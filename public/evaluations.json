@@ -1,0 +1,80 @@
+[
+  {
+    "rentree": 2024,
+    "uai": "9730200E",
+    "denomination": "E.P.PU MORTIN",
+    "sigle": "MORTIN",
+    "commune": "CAYENNE",
+    "classe": "CP",
+    "matiere": "Français",
+    "libelle": "Lire",
+    "nb_eleves": 68,
+    "nb_rep": 68,
+    "tx_reussite": "75.5"
+  },
+  {
+    "rentree": 2024,
+    "uai": "9730200E",
+    "denomination": "E.P.PU MORTIN",
+    "sigle": "MORTIN",
+    "commune": "CAYENNE",
+    "classe": "CP",
+    "matiere": "Mathématiques",
+    "libelle": "Résoudre des problèmes",
+    "nb_eleves": 68,
+    "nb_rep": 68,
+    "tx_reussite": "68.2"
+  },
+  {
+    "rentree": 2024,
+    "uai": "9730129C",
+    "denomination": "E.M.PU ELIETTE DANGLADES",
+    "sigle": "DANGLADES",
+    "commune": "CAYENNE",
+    "classe": "GS",
+    "matiere": "Français",
+    "libelle": "Comprendre des textes écrits",
+    "nb_eleves": 72,
+    "nb_rep": 72,
+    "tx_reussite": "82.3"
+  },
+  {
+    "rentree": 2024,
+    "uai": "9730399W",
+    "denomination": "E.E.PU VENDOME",
+    "sigle": "VENDOME",
+    "commune": "CAYENNE",
+    "classe": "CE1",
+    "matiere": "Français",
+    "libelle": "Lire",
+    "nb_eleves": 35,
+    "nb_rep": 35,
+    "tx_reussite": "71.4"
+  },
+  {
+    "rentree": 2024,
+    "uai": "9730399W",
+    "denomination": "E.E.PU VENDOME",
+    "sigle": "VENDOME",
+    "commune": "CAYENNE",
+    "classe": "CE1",
+    "matiere": "Mathématiques",
+    "libelle": "Résoudre des problèmes",
+    "nb_eleves": 35,
+    "nb_rep": 35,
+    "tx_reussite": "65.7"
+  },
+  {
+    "rentree": 2024,
+    "uai": "9730117P",
+    "denomination": "E.M.PU LEOPOLD HEDER",
+    "sigle": "HEDER",
+    "commune": "CAYENNE",
+    "classe": "MS",
+    "matiere": "Français",
+    "libelle": "Vocabulaire",
+    "nb_eleves": 24,
+    "nb_rep": 24,
+    "tx_reussite": "79.2"
+  }
+]

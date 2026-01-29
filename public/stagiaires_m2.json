@@ -1,0 +1,79 @@
+[
+  {
+    "nom": "FLEURY",
+    "prenom": "Linsee",
+    "stage_file": { "ecole": "EEPU G. HERMINE", "tuteur": "Mme DOMPUT Cindy", "niveau": "CP" },
+    "stage_masse_1": { "ecole": "EEPU G. HERMINE", "tuteur": "Mme BOUSSATON DEFERT Sophie", "niveau": "PS" },
+    "stage_masse_2": { "ecole": "EEPU G. HERMINE", "tuteur": "M. DORLIPO Steddy", "niveau": "CM2" }
+  },
+  {
+    "nom": "FLEURY",
+    "prenom": "Gaëlle-Naura",
+    "stage_file": { "ecole": "EEPU G. HERMINE", "tuteur": "Mme BOUSSATON DEFERT Sophie", "niveau": "PS" },
+    "stage_masse_1": { "ecole": "EEPU G. HERMINE", "tuteur": "M. DORLIPO Steddy", "niveau": "CM2" },
+    "stage_masse_2": { "ecole": "EEPU G. HERMINE", "tuteur": "Mme DOMPUT Cindy", "niveau": "CP" }
+  },
+  {
+    "nom": "LANTE",
+    "prenom": "Emilia Graciella",
+    "stage_file": { "ecole": "EEPU MONT-LUCAS", "tuteur": "Mme HARDJOPAWIRO Livia", "niveau": "CP" },
+    "stage_masse_1": { "ecole": "EEPU SABA", "tuteur": "M. PLENET Patrick", "niveau": "CM2" },
+    "stage_masse_2": { "ecole": "EMPU MONT-LUCAS", "tuteur": "Mme NG HORTH Claudine", "niveau": "GS" }
+  },
+  {
+    "nom": "ELAS",
+    "prenom": "China",
+    "stage_file": { "ecole": "EMPU MONT-LUCAS", "tuteur": "Mme TABAR Déborah", "niveau": "MS" },
+    "stage_masse_1": { "ecole": "EEPU HEDER", "tuteur": "M PRIMEON Fred", "niveau": "CM1" },
+    "stage_masse_2": { "ecole": "EEPU MONT-LUCAS", "tuteur": "Mme HARDJOPAWIRO Livia", "niveau": "CP" }
+  },
+  {
+    "nom": "TESSA",
+    "prenom": "Isméralda",
+    "stage_file": { "ecole": "EEPU M. SABA", "tuteur": "Mme CHARLES Leslie", "niveau": "CE2" },
+    "stage_masse_1": { "ecole": "EMPU L. VOLMAR", "tuteur": "Mme BINTOUL PELAGY Gerty", "niveau": "MS" },
+    "stage_masse_2": { "ecole": "EEPU M. SABA", "tuteur": "M. PLENET Patrick", "niveau": "CM2" }
+  },
+  {
+    "nom": "JOSEPH",
+    "prenom": "Evens",
+    "stage_file": { "ecole": "EMPU MONT-LUCAS", "tuteur": "Mme LUBIN Alvina", "niveau": "MS" },
+    "stage_masse_1": { "ecole": "EEPU MONT-LUCAS", "tuteur": "Mme HARDJOPAWIRO Livia", "niveau": "CP" },
+    "stage_masse_2": { "ecole": "EEPU HEDER", "tuteur": "M. PRIMEON Fred", "niveau": "CM1" }
+  },
+  {
+    "nom": "SAUL",
+    "prenom": "James",
+    "stage_file": { "ecole": "EEPU M. SABA", "tuteur": "M. PLENET Patrick", "niveau": "CM2" },
+    "stage_masse_1": { "ecole": "EEPU M. SABA", "tuteur": "Mme CHARLES Leslie", "niveau": "CE2" },
+    "stage_masse_2": { "ecole": "EMPU L. VOLMAR", "tuteur": "Mme BINTOUL PELAGY Gerty", "niveau": "MS" }
+  },
+  {
+    "nom": "URSULET",
+    "prenom": "Medhi",
+    "stage_file": { "ecole": "EEPU MONT-LUCAS", "tuteur": "Mme LATOUR Dolorès", "niveau": "CP" },
+    "stage_masse_1": { "ecole": "EMPU MONT-LUCAS", "tuteur": "Mme NG HORTH Claudine", "niveau": "GS" },
+    "stage_masse_2": { "ecole": "EEPU MONT-LUCAS", "tuteur": "Mme JEAN Francesca", "niveau": "CM1" }
+  },
+  {
+    "nom": "ESNAULT",
+    "prenom": "Maëlys",
+    "stage_file": { "ecole": "EMPU MONT-LUCAS", "tuteur": "Mme NG HORTH Claudine", "niveau": "GS" },
+    "stage_masse_1": { "ecole": "EEPU MONT-LUCAS", "tuteur": "Mme JEAN Francesca", "niveau": "CM1" },
+    "stage_masse_2": { "ecole": "EEPU MONT-LUCAS", "tuteur": "Mme LATOUR Dolores", "niveau": "CP" }
+  },
+  {
+    "nom": "AVRIL",
+    "prenom": "Gandhi",
+    "stage_file": { "ecole": "EMPU L. VOLMAR", "tuteur": "Mme BINTOUL PELAGY Gerty", "niveau": "MS" },
+    "stage_masse_1": { "ecole": "EEPU L. HEDER", "tuteur": "Mme RICHARDSON Brunhilde", "niveau": "CP" },
+    "stage_masse_2": { "ecole": "EEPU SABA", "tuteur": "Mme TIEGOT Annie", "niveau": "CM2" }
+  },
+  {
+    "nom": "GESNER",
+    "prenom": "Marlène",
+    "stage_file": { "ecole": "EEPU VENDOME", "tuteur": "Mme BELLEGARDE BENOIT Ruth", "niveau": "CE1" },
+    "stage_masse_1": { "ecole": "EEPU VENDÔME", "tuteur": "Mme MONTAUBAN Céline", "niveau": "CM2" },
+    "stage_masse_2": { "ecole": "EMPU VENDÔME", "tuteur": "Mme CETOUTE Marie-Love", "niveau": "GS" }
+  }
+]

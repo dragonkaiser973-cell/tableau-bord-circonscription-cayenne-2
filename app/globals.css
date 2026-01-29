@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #1e5a78 0%, #2d8ba8 50%, #45b8a0 100%);
+  min-height: 100vh;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-br from-primary-500 to-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-white bg-opacity-25 backdrop-blur-md text-white border-2 border-white border-opacity-30 font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:bg-opacity-35;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl p-8 shadow-xl;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors;
+  }
+
+  .stat-card {
+    @apply bg-gradient-to-br from-primary-500 to-primary-700 text-white p-6 rounded-xl text-center;
+  }
+
+  .data-table {
+    @apply w-full border-collapse bg-white rounded-lg overflow-hidden shadow-md;
+  }
+
+  .data-table th {
+    @apply bg-gray-50 px-4 py-3 text-left font-semibold text-gray-600 text-xs uppercase tracking-wider border-b-2 border-gray-200;
+  }
+
+  .data-table td {
+    @apply px-4 py-3 border-b border-gray-100 text-gray-700;
+  }
+
+  .data-table tr:hover {
+    @apply bg-gray-50;
+  }
+}

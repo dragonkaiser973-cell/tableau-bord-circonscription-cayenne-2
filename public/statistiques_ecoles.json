@@ -1,0 +1,475 @@
+[
+  {
+    "uai": "9730200E",
+    "nom": "E.P.PU MORTIN",
+    "effectifs": {
+      "Inscrits": 5,
+      "Admissible": 0,
+      "Admis": 467,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 467,
+      "répartis": 467,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 33
+    },
+    "repartitions": {
+      "PS": 24,
+      "MS": 26,
+      "GS": 24,
+      "CP": 88,
+      "CE1": 89,
+      "CE2": 92,
+      "CM1": 75,
+      "CM2": 49
+    },
+    "totaux": {
+      "CYCLE I": 74,
+      "CYCLE II": 269,
+      "CYCLE III": 124,
+      "Total": 467
+    },
+    "type": "E.P.PU"
+  },
+  {
+    "uai": "9730129C",
+    "nom": "E.M.PU ELIETTE DANGLADES",
+    "effectifs": {
+      "Inscrit": 0,
+      "Admissible": 0,
+      "Admis": 212,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 212,
+      "répartis": 212,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 24
+    },
+    "repartitions": {
+      "PS": 51,
+      "MS": 89,
+      "GS": 72
+    },
+    "totaux": {
+      "CYCLE I": 212,
+      "Total": 212
+    },
+    "type": "E.M.PU"
+  },
+  {
+    "uai": "9730117P",
+    "nom": "E.M.PU LEOPOLD HEDER",
+    "effectifs": {
+      "Inscrit": 1,
+      "Admissible": 0,
+      "Admis": 92,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 92,
+      "répartis": 92,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 5
+    },
+    "repartitions": {
+      "PS": 41,
+      "MS": 24,
+      "GS": 27
+    },
+    "totaux": {
+      "CYCLE I": 92,
+      "Total": 92
+    },
+    "type": "E.M.PU"
+  },
+  {
+    "uai": "9730399W",
+    "nom": "E.E.PU VENDOME",
+    "effectifs": {
+      "Inscrits": 12,
+      "Admissible": 0,
+      "Admis": 503,
+      "Admis accepté": 1,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 502,
+      "répartis": 502,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 15
+    },
+    "repartitions": {
+      "CP": 98,
+      "CE1": 111,
+      "CE2": 115,
+      "CM1": 92,
+      "CM2": 86
+    },
+    "totaux": {
+      "CYCLE II": 324,
+      "CYCLE III": 178,
+      "Total": 502
+    },
+    "type": "E.E.PU"
+  },
+  {
+    "uai": "9730128B",
+    "nom": "E.E.PU ELIETTE DANGLADES",
+    "effectifs": {
+      "Inscrits": 7,
+      "Admissible": 0,
+      "Admis": 372,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 372,
+      "répartis": 372,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 16
+    },
+    "repartitions": {
+      "CP": 75,
+      "CE1": 75,
+      "CE2": 75,
+      "CM1": 73,
+      "CM2": 74
+    },
+    "totaux": {
+      "CYCLE II": 225,
+      "CYCLE III": 147,
+      "Total": 372
+    },
+    "type": "E.E.PU"
+  },
+  {
+    "uai": "9730209P",
+    "nom": "E.M.PU MONT-LUCAS",
+    "effectifs": {
+      "Inscrits": 6,
+      "Admissible": 0,
+      "Admis": 301,
+      "Admis accepté": 1,
+      "réparti": 1,
+      "non réparti": 0,
+      "Admis définitifs": 300,
+      "répartis": 300,
+      "bloqué": 1,
+      "en attente d'INE": 1,
+      "Radiés": 18
+    },
+    "repartitions": {
+      "PS": 72,
+      "MS": 100,
+      "GS": 129
+    },
+    "totaux": {
+      "CYCLE I": 301,
+      "Total": 301
+    },
+    "type": "E.M.PU"
+  },
+  {
+    "uai": "9730114L",
+    "nom": "E.E.PU LEOPOLD HEDER",
+    "effectifs": {
+      "Inscrits": 6,
+      "Admissible": 0,
+      "Admis": 336,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 336,
+      "répartis": 336,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 14
+    },
+    "repartitions": {
+      "CP": 76,
+      "CE1": 67,
+      "CE2": 82,
+      "CM1": 61,
+      "CM2": 50
+    },
+    "totaux": {
+      "CYCLE II": 225,
+      "CYCLE III": 111,
+      "Total": 336
+    },
+    "type": "E.E.PU"
+  },
+  {
+    "uai": "9730203H",
+    "nom": "E.M.PU LA ROSERAIE",
+    "effectifs": {
+      "Inscrits": 5,
+      "Admissible": 0,
+      "Admis": 222,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 222,
+      "répartis": 222,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 20
+    },
+    "repartitions": {
+      "PS": 92,
+      "MS": 64,
+      "GS": 66
+    },
+    "totaux": {
+      "CYCLE I": 222,
+      "Total": 222
+    },
+    "type": "E.M.PU"
+  },
+  {
+    "uai": "9730326S",
+    "nom": "E.M.PU LEODATE VOLMAR",
+    "effectifs": {
+      "Inscrits": 4,
+      "Admissible": 0,
+      "Admis": 300,
+      "Admis accepté": 1,
+      "réparti": 1,
+      "non réparti": 0,
+      "Admis définitifs": 299,
+      "répartis": 299,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 11
+    },
+    "repartitions": {
+      "PS": 90,
+      "MS": 96,
+      "GS": 114
+    },
+    "totaux": {
+      "CYCLE I": 300,
+      "Total": 300
+    },
+    "type": "E.M.PU"
+  },
+  {
+    "uai": "9730104A",
+    "nom": "E.E.PU MAXIMILIEN SABA",
+    "effectifs": {
+      "Inscrits": 4,
+      "Admissible": 0,
+      "Admis": 342,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 342,
+      "répartis": 342,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 23
+    },
+    "repartitions": {
+      "CP": 68,
+      "CE1": 67,
+      "CE2": 90,
+      "CM1": 63,
+      "CM2": 54
+    },
+    "totaux": {
+      "CYCLE II": 225,
+      "CYCLE III": 117,
+      "Total": 342
+    },
+    "type": "E.E.PU"
+  },
+  {
+    "uai": "9730211S",
+    "nom": "E.E.PU MONT-LUCAS",
+    "effectifs": {
+      "Inscrits": 6,
+      "Admissible": 0,
+      "Admis": 480,
+      "Admis acceptés": 2,
+      "réparti": 0,
+      "non répartis": 2,
+      "Admis définitifs": 478,
+      "répartis": 478,
+      "non réparti": 0,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 25
+    },
+    "repartitions": {
+      "CP": 83,
+      "CE1": 92,
+      "CE2": 138,
+      "CM1": 88,
+      "CM2": 77
+    },
+    "totaux": {
+      "CYCLE II": 313,
+      "CYCLE III": 165,
+      "Total": 478
+    },
+    "type": "E.E.PU"
+  },
+  {
+    "uai": "9730042H",
+    "nom": "E.E.PU GAETAN HERMINE",
+    "effectifs": {
+      "Inscrits": 19,
+      "Admissible": 0,
+      "Admis": 418,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 418,
+      "répartis": 418,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 33
+    },
+    "repartitions": {
+      "CP": 75,
+      "CE1": 78,
+      "CE2": 69,
+      "CM1": 98,
+      "CM2": 98
+    },
+    "totaux": {
+      "CYCLE II": 222,
+      "CYCLE III": 196,
+      "Total": 418
+    },
+    "type": "E.E.PU"
+  },
+  {
+    "uai": "9730189T",
+    "nom": "E.M.PU GAETAN HERMINE",
+    "effectifs": {
+      "Inscrits": 7,
+      "Admissible": 0,
+      "Admis": 244,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 244,
+      "répartis": 244,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 18
+    },
+    "repartitions": {
+      "PS": 74,
+      "MS": 83,
+      "GS": 87
+    },
+    "totaux": {
+      "CYCLE I": 244,
+      "Total": 244
+    },
+    "type": "E.M.PU"
+  },
+  {
+    "uai": "9730043J",
+    "nom": "E.P.PU AUGUSTINE DUCHANGE",
+    "effectifs": {
+      "Inscrit": 0,
+      "Admissible": 0,
+      "Admis": 260,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 260,
+      "répartis": 260,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 11
+    },
+    "repartitions": {
+      "TPS": 8,
+      "PS": 28,
+      "MS": 35,
+      "GS": 38,
+      "CP": 41,
+      "CE1": 34,
+      "CE2": 29,
+      "CM1": 23,
+      "CM2": 24
+    },
+    "totaux": {
+      "CYCLE I": 109,
+      "CYCLE II": 104,
+      "CYCLE III": 47,
+      "Total": 260
+    },
+    "type": "E.P.PU"
+  },
+  {
+    "uai": "9730227J",
+    "nom": "E.P.PU DE CACAO",
+    "effectifs": {
+      "Inscrits": 4,
+      "Admissibles": 5,
+      "Admis": 108,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 1,
+      "Admis définitifs": 108,
+      "répartis": 107,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 2
+    },
+    "repartitions": {
+      "PS": 10,
+      "MS": 13,
+      "GS": 10,
+      "CP": 20,
+      "CE1": 10,
+      "CE2": 18,
+      "CM1": 12,
+      "CM2": 14
+    },
+    "totaux": {
+      "CYCLE I": 33,
+      "CYCLE II": 48,
+      "CYCLE III": 26,
+      "Total": 107
+    },
+    "type": "E.P.PU"
+  },
+  {
+    "uai": "9730417R",
+    "nom": "E.M.PU VENDOME",
+    "effectifs": {
+      "Inscrits": 4,
+      "Admissible": 0,
+      "Admis": 343,
+      "Admis accepté": 0,
+      "réparti": 0,
+      "non réparti": 0,
+      "Admis définitifs": 343,
+      "répartis": 343,
+      "bloqué": 0,
+      "en attente d'INE": 0,
+      "Radiés": 13
+    },
+    "repartitions": {
+      "PS": 100,
+      "MS": 119,
+      "GS": 124
+    },
+    "totaux": {
+      "CYCLE I": 343,
+      "Total": 343
+    },
+    "type": "E.M.PU"
+  }
+]

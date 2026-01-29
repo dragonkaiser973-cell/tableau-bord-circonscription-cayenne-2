@@ -1,0 +1,2161 @@
+[
+  {
+    "uai": "9730104A",
+    "classes": [
+      {
+        "libelle": "COURS MOYEN 1 - COURS MOYEN 2",
+        "enseignant": "Mme MANGATALLE Marie- Sergine Mme WEIMERT Régine",
+        "niveau": "CM1 - CM2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "COURS MOYEN 1 A",
+        "enseignant": "Mme MIMBA Carmen",
+        "niveau": "CM1",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "COURS MOYEN 1 B",
+        "enseignant": "Mme DOYE Myriam",
+        "niveau": "CM1",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "COURS MOYEN 2 A",
+        "enseignant": "M. PLENET Patrick",
+        "niveau": "CM2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "COURS MOYEN 2 B",
+        "enseignant": "Mme TIEGOT Annie",
+        "niveau": "CM2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "COURS PRÉPARATOIRE A",
+        "enseignant": "M. CADETTE Olivier",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS PRÉPARATOIRE B",
+        "enseignant": "Mme PIANELLI NOBAL Naïma",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS PRÉPARATOIRE C",
+        "enseignant": "Mme BERLASSE Sylvie",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS PRÉPARATOIRE D",
+        "enseignant": "Mme BIQUE FACORAT Rébecca",
+        "niveau": "CP",
+        "nbEleves": 10,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS PRÉPARATOIRE E",
+        "enseignant": "Mme ULLINDAH Amandine",
+        "niveau": "CP",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS PRÉPARATOIRE F",
+        "enseignant": "Mme SAMINADIN Aurélie",
+        "niveau": "CP",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 1 A",
+        "enseignant": "Mme GASPARD Marie- Chantal",
+        "niveau": "CE1",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 1 B",
+        "enseignant": "Mme RENE Jacqueline",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 1 C",
+        "enseignant": "M. PIANELLI Michel",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 1 D",
+        "enseignant": "Mme LOUISSAINT Altina",
+        "niveau": "CE1",
+        "nbEleves": 10,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 1 E",
+        "enseignant": "Mme MANGATALLE Clotilde",
+        "niveau": "CE1",
+        "nbEleves": 10,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 1 F",
+        "enseignant": "Mme BORGES HAUSSLER Christiane",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 2 A",
+        "enseignant": "Mme MELGIRE Lénaïck",
+        "niveau": "CE2",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 2 B",
+        "enseignant": "Mme NICOLAS Peggy",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 2 C",
+        "enseignant": "Mme CHARLES Leslie",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "COURS ÉLÉMENTAIRE 2 D",
+        "enseignant": "M. LATAPPY Stéphane",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "RESEAU D'AIDES SPECIALISEES AUX ELEVES EN DIFFICUL",
+        "enseignant": "RASED",
+        "niveau": "0",
+        "nbEleves": 0,
+        "dedoublee": false
+      },
+      {
+        "libelle": "UNITE LOCALISEE POUR L'INCLUSION SCOLAIRE",
+        "enseignant": "ULIS ECOLE",
+        "niveau": "12",
+        "nbEleves": 0,
+        "dedoublee": false
+      },
+      {
+        "libelle": "UNITE PEDAGOGIQUE POUR ELEVES ALLOPHONES ARRIVANTS",
+        "enseignant": "UPE2A",
+        "niveau": "13",
+        "nbEleves": 0,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": [
+      {
+        "libelle": "RESEAU D'AIDES SPECIALISEES AUX ELEVES EN DIFFICUL",
+        "type": "RASED",
+        "nbEleves": 0
+      },
+      {
+        "libelle": "UNITE LOCALISEE POUR L'INCLUSION SCOLAIRE",
+        "type": "ULIS ECOLE",
+        "nbEleves": 12
+      },
+      {
+        "libelle": "UNITE PEDAGOGIQUE POUR ELEVES ALLOPHONES ARRIVANTS",
+        "type": "UPE2A",
+        "nbEleves": 13
+      }
+    ]
+  },
+  {
+    "uai": "9730114L",
+    "classes": [
+      {
+        "libelle": "cours moyen 1 WASSAÏ",
+        "enseignant": "Mme CHANDELY Elisa",
+        "niveau": "CM1",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "cours moyen 1- PAREPOU",
+        "enseignant": "M. PRIMEON Fred",
+        "niveau": "CM1",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "cours moyen 2 COMOU",
+        "enseignant": "M. MINA KAGO WILFRIED",
+        "niveau": "CM2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "cours moyen 2 CUPUACU",
+        "enseignant": "M. ATTICOT Pascal",
+        "niveau": "CM2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "cours préparatoire 1 PITAYA",
+        "enseignant": "Mme RICHARDSON Brunhilde",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": false
+      },
+      {
+        "libelle": "cours préparatoire ANANAS",
+        "enseignant": "Mme ERARDH CATHERINE Mme SAID Aurore",
+        "niveau": "CP",
+        "nbEleves": 9,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours préparatoire COROSSOL",
+        "enseignant": "Mme JEAN-VINCENT Elsa",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours préparatoire MANDARINE",
+        "enseignant": "Mme SIMEON Doriane",
+        "niveau": "CP",
+        "nbEleves": 10,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours préparatoire MANGUE",
+        "enseignant": "Mme MADI Sainte- Lucia",
+        "niveau": "CP",
+        "nbEleves": 10,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours préparatoire PATAWA",
+        "enseignant": "Mme BARIAU Maéva",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours préparatoire- GROSEILLE",
+        "enseignant": "Mme ABIENSO Charles Antoine",
+        "niveau": "CP",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 1 -AWARA",
+        "enseignant": "Mme BREVIGNON DAVINA",
+        "niveau": "CE1",
+        "nbEleves": 10,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 1 -BARBADINE",
+        "enseignant": "Mme OSPITAL Julie",
+        "niveau": "CE1",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 1 -CAÏMITE",
+        "enseignant": "Mme YZEROS Marie-Christine",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 1 -PRUNE DE CYTHERE",
+        "enseignant": "Mme AZOR FRANCINE",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 1 -SURETTE",
+        "enseignant": "M. BRIQUET YOHANN",
+        "niveau": "CE1",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 1-GRENADE",
+        "enseignant": "Mme HOUMADY ZAHIRAH",
+        "niveau": "CE1",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 2 -POMME CANNELLE",
+        "enseignant": "Mme TIEGOT Véronique",
+        "niveau": "CE2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "cours élémentaire 2 -POMME D'AMOUR",
+        "enseignant": "Mme MOTLAI Sabrina",
+        "niveau": "CE2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "cours élémentaire 2 -POMME ROSA",
+        "enseignant": "Mme MALACARNET Maureen",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours élémentaire 2 et cours moyens 1 MARIPAS",
+        "enseignant": "Mme ROBO AYANNE Sadia",
+        "niveau": "CE2 - CM1",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "ulis CAJOU",
+        "enseignant": "ULIS ECOLE",
+        "niveau": "7",
+        "nbEleves": 0,
+        "dedoublee": false
+      },
+      {
+        "libelle": "UPE2A JICAMA",
+        "enseignant": "UPE2A",
+        "niveau": "8",
+        "nbEleves": 0,
+        "dedoublee": false
+      },
+      {
+        "libelle": "ES-ADP",
+        "enseignant": "RASED",
+        "niveau": "0",
+        "nbEleves": 0,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": [
+      {
+        "libelle": "ulis CAJOU",
+        "type": "ULIS ECOLE",
+        "nbEleves": 7
+      },
+      {
+        "libelle": "UPE2A JICAMA",
+        "type": "UPE2A",
+        "nbEleves": 8
+      },
+      {
+        "libelle": "ES-ADP",
+        "type": "RASED",
+        "nbEleves": 0
+      }
+    ]
+  },
+  {
+    "uai": "9730117P",
+    "classes": [
+      {
+        "libelle": "Section des Grands ORCHIDEES",
+        "enseignant": "Mme VICTORINE-THEOLADE Stéphanie",
+        "niveau": "GS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des Moyens et Grands ALPINIA",
+        "enseignant": "-",
+        "niveau": "MS - GS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des Petits et Moyens BALISIERS",
+        "enseignant": "Mme TRACEY-LECANTE Travise",
+        "niveau": "PS - MS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des Petits HIBISCUS",
+        "enseignant": "Mme PIANET Carole",
+        "niveau": "PS",
+        "nbEleves": 24,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": []
+  },
+  {
+    "uai": "9730128B",
+    "classes": [
+      {
+        "libelle": "CE1 A1 de Mme AMARANTHE Gretta - mobil-home 15",
+        "enseignant": "Mme AMARANTHE Gretta",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 B1 de Mme PALMOT Edith - mobil-home 16",
+        "enseignant": "Mme PALMOT Edith",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 B2 de Mme LABEL-DELIN Priscilla- mobil-home 16",
+        "enseignant": "Mme LABEL-DELIN Priscilla",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 C1 de Mme SYVRAIN-PETIT-FRERE Wilonina-MB 17",
+        "enseignant": "Mme SYVRAIN-PETIT-FRERE Wilonina",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 C2 de Mme ISAACS Latavia - mobil-home 17",
+        "enseignant": "Mme ISAACS Latavia",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1A2 de Mme SEPHO-JEAN-CHRISTOPHE Josia- salle 15",
+        "enseignant": "Mme SEPHO-JEAN-CHRISTOPHE Josia",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE2 A de Mme FERNAND Sophia - salle 10",
+        "enseignant": "Mme FERNAND Sophia",
+        "niveau": "CE2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE2 B de Mme LIDOR Ronide-Sylvie - salle 2",
+        "enseignant": "Mme LIDOR Ronide-Sylvie",
+        "niveau": "CE2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE2 C de Mme SADIKALAY Yolaine - salle 4",
+        "enseignant": "Mme SADIKALAY Yolaine",
+        "niveau": "CE2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 A de Mme GALLIOT Sandra - salle 7",
+        "enseignant": "Mme GALLIOT Sandra",
+        "niveau": "CM1",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 B de Mme JEAN-BAPTISTE Nathalie - salle 8",
+        "enseignant": "Mme JEAN-BAPTISTE Nathalie",
+        "niveau": "CM1",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 C de M. CANDALE Alain - salle 13",
+        "enseignant": "M. CANDALE Alain",
+        "niveau": "CM1",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 et CM2 de Mme GUITTEAUD Corinne - salle 12",
+        "enseignant": "Mme GUITTEAUD Corinne",
+        "niveau": "CM1 - CM2",
+        "nbEleves": 20,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM2 A de M. SAINT LOUIS Didier - salle 9",
+        "enseignant": "M. SAINT LOUIS Didier",
+        "niveau": "CM2",
+        "nbEleves": 20,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM2 B de Mme CHERUBIN-JEANNETTE Laura- salle 11",
+        "enseignant": "Mme CHERUBIN-JEANNETTE Laura",
+        "niveau": "CM2",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM2 C de M. DAS NEVES DOS SANTOS Keis - salle 14",
+        "enseignant": "M. DAS NEVES DOS SANTOS Keis",
+        "niveau": "CM2",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CP A1 de Mme ROESZ Admise - salle 6",
+        "enseignant": "Mme ROESZ Admise",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP A2 de M. DURAND Nicolas - salle 6",
+        "enseignant": "M. DURAND Nicolas",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP B1 de Mme BARTEL Françoise - salle 5",
+        "enseignant": "Mme BARTEL Françoise",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP B2 de Mme SULPICE-TIMOTHEE Elodie - salle 5",
+        "enseignant": "Mme SULPICE-TIMOTHEE Elodie",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP C1 de Mme LEON Hélène - salle 3",
+        "enseignant": "Mme LEON Hélène",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP C2 de Mme MAIGNAN Daniela - salle 3",
+        "enseignant": "Mme MAIGNAN Daniela",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "ULIS-ECOLE de Mme VERIN Yuna - salle 1",
+        "enseignant": "ULIS ECOLE",
+        "niveau": "14",
+        "nbEleves": 0,
+        "dedoublee": false
+      },
+      {
+        "libelle": "UPE2A de Mme PRAJOEWARI - salle 18",
+        "enseignant": "UPE2A",
+        "niveau": "0",
+        "nbEleves": 0,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": [
+      {
+        "libelle": "ULIS-ECOLE de Mme VERIN Yuna - salle 1",
+        "type": "ULIS ECOLE",
+        "nbEleves": 14
+      },
+      {
+        "libelle": "UPE2A de Mme PRAJOEWARI - salle 18",
+        "type": "UPE2A",
+        "nbEleves": 0
+      }
+    ]
+  },
+  {
+    "uai": "9730129C",
+    "classes": [
+      {
+        "libelle": "SECTION DES GRANDS A",
+        "enseignant": "M. JUSTIN Jean-Marc",
+        "niveau": "GS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES GRANDS B",
+        "enseignant": "M. BARBOT Frédéric",
+        "niveau": "GS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES GRANDS C",
+        "enseignant": "Mme SUPRINA Véline",
+        "niveau": "GS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES MOYENS A",
+        "enseignant": "Mme DJOHO Christiane",
+        "niveau": "PS - MS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES MOYENS B",
+        "enseignant": "M. CADET Ryan Mme MILZINK-SEWGOBIND Line",
+        "niveau": "MS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES MOYENS C",
+        "enseignant": "Mme MONTHIEUX Pascale",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES MOYENS D",
+        "enseignant": "Mme MALBRANCHE Rosélène",
+        "niveau": "MS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES PETITS A",
+        "enseignant": "M. LUCE Mario",
+        "niveau": "PS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES PETITS B",
+        "enseignant": "Mme BISHOP BAAL Nelly",
+        "niveau": "PS",
+        "nbEleves": 23,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": []
+  },
+  {
+    "uai": "9730189T",
+    "classes": [
+      {
+        "libelle": "GRANDE SECTION ARAS",
+        "enseignant": "Mme AUGUSTINE AGNES",
+        "niveau": "GS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION ARUMS",
+        "enseignant": "M. AGOT PATRICK Mme LETARD MORANE",
+        "niveau": "GS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION HIBISCUS",
+        "enseignant": "Mme VALTRINE YVELINE",
+        "niveau": "MS - GS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION ORCHIDEES",
+        "enseignant": "Mme EMILIEN DUCLONA JULIETTE",
+        "niveau": "GS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION HORTENSIAS",
+        "enseignant": "Mme OTZ KATELL",
+        "niveau": "MS",
+        "nbEleves": 26,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION JASMINS",
+        "enseignant": "Mme FELICHI CHRISTINE",
+        "niveau": "MS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION OISEAUX DU PARADIS",
+        "enseignant": "Mme LECOMTE CLAIRE",
+        "niveau": "MS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION BOUGAINVILLIERS",
+        "enseignant": "Mme DEFERT BOUSSATON SOPHIE",
+        "niveau": "PS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION FLAMBOYANTS",
+        "enseignant": "Mme RAMCHAM PRISCA",
+        "niveau": "PS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION MORPHOS",
+        "enseignant": "Mme BOSSOU CHRISTIANE",
+        "niveau": "PS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "ULIS BALISIER",
+        "enseignant": "ULIS ECOLE",
+        "niveau": "13",
+        "nbEleves": 0,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": [
+      {
+        "libelle": "ULIS BALISIER",
+        "type": "ULIS ECOLE",
+        "nbEleves": 13
+      }
+    ]
+  },
+  {
+    "uai": "9730200E",
+    "classes": [
+      {
+        "libelle": "CE1 ADENIUM",
+        "enseignant": "Mme LONGIN Vanessa",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 ALPINIA",
+        "enseignant": "Mme MUNROE Jennifer",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 BEGONIA",
+        "enseignant": "Mme EDWARD Muriel Mme REUNIF Carine",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 BOUTON D OR mobilhome",
+        "enseignant": "Mme VERGER Gaëlle",
+        "niveau": "CE1",
+        "nbEleves": 14,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE1 FRANGIPANIER",
+        "enseignant": "Mme MOISE Nadège",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 GARDENIA",
+        "enseignant": "Mme LARANCE Keittia",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 LIANE D ARGENT",
+        "enseignant": "Mme VA Aimée",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE2 JASMIN",
+        "enseignant": "Mme BRUNACHE Valérie",
+        "niveau": "CE2",
+        "nbEleves": 20,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE2 BOIS DE ROSE",
+        "enseignant": "Mme PINEL Monique",
+        "niveau": "CE2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE2 BOUGAINVILLIER",
+        "enseignant": "Mme PIERRE COUTENAY Carole",
+        "niveau": "CE2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE2 LILAS DES INDES",
+        "enseignant": "Mme OLIVEIRA DIAS Tatiana",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 BALISIER",
+        "enseignant": "Mme LECHEVILLIER Sidonie",
+        "niveau": "CM1",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 BUISSON ARDENT",
+        "enseignant": "Mme FLORENTINY Stelyne",
+        "niveau": "CM1",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 HIBISCUS",
+        "enseignant": "Mme ALFRED Priscilla Mme MADELEINE Nora",
+        "niveau": "CM1",
+        "nbEleves": 26,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM2 ALLAMANDA",
+        "enseignant": "M. HASSANI Hadji",
+        "niveau": "CM2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM2 AZALEE",
+        "enseignant": "Mme BASSO Gisèle",
+        "niveau": "CM2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CP ANTHURIUM",
+        "enseignant": "Mme SONNY Rosy",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP DAHLIA",
+        "enseignant": "Mme FERDINAND SYLVETTE",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP MUSENDA",
+        "enseignant": "Mme SAINT LOUIS Salima",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP OISEAU DE PARADIS",
+        "enseignant": "Mme OSSEUX Arielle",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP ORCHIDEE",
+        "enseignant": "Mme RACON Corine",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP PASSIFLORE",
+        "enseignant": "Mme BELLONY Lanna",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP PETRIA",
+        "enseignant": "Mme PAVILLA SAIDA",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "GS FLAMBOYANTS",
+        "enseignant": "Mme ARAIA Roza",
+        "niveau": "GS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MS ROSE DE PORCELAINE",
+        "enseignant": "Mme CESTO Vanessa Mme VOYER Sandrine",
+        "niveau": "MS",
+        "nbEleves": 26,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PS PLUIE D OR",
+        "enseignant": "Mme DOL Julie",
+        "niveau": "PS",
+        "nbEleves": 24,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": []
+  },
+  {
+    "uai": "9730203H",
+    "classes": [
+      {
+        "libelle": "Section des grands A",
+        "enseignant": "Mme CHAMPESTING Carine",
+        "niveau": "GS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des grands B",
+        "enseignant": "Mme PRIAM Catherine",
+        "niveau": "GS",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des grands C",
+        "enseignant": "Mme GODARD Marie",
+        "niveau": "GS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des moyens A",
+        "enseignant": "Mme DUMAISON Vénite",
+        "niveau": "MS",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des moyens B",
+        "enseignant": "Mme ALAIS Elodie",
+        "niveau": "MS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des moyens C",
+        "enseignant": "Mme EGLANTINE Sandra",
+        "niveau": "MS",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des petits A",
+        "enseignant": "Mme DELTOY Sylvie Mme FAZER Fleurtilde",
+        "niveau": "PS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des petits B",
+        "enseignant": "Mme LOUISE Aurore",
+        "niveau": "PS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des petits C",
+        "enseignant": "Mme CHAUVIRE Patricia",
+        "niveau": "PS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Section des petits D",
+        "enseignant": "Mme TORVIC Samyra",
+        "niveau": "PS",
+        "nbEleves": 22,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": []
+  },
+  {
+    "uai": "9730209P",
+    "classes": [
+      {
+        "libelle": "GRANDE SECTION 1 Modulaire",
+        "enseignant": "M. JONNAIS FRANTZ",
+        "niveau": "GS",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION 2",
+        "enseignant": "Mme MARBOT PAULE",
+        "niveau": "GS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION 3",
+        "enseignant": "Mme HORTH CLAUDINE",
+        "niveau": "GS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION 4",
+        "enseignant": "M. VILLAGEOIS BLANCHARD",
+        "niveau": "GS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION 5",
+        "enseignant": "Mme LUBIN ALVINA",
+        "niveau": "GS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE GRANDE SECTION Modulaire",
+        "enseignant": "Mme BOITARD ROSIE",
+        "niveau": "MS - GS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION 1 Modulaire",
+        "enseignant": "Mme TABAR DEBORAH",
+        "niveau": "MS",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION 2",
+        "enseignant": "Mme TSOI CORINE",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION 3 Modulaire",
+        "enseignant": "Mme BRIQUET KARINE",
+        "niveau": "MS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION 4",
+        "enseignant": "M. MERILLE JORDAN",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION 1",
+        "enseignant": "Mme ROMNEY CHANTAL",
+        "niveau": "PS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION 2",
+        "enseignant": "Mme LO-A-TJON NORAH",
+        "niveau": "PS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION 3",
+        "enseignant": "Mme JEUDY STEPHANIE",
+        "niveau": "PS",
+        "nbEleves": 24,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": []
+  },
+  {
+    "uai": "9730211S",
+    "classes": [
+      {
+        "libelle": "01 - CP A 1 - Mme LIVRAMENTO Stéphanie - S.01",
+        "enseignant": "Mme LIVRAMENTO Stéphanie",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "01 - CP A 2 - Mme PALTON Jessie S.01",
+        "enseignant": "Mme PALTON Jessie",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "01 - CP B 1 - Mme HARDJOPAWIRO Lyvia - S.02 -",
+        "enseignant": "Mme HARDJOPAWIRO Livia",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "01 - CP B 2 - M ARTHUS Paul - S.02",
+        "enseignant": "M. ARTHUS Paul",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "01 - CP C 1 - Mme LATOUR Dolores- S.04",
+        "enseignant": "Mme LATOUR Dolores",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "01 - CP C 2 - Mme CHERUBIN Aude - S.03",
+        "enseignant": "Mme CHERUBIN Aude",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "01 - CP D - Mme YANG Lino - S.02",
+        "enseignant": "Mme YANG Lino",
+        "niveau": "CP",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "02 - CE1 A2 - Me JEAN-BAPTISTE Alice - Mobilhome21",
+        "enseignant": "Mme JEAN-BAPTISTE Alice",
+        "niveau": "CE1",
+        "nbEleves": 9,
+        "dedoublee": true
+      },
+      {
+        "libelle": "02 - CE1 B 1 - M LEANDRE Rodrigue - Mobilhome 22",
+        "enseignant": "M. LEANDRE Rodrigue",
+        "niveau": "CE1",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "02 - CE1 B 2 - Mme BERNARD Vastie - Mobilhome 22",
+        "enseignant": "Mme BERNARD Vastie",
+        "niveau": "CE1",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "02 - CE1 C1 - Mme ARNAUD Maïté - S.04",
+        "enseignant": "Mme ARNAUD Maïté",
+        "niveau": "CE1",
+        "nbEleves": 11,
+        "dedoublee": true
+      },
+      {
+        "libelle": "02 - CE1 C2 - Mme JOSEPH Luciana - S.04",
+        "enseignant": "Mme JOSEPH Luciana",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "02 - CE1 D - Mme VIEL Claire - S.02",
+        "enseignant": "Mme VIEL Claire Mme YANG LINO",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "02 - CE1 E - Mme CHIROT Laetitia - S.20",
+        "enseignant": "Mme CHIROT Laetitia",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": false
+      },
+      {
+        "libelle": "02 - CE1A1 - Me MARTINEZ Anamigralta -Mobilhome 21",
+        "enseignant": "Mme MARTINEZ ANAMIGRALTA",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "03 - CE2 A - Mme SEVERIN Mickaëla - Mobilhome 10",
+        "enseignant": "Mme SEVERIN Mickaëla",
+        "niveau": "CE2",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "03 - CE2 B - Mme SAINT-LOUIS Khavagne - S.08",
+        "enseignant": "Mme SAINT-LOUIS Khavagne",
+        "niveau": "CE2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "03 - CE2 C - M CATHERINE Carl - S.07",
+        "enseignant": "M. CATHERINE Carl",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "03 - CE2 D - Mme ALEXANDER Sandrine - S.09",
+        "enseignant": "Mme ALEXANDER Sandrine",
+        "niveau": "CE2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "03 - CE2 E - Mme GARCON Cindy - S.06",
+        "enseignant": "-",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "03 - CE2 F - Mme PALIX Esther - S.18",
+        "enseignant": "Mme PALIX ESTHER",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "04 - CM1 A - M MAXIME Jean - S.16",
+        "enseignant": "M. MAXIME Jean",
+        "niveau": "CM1",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "04 - CM1 B - Mme CIPPE Delphine - S.14",
+        "enseignant": "Mme CIPPE Delphine",
+        "niveau": "CM1",
+        "nbEleves": 20,
+        "dedoublee": false
+      },
+      {
+        "libelle": "04 - CM1 C - M CASTET Guilhem - S.12",
+        "enseignant": "M. CASTET Guilhem",
+        "niveau": "CM1",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "04 - CM1 D - Mme JEAN Francesca - S.13",
+        "enseignant": "Mme JEAN Francesca",
+        "niveau": "CM1",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "05 - CM2 A Mme HINKSON Lindsay - S.11",
+        "enseignant": "Mme HINKSON Lindsay",
+        "niveau": "CM2",
+        "nbEleves": 19,
+        "dedoublee": false
+      },
+      {
+        "libelle": "05 - CM2 B - Mme WHITTAKER Bianca - S.15",
+        "enseignant": "Mme WHITTAKER Bianca",
+        "niveau": "CM2",
+        "nbEleves": 20,
+        "dedoublee": false
+      },
+      {
+        "libelle": "05 - CM2 C - Mme VIRAYIE Florence - S.17",
+        "enseignant": "Mme VIRAYIE Florence",
+        "niveau": "CM2",
+        "nbEleves": 19,
+        "dedoublee": false
+      },
+      {
+        "libelle": "05 - CM2 D - Mr JOSEPHINE Melvin - Mobilhome 19",
+        "enseignant": "M. JOSEPHINE Melvin",
+        "niveau": "CM2",
+        "nbEleves": 19,
+        "dedoublee": false
+      },
+      {
+        "libelle": "06 - ULIS - Mme BINGA Coralie - Mobilhome C3",
+        "enseignant": "ULIS ECOLE",
+        "niveau": "12",
+        "nbEleves": 0,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": [
+      {
+        "libelle": "06 - ULIS - Mme BINGA Coralie - Mobilhome C3",
+        "type": "ULIS ECOLE",
+        "nbEleves": 12
+      }
+    ]
+  },
+  {
+    "uai": "9730326S",
+    "classes": [
+      {
+        "libelle": "SECTION DES GRANDS A - en Mobil'home",
+        "enseignant": "-",
+        "niveau": "GS",
+        "nbEleves": 19,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES GRANDS B - en Mobil'home",
+        "enseignant": "Mme VOLMAR-MARTINE Yolaine",
+        "niveau": "GS",
+        "nbEleves": 19,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES GRANDS C - en Mobil'home",
+        "enseignant": "Mme CLOTILDE Christelle",
+        "niveau": "GS",
+        "nbEleves": 18,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES GRANDS D - en Mobil'home",
+        "enseignant": "Mme GALOPIN Aline",
+        "niveau": "GS",
+        "nbEleves": 20,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES GRANDS E - en Mobil'home",
+        "enseignant": "M. LAMA Yanick",
+        "niveau": "GS",
+        "nbEleves": 19,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES GRANDS F - en Mobil'home",
+        "enseignant": "M. LHOTELLIER Nicolas",
+        "niveau": "GS",
+        "nbEleves": 19,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES MOYENS A",
+        "enseignant": "Mme BINTOUL Gerty",
+        "niveau": "MS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES MOYENS B",
+        "enseignant": "Mme MATHIAS Cindy",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES MOYENS C",
+        "enseignant": "Mme HIRA Murielle",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES MOYENS D",
+        "enseignant": "Mme SAINT-JULIEN See-Jee",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES PETITS A",
+        "enseignant": "Mme SALEG Lionella",
+        "niveau": "PS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES PETITS C",
+        "enseignant": "Mme BRUNO Lisa",
+        "niveau": "PS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES PETITS D",
+        "enseignant": "-",
+        "niveau": "PS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "SECTION DES PETITS ET DES MOYENS",
+        "enseignant": "Mme YANG Nzeu Lucie",
+        "niveau": "PS - MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": []
+  },
+  {
+    "uai": "9730399W",
+    "classes": [
+      {
+        "libelle": "CE1 ALPINIA Mme ST-PREUX Anaëlle",
+        "enseignant": "Mme ST-PREUX Anaëlle",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 ACACIA ESSONO Diane",
+        "enseignant": "Mme ESSONO Diane",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 BOUGAINVILLIER M. LUAP Uldovique",
+        "enseignant": "M. LUAP Uldovique",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 COROSSOL Mme RELLY Bernadette",
+        "enseignant": "Mme RELLY Bernadette",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 EBENE Mme OTTO Sophia",
+        "enseignant": "Mme OTTO Sophia",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 HELICONIA Mme BEAUFORT Wendy Petite Salle",
+        "enseignant": "Mme BEAUFORT Wendy",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 HIBISCUS Mme BELLEGARDE Ruth Petite Salle",
+        "enseignant": "Mme BELLEGARDE BENOIT Ruth",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 JACARANDA Mme FERNAND Raïna",
+        "enseignant": "Mme FERNAND Raïna",
+        "niveau": "CE1",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE1 MELISSE Mme TATTO Rosine Petite Salle",
+        "enseignant": "Mme TATTO Rosine",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CE2 COMOU Mme ELLIOTT Guilène",
+        "enseignant": "Mme ELLIOTT Guilène",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE2 MARIPA Mme MOLBA Seyrena",
+        "enseignant": "Mme MOLBA Seyrena",
+        "niveau": "CE2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE2 MOUCAYA Mme DUPIL Hélène",
+        "enseignant": "Mme DUPIL Hélène",
+        "niveau": "CE2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE2 WASSAÏ Mme JOSEPH Claudie Mobil-home",
+        "enseignant": "Mme JOSEPH Claudie",
+        "niveau": "CE2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CE2-CM1 AWARA MARIE-JOSEPH Maïde",
+        "enseignant": "Mme MARIE-JOSEPH Maïde",
+        "niveau": "CE2 - CM1",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 CAMOPI M. HYASINE Jean-Noël",
+        "enseignant": "M. HYASINE Jean-Noël",
+        "niveau": "CM1",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 MANA Mme MARIUS Fedna",
+        "enseignant": "Mme MARIUS Fedna",
+        "niveau": "CM1",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1 OUANARY Mme DIAS LELIS Nathalie",
+        "enseignant": "Mme DIAS LELIS Nathalie",
+        "niveau": "CM1",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM1-CM2 REGINA Mme SEBELOUE Sandra Mobil-Home",
+        "enseignant": "Mme SEBELOUE Sandra",
+        "niveau": "CM1 - CM2",
+        "nbEleves": 26,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM2 APATOU Mme BRUNO Julie",
+        "enseignant": "Mme BRUNO Julie",
+        "niveau": "CM2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM2 MATOURY Mme PORTHOS Estella",
+        "enseignant": "Mme PORTHOS Estella",
+        "niveau": "CM2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CM2 ST-ELIE Mme MONTAUBAN Céline",
+        "enseignant": "Mme MONTAUBAN Céline",
+        "niveau": "CM2",
+        "nbEleves": 26,
+        "dedoublee": false
+      },
+      {
+        "libelle": "CP CAÏMAN Mme GUE Youseline",
+        "enseignant": "Mme GUE Youseline",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP ARA Mme GUILLOUT Emeline Mobil-Home",
+        "enseignant": "Mme GUILLOUT Emeline",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP COLIBRI M. SCHUFT Sébastien Mobil-Home",
+        "enseignant": "M. SCHUFT Sébastien",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP IBIS Mme MARIE-SAINTE Rose-Aimée",
+        "enseignant": "Mme MARIE-SAINTE Rose-Aimée",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP MORPHO Mme VOIGHT Yrvine Petite Salle",
+        "enseignant": "Mme VOIGHT Yrvine",
+        "niveau": "CP",
+        "nbEleves": 14,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP OCELOT Mme CRAMPONT Virginie",
+        "enseignant": "Mme CRAMPONT Virginie",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP TATOU Mme SINAÏ Barbara Petite salle",
+        "enseignant": "Mme SINAÏ Barbara",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "CP TOUCAN Mme SEMPLE Isabelle",
+        "enseignant": "Mme SEMPLE Isabelle",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "RASED Mme BOYER FRAISSE Nathalie",
+        "enseignant": "RASED",
+        "niveau": "0",
+        "nbEleves": 0,
+        "dedoublee": false
+      },
+      {
+        "libelle": "ULIS JAGUAR Mme BAHLIT Lauryann",
+        "enseignant": "ULIS ECOLE",
+        "niveau": "13",
+        "nbEleves": 0,
+        "dedoublee": false
+      },
+      {
+        "libelle": "UPE2A ORCHIDEE Mme CLEDELIN Marie-Claire",
+        "enseignant": "UPE2A",
+        "niveau": "23",
+        "nbEleves": 0,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": [
+      {
+        "libelle": "RASED Mme BOYER FRAISSE Nathalie",
+        "type": "RASED",
+        "nbEleves": 0
+      },
+      {
+        "libelle": "ULIS JAGUAR Mme BAHLIT Lauryann",
+        "type": "ULIS ECOLE",
+        "nbEleves": 13
+      },
+      {
+        "libelle": "UPE2A ORCHIDEE Mme CLEDELIN Marie-Claire",
+        "type": "UPE2A",
+        "nbEleves": 23
+      }
+    ]
+  },
+  {
+    "uai": "9730417R",
+    "classes": [
+      {
+        "libelle": "GRANDE SECTION 1 mobile home",
+        "enseignant": "Mme ELISABETH Evelyne",
+        "niveau": "GS",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION 2 mobile home",
+        "enseignant": "Mme HOLGADO-CHAVEZ INTI",
+        "niveau": "GS",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION 3 mobile home",
+        "enseignant": "Mme BERTE-GROMAT Sophia",
+        "niveau": "GS",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION 4 mobile home",
+        "enseignant": "M. NEMOUTHE Ronaldo",
+        "niveau": "GS",
+        "nbEleves": 20,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION 5 mobile home",
+        "enseignant": "Mme CETOUTE Marie-Love",
+        "niveau": "GS",
+        "nbEleves": 21,
+        "dedoublee": false
+      },
+      {
+        "libelle": "GRANDE SECTION 6 Mobile-Home",
+        "enseignant": "Mme PEYREFITTE Caroline",
+        "niveau": "GS",
+        "nbEleves": 20,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION 1",
+        "enseignant": "Mme PANSA Jolita",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION 2",
+        "enseignant": "Mme CANU Angélique",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION 3",
+        "enseignant": "Mme BOILLOT Fatouma",
+        "niveau": "MS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION 4",
+        "enseignant": "Mme ADONIS Marie-Hélène",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "MOYENNE SECTION 5",
+        "enseignant": "Mme FALAYE MINARD Wandrille",
+        "niveau": "MS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION 1",
+        "enseignant": "Mme FIMIEZ CINDY",
+        "niveau": "PS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION 2",
+        "enseignant": "M. LUBRIN Yoane",
+        "niveau": "PS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION 3",
+        "enseignant": "Mme ANTON-SAMPSON Stévy",
+        "niveau": "PS",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "PETITE SECTION 4",
+        "enseignant": "Mme ARAIA Gabriella",
+        "niveau": "PS",
+        "nbEleves": 25,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": []
+  },
+  {
+    "uai": "9730042H",
+    "classes": [
+      {
+        "libelle": "Cours Moyen 2 C MME HIRAM Miriella",
+        "enseignant": "Mme HIRAM Miriella",
+        "niveau": "CM2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours moyen 1 A MME MILOVANOVIC Jasna",
+        "enseignant": "Mme MILOVANOVIC Jasna",
+        "niveau": "CM1",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "cours moyen 1 B MME SAINVIL Nadine",
+        "enseignant": "Mme SAINVIL Nadine",
+        "niveau": "CM1",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours MOYEN 1 C Mme BIJOU Nathalie",
+        "enseignant": "Mme BIJOU Nathalie",
+        "niveau": "CM1",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours moyen 1 D Mme BLEUS Lydia",
+        "enseignant": "Mme BLEUS Lydia",
+        "niveau": "CM1",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours moyen 2 A Mr DORLIPO Steddy",
+        "enseignant": "M. DORLIPO Steddy",
+        "niveau": "CM2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours moyen 2 B Mr COUPRA Chris",
+        "enseignant": "M. COUPRA Chris",
+        "niveau": "CM2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours moyen 2 D M. NONCENT Patrice",
+        "enseignant": "M. NONCENT Patrice",
+        "niveau": "CM2",
+        "nbEleves": 25,
+        "dedoublee": false
+      },
+      {
+        "libelle": "cours préparatoire A 1 M. FUNG FONG YOU Frédéric",
+        "enseignant": "M. FUNG FONG YOU Frédéric",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours préparatoire A 2 MME JEAN BAPTISTE Ruthly",
+        "enseignant": "Mme JEAN BAPTISTE Ruthly",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours préparatoire B 1 MME HO-A-TON Ericka",
+        "enseignant": "Mme HO A TON ERICKA",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours préparatoire B 2 Mme COUNALI BALUM Elodie",
+        "enseignant": "Mme COUNALI BALUM Elodie",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours préparatoire C1 Mme THODIARD Laurence",
+        "enseignant": "Mme THODIARD Laurence",
+        "niveau": "CP",
+        "nbEleves": 12,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours préparatoire C2 Mme DOMPUT DE ALMEIDA MELO",
+        "enseignant": "Mme DOMPUT DE ALMEIDA MELO Cindy",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours élémentaire 1 A1 Mme AUSTER Horciane",
+        "enseignant": "Mme AUSTER Horciane",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 1 A2 MME ADONAI Anne Marie",
+        "enseignant": "Mme ADONAI Anne-Marie",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours élémentaire 1 B1 Mme MIGUE Elaurianne",
+        "enseignant": "Mme MIGUE Elaurianne",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours élémentaire 1 B2 Mme FOSSE Jessica",
+        "enseignant": "Mme FOSSE Jessica",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 1 C1 M. CASCINO Mathieu",
+        "enseignant": "M. CASCINO MATHIEU",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "cours élémentaire 1 C2 Mme VALBON Monette",
+        "enseignant": "Mme VALBON Monette",
+        "niveau": "CE1",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours élémentaire 2 A Mme LAURENT Floriane",
+        "enseignant": "Mme LAURENT Floriane",
+        "niveau": "CE2",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours élémentaire 2 B Mme BALOURD Corine",
+        "enseignant": "Mme BALOURD Corine",
+        "niveau": "CE2",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours élémentaire 2 C Mme DESFLOTS Fabrice",
+        "enseignant": "M. DESFLOTS Fabrice",
+        "niveau": "CE2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "ULIS",
+        "enseignant": "ULIS ECOLE",
+        "niveau": "10",
+        "nbEleves": 0,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": [
+      {
+        "libelle": "ULIS",
+        "type": "ULIS ECOLE",
+        "nbEleves": 10
+      }
+    ]
+  },
+  {
+    "uai": "9730227J",
+    "classes": [
+      {
+        "libelle": "Cours Moyen 1ére et 2ème année",
+        "enseignant": "Mme RABINAUD Véronique",
+        "niveau": "CM1 - CM2",
+        "nbEleves": 26,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cycle 1. CP",
+        "enseignant": "Mme YANG Zeu",
+        "niveau": "CP",
+        "nbEleves": 15,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cycle 2 CE1",
+        "enseignant": "M. COLON DE FRANCIOSI Jérôme",
+        "niveau": "CP - CE1",
+        "nbEleves": 15,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Fin Cycle 2",
+        "enseignant": "M. FRADET Jérôme",
+        "niveau": "CE2",
+        "nbEleves": 18,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Fin de cycle 1",
+        "enseignant": "Mme KAGO Sandra",
+        "niveau": "MS - GS",
+        "nbEleves": 15,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Maternelle PS MS",
+        "enseignant": "Mme TANGARA Aïssata",
+        "niveau": "PS - MS",
+        "nbEleves": 18,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Regroupement Inclusif",
+        "enseignant": "ULIS ECOLE",
+        "niveau": "6",
+        "nbEleves": 0,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": [
+      {
+        "libelle": "Regroupement Inclusif",
+        "type": "ULIS ECOLE",
+        "nbEleves": 6
+      }
+    ]
+  },
+  {
+    "uai": "9730043J",
+    "classes": [
+      {
+        "libelle": "Cours Elémentaire 1ère B Mme PAGNIER",
+        "enseignant": "Mme PAGNIER Gaëlle",
+        "niveau": "CE1",
+        "nbEleves": 14,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours Elémentaire 2è année Mme LIGNEEL",
+        "enseignant": "Mme LIGNEEL Marietta",
+        "niveau": "CE2",
+        "nbEleves": 20,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours Eléméntaire 1ère A M. OLIVIER",
+        "enseignant": "M. OLIVIER Jonathan",
+        "niveau": "CE1",
+        "nbEleves": 14,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours Moyen 1ère année Mme LEONIL",
+        "enseignant": "Mme LEONIL Monique",
+        "niveau": "CM1",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours Moyen 2è année Mme ALGER",
+        "enseignant": "Mme ALGER Kathleen",
+        "niveau": "CM2",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Cours Préparatoire A Mme DURAND",
+        "enseignant": "Mme DURAND Laurenne",
+        "niveau": "CP",
+        "nbEleves": 14,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours préparatoire B Mme THOM",
+        "enseignant": "Mme THOM Indira",
+        "niveau": "CP",
+        "nbEleves": 14,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours Préparatoire C Mme DADA",
+        "enseignant": "Mme DADA Tannela",
+        "niveau": "CP",
+        "nbEleves": 13,
+        "dedoublee": true
+      },
+      {
+        "libelle": "Cours élémentaire 1ère et 2ème année M. BIDAUD",
+        "enseignant": "M. BIDAUD Régis",
+        "niveau": "CE1 - CE2",
+        "nbEleves": 15,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Grande Section Mme VANO",
+        "enseignant": "Mme VANO Marie-Line",
+        "niveau": "GS",
+        "nbEleves": 23,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Moyenne et Grande Section Mme AUGUSTE",
+        "enseignant": "Mme AUGUSTE Angèle",
+        "niveau": "MS - GS",
+        "nbEleves": 24,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Moyenne Section Mme GIFFARD",
+        "enseignant": "Mme GIFFARD-LO-A-SJOE Olivia",
+        "niveau": "MS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Petite et Moyenne Section Mme BENOIT",
+        "enseignant": "Mme BENOIT Vanina",
+        "niveau": "PS - MS",
+        "nbEleves": 22,
+        "dedoublee": false
+      },
+      {
+        "libelle": "Toute Petite et Petite Section Mme PINSON",
+        "enseignant": "Mme PINSON Charlotte",
+        "niveau": "TPS - PS",
+        "nbEleves": 18,
+        "dedoublee": false
+      },
+      {
+        "libelle": "RASED Mme MENENDEZ",
+        "enseignant": "RASED",
+        "niveau": "0",
+        "nbEleves": 0,
+        "dedoublee": false
+      }
+    ],
+    "dispositifs": [
+      {
+        "libelle": "RASED Mme MENENDEZ",
+        "type": "RASED",
+        "nbEleves": 0
+      }
+    ]
+  }
+]
