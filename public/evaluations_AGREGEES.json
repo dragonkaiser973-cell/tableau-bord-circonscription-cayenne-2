@@ -1,0 +1,112 @@
+[
+  {
+    "annee": "2024",
+    "matiere": "Français",
+    "competence": "Lire",
+    "tx_cir_groupe_1": 12.5,
+    "tx_cir_groupe_2": 62.0,
+    "tx_cir_groupe_3": 25.5,
+    "tx_aca_groupe_1": 15.2,
+    "tx_aca_groupe_2": 58.3,
+    "tx_aca_groupe_3": 26.5
+  },
+  {
+    "annee": "2024",
+    "matiere": "Français",
+    "competence": "Comprendre",
+    "tx_cir_groupe_1": 8.3,
+    "tx_cir_groupe_2": 59.7,
+    "tx_cir_groupe_3": 32.0,
+    "tx_aca_groupe_1": 12.1,
+    "tx_aca_groupe_2": 57.2,
+    "tx_aca_groupe_3": 30.7
+  },
+  {
+    "annee": "2024",
+    "matiere": "Français",
+    "competence": "Vocabulaire",
+    "tx_cir_groupe_1": 10.8,
+    "tx_cir_groupe_2": 60.4,
+    "tx_cir_groupe_3": 28.8,
+    "tx_aca_groupe_1": 13.5,
+    "tx_aca_groupe_2": 59.1,
+    "tx_aca_groupe_3": 27.4
+  },
+  {
+    "annee": "2024",
+    "matiere": "Mathématiques",
+    "competence": "Résoudre des problèmes",
+    "tx_cir_groupe_1": 18.2,
+    "tx_cir_groupe_2": 63.5,
+    "tx_cir_groupe_3": 18.3,
+    "tx_aca_groupe_1": 20.5,
+    "tx_aca_groupe_2": 61.8,
+    "tx_aca_groupe_3": 17.7
+  },
+  {
+    "annee": "2024",
+    "matiere": "Mathématiques",
+    "competence": "Nombres et calculs",
+    "tx_cir_groupe_1": 15.7,
+    "tx_cir_groupe_2": 65.2,
+    "tx_cir_groupe_3": 19.1,
+    "tx_aca_groupe_1": 18.3,
+    "tx_aca_groupe_2": 62.9,
+    "tx_aca_groupe_3": 18.8
+  },
+  {
+    "annee": "2023",
+    "matiere": "Français",
+    "competence": "Lire",
+    "tx_cir_groupe_1": 14.2,
+    "tx_cir_groupe_2": 60.5,
+    "tx_cir_groupe_3": 25.3,
+    "tx_aca_groupe_1": 16.1,
+    "tx_aca_groupe_2": 57.8,
+    "tx_aca_groupe_3": 26.1
+  },
+  {
+    "annee": "2023",
+    "matiere": "Français",
+    "competence": "Comprendre",
+    "tx_cir_groupe_1": 9.5,
+    "tx_cir_groupe_2": 58.2,
+    "tx_cir_groupe_3": 32.3,
+    "tx_aca_groupe_1": 13.2,
+    "tx_aca_groupe_2": 56.1,
+    "tx_aca_groupe_3": 30.7
+  },
+  {
+    "annee": "2023",
+    "matiere": "Mathématiques",
+    "competence": "Résoudre des problèmes",
+    "tx_cir_groupe_1": 19.5,
+    "tx_cir_groupe_2": 62.1,
+    "tx_cir_groupe_3": 18.4,
+    "tx_aca_groupe_1": 21.2,
+    "tx_aca_groupe_2": 60.5,
+    "tx_aca_groupe_3": 18.3
+  },
+  {
+    "annee": "2022",
+    "matiere": "Français",
+    "competence": "Lire",
+    "tx_cir_groupe_1": 15.8,
+    "tx_cir_groupe_2": 59.2,
+    "tx_cir_groupe_3": 25.0,
+    "tx_aca_groupe_1": 17.5,
+    "tx_aca_groupe_2": 56.3,
+    "tx_aca_groupe_3": 26.2
+  },
+  {
+    "annee": "2022",
+    "matiere": "Mathématiques",
+    "competence": "Résoudre des problèmes",
+    "tx_cir_groupe_1": 20.3,
+    "tx_cir_groupe_2": 61.5,
+    "tx_cir_groupe_3": 18.2,
+    "tx_aca_groupe_1": 22.1,
+    "tx_aca_groupe_2": 59.8,
+    "tx_aca_groupe_3": 18.1
+  }
+]

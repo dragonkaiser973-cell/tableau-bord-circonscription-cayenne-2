@@ -1,0 +1,18 @@
+{
+  "annee_scolaire_actuelle": "2025-2026",
+  "historique_effectifs": [
+    {
+      "annee": "2022-2023",
+      "effectif": 3150
+    },
+    {
+      "annee": "2023-2024",
+      "effectif": 3280
+    },
+    {
+      "annee": "2024-2025",
+      "effectif": 3420
+    }
+  ],
+  "date_derniere_maj": "2026-01-28"
+}

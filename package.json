@@ -1,0 +1,36 @@
+{
+  "name": "circonscription-cayenne2-roura",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "15.1.6",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "xlsx": "^0.18.5",
+    "chart.js": "^4.4.1",
+    "react-chartjs-2": "^5.2.0",
+    "chartjs-plugin-datalabels": "^2.2.0",
+    "jspdf": "^2.5.1",
+    "html2canvas": "^1.4.1",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.2.0",
+    "adm-zip": "^0.5.10"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.5",
+    "@types/react": "19.0.6",
+    "@types/react-dom": "19.0.3",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/adm-zip": "^0.5.5",
+    "typescript": "5.7.2",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0"
+  }
+}
