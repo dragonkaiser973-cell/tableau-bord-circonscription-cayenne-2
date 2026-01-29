@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -41,7 +41,7 @@ const getVacancesScolaires = (anneeScolaire: number): PeriodeVacances[] => {
   ];
 };
 
-export default function CalendrierPage() {
+function CalendrierPageContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [evenements, setEvenements] = useState<Evenement[]>([]);
   const [moisActuel, setMoisActuel] = useState(0);
@@ -460,5 +460,13 @@ export default function CalendrierPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CalendrierPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+      <CalendrierPageContent />
+    </Suspense>
   );
 }
