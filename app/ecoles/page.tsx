@@ -55,12 +55,12 @@ export default function EcolesPage() {
         fetch('/api/ecoles-structure').catch(() => ({ ok: false }))
       ]);
       
-      if (identiteRes.ok) {
+      if (identiteRes.ok && 'json' in identiteRes) {
         const identiteData = await identiteRes.json();
         setEcoles(identiteData);
       }
       
-      if (structureRes.ok) {
+      if (structureRes.ok && 'json' in structureRes) {
         const structureData = await structureRes.json();
         setStructures(structureData);
       }
