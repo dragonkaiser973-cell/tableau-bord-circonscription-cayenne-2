@@ -51,27 +51,27 @@ export default function StatistiquesPage() {
         fetch(`/api/archives/data?annee=${annee}&type=evaluations`).catch(() => ({ ok: false }))
       ]);
 
-      if (statsRes.ok) {
+      if (statsRes.ok && 'json' in statsRes) {
         const statsData = await statsRes.json();
         setStatsEcoles(statsData);
       }
 
-      if (ecolesRes.ok) {
+      if (ecolesRes.ok && 'json' in ecolesRes) {
         const ecolesData = await ecolesRes.json();
         setEcoles(ecolesData);
       }
 
-      if (structuresRes.ok) {
+      if (structuresRes.ok && 'json' in structuresRes) {
         const structuresData = await structuresRes.json();
         setStructures(structuresData);
       }
 
-      if (ensRes.ok) {
+      if (ensRes.ok && 'json' in ensRes) {
         const ensData = await ensRes.json();
         setEnseignants(ensData);
       }
 
-      if (evalRes.ok) {
+      if (evalRes.ok && 'json' in evalRes) {
         const evalData = await evalRes.json();
         setEvaluations(evalData);
       }
