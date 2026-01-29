@@ -211,7 +211,7 @@ export default function EnseignantsPage() {
 
       // Charger les structures si disponibles
       let structuresData = [];
-      if (structuresRes.ok) {
+      if (structuresRes.ok && 'json' in structuresRes) {
         structuresData = await structuresRes.json();
       }
 
