@@ -172,7 +172,6 @@ export default function CalendrierPage() {
   const changerAnneeScolaire = (nouvelleAnnee: number) => {
     setAnneeActuelle(nouvelleAnnee);
     setMoisActuel(0);
-    setShowUpdateModal(false);
   };
 
   const getMoisAnneeScolaire = () => {
