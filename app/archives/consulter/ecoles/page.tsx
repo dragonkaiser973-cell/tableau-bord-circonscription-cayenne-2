@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -41,7 +41,7 @@ interface EcoleStructure {
   }>;
 }
 
-export default function EcolesArchivePage() {
+function EcolesArchivePageContent() {
   const [ecoles, setEcoles] = useState<EcoleIdentite[]>([]);
   const [structures, setStructures] = useState<EcoleStructure[]>([]);
   const [selectedEcole, setSelectedEcole] = useState<EcoleIdentite | null>(null);
@@ -362,5 +362,13 @@ export default function EcolesArchivePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function EcolesArchivePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+      <EcolesArchivePageContent />
+    </Suspense>
   );
 }
