@@ -99,7 +99,7 @@ export default function EvaluationsPage() {
         const annees = [...new Set(evalData.map((e: any) => e.rentree))].sort().reverse();
         setSelectedAnnee(annees[0]?.toString() || '');
 
-        const niveaux = [...new Set(evalData.map((e: any) => e.classe))].sort();
+        const niveaux = [...new Set(evalData.map((e: any) => e.classe))].sort() as string[];
         // Chercher "CP rentrée" ou "CE1" en priorité
         const niveauDefaut = niveaux.find(n => n.includes('CP rentrée')) || 
                             niveaux.find(n => n.includes('CP')) || 
