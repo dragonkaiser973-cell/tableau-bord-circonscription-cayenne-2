@@ -328,7 +328,7 @@ export default function ConsulterArchivePage() {
                 <h4 className="font-bold text-green-600 mb-3 text-lg">📊 Total</h4>
                 <div className="bg-green-50 p-6 rounded-lg border-2 border-green-200 text-center">
                   <div className="text-5xl font-bold text-green-700">
-                    {Object.values(totauxNiveau).reduce((a: any, b: any) => a + b, 0)}
+                    {Object.values(totauxNiveau).reduce((a: number, b: any) => a + b, 0) as number}
                   </div>
                   <div className="text-sm text-green-600 mt-2">élèves au total</div>
                 </div>
