@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
     // ÉTAPE 1 : LIRE TOUS LES FICHIERS SOURCES
     // ====================================================================
     
-    const sources = {
+    const sources: any = {
       // Fichiers dans public/
       ecoles_identite: await readJSONFile(path.join(publicDir, 'ecoles_identite.json')),
       ecoles_structure: await readJSONFile(path.join(publicDir, 'ecoles_structure.json')),
