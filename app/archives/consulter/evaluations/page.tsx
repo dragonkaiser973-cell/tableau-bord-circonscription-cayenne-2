@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Line, Bar } from 'react-chartjs-2';
@@ -29,7 +29,7 @@ ChartJS.register(
   Filler
 );
 
-export default function EvaluationsPage() {
+function EvaluationsPageContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [ecoles, setEcoles] = useState<any[]>([]);
@@ -938,5 +938,13 @@ export default function EvaluationsPage() {
         </p>
       </footer>
     </div>
+  );
+}
+
+export default function EvaluationsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+      <EvaluationsPageContent />
+    </Suspense>
   );
 }

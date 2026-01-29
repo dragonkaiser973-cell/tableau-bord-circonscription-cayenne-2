@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
@@ -22,7 +22,7 @@ interface StatsEcole {
   };
 }
 
-export default function StatistiquesPage() {
+function StatistiquesPageContent() {
   const [loading, setLoading] = useState(true);
   const [statsEcoles, setStatsEcoles] = useState<StatsEcole[]>([]);
   const [ecoles, setEcoles] = useState<any[]>([]);
@@ -576,5 +576,13 @@ export default function StatistiquesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StatistiquesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+      <StatistiquesPageContent />
+    </Suspense>
   );
 }

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function ConsulterArchivePage() {
+function ConsulterArchivePageContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [archive, setArchive] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -394,5 +394,13 @@ export default function ConsulterArchivePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ConsulterArchivePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+      <ConsulterArchivePageContent />
+    </Suspense>
   );
 }

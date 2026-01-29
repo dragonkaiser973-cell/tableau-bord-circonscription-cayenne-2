@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { calculerEchelonComplet } from '@/lib/echelons';
@@ -27,7 +27,7 @@ interface Enseignant {
   individu: string;
 }
 
-export default function EnseignantsArchivesPage() {
+function EnseignantsArchivesPageContent() {
   const [enseignants, setEnseignants] = useState<Enseignant[]>([]);
   const [ecoles, setEcoles] = useState<any[]>([]);
   const [stagiaireM2, setStagiaireM2] = useState<any[]>([]);
@@ -484,5 +484,13 @@ export default function EnseignantsArchivesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function EnseignantsArchivesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+      <EnseignantsArchivesPageContent />
+    </Suspense>
   );
 }
