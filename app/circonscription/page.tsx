@@ -746,7 +746,7 @@ export default function CirconscriptionPage() {
                       label: (context: any) => `IPS: ${context.parsed.y.toFixed(1)}`
                     }
                   }
-                },
+                } as any,
                 scales: {
                   y: { 
                     beginAtZero: true,
