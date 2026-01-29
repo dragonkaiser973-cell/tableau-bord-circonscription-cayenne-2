@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
@@ -8,7 +8,7 @@ import { Bar, Pie } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
-export default function CirconscriptionArchivePage() {
+function CirconscriptionArchivePageContent() {
   const [archive, setArchive] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -434,5 +434,13 @@ export default function CirconscriptionArchivePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CirconscriptionArchivePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]"><div className="text-white">Chargement...</div></div>}>
+      <CirconscriptionArchivePageContent />
+    </Suspense>
   );
 }
