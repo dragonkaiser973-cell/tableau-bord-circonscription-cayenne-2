@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Récupérer l'utilisateur
-    const user = getUserByUsername(username);
+    const user = await getUserByUsername(username);
 
     if (!user) {
       return NextResponse.json(

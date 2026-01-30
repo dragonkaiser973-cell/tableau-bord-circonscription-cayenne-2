@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       filters.statut = searchParams.get('statut');
     }
 
-    const enseignants = getEnseignants(filters);
+    const enseignants = await getEnseignants(filters);
     return NextResponse.json(enseignants);
   } catch (error) {
     console.error('Erreur lors de la récupération des enseignants:', error);

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       filters.matiere = searchParams.get('matiere');
     }
 
-    const evaluations = getEvaluations(filters);
+    const evaluations = await getEvaluations(filters);
     return NextResponse.json(evaluations);
   } catch (error) {
     console.error('Erreur lors de la récupération des évaluations:', error);

@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const id = searchParams.get('id');
 
     if (id) {
-      const ecole = getEcoleById(parseInt(id));
+      const ecole = await getEcoleById(parseInt(id));
       if (!ecole) {
         return NextResponse.json(
           { message: 'École non trouvée' },
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(ecole);
     }
 
-    const ecoles = getEcoles();
+    const ecoles = await getEcoles();
     return NextResponse.json(ecoles);
   } catch (error) {
     console.error('Erreur lors de la récupération des écoles:', error);

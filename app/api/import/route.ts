@@ -65,7 +65,7 @@ async function importEvaluations(workbook: XLSX.WorkBook, filename: string) {
     let ecoles_created = 0;
     for (const row of data as any[]) {
       if (row.uai && row.denomination && !ecolesCache.has(row.uai)) {
-        createOrUpdateEcole({
+        await createOrUpdateEcole({
           uai: row.uai,
           nom: row.denomination,
           sigle: row.sigle || '',
@@ -135,7 +135,7 @@ async function importEvaluations(workbook: XLSX.WorkBook, filename: string) {
       console.log(`💾 Batch ${batchNum}/${totalBatches} (${batch.length} évaluations)`);
       
       for (const evaluation of batch) {
-        createOrUpdateEvaluation(evaluation);
+        await createOrUpdateEvaluation(evaluation);
         imported++;
       }
       
@@ -198,9 +198,9 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
             console.log(`🏫 École détectée: ${uai} - ${nom}`);
             
             // Créer ou récupérer l'école (y compris la circonscription)
-            let ecole = getEcoleByUai(uai);
+            let ecole = await getEcoleByUai(uai);
             if (!ecole) {
-              createOrUpdateEcole({
+              await createOrUpdateEcole({
                 uai,
                 nom,
                 sigle: parts[1]?.split(' ')[0] || '',
@@ -208,7 +208,7 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
                 rep_plus: false,
                 ips: null
               });
-              ecole = getEcoleByUai(uai);
+              ecole = await getEcoleByUai(uai);
             }
             currentEcole = ecole;
             currentDiscipline = ''; // Réinitialiser la discipline pour la nouvelle école
@@ -393,7 +393,7 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
             console.log(`👤 Création LOUIS OLIVIER:`, enseignantData);
           }
           
-          createEnseignant(enseignantData);
+          await createEnseignant(enseignantData);
 
           imported++;
         }
