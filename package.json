@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.93.3",
     "adm-zip": "^0.5.10",
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.1",
