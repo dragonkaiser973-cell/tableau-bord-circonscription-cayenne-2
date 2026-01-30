@@ -165,9 +165,14 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     
+    console.log('📄 Import TRM - Fichier:', filename);
+    console.log('📊 Sheet name:', sheetName);
+    
     // Le fichier TRM a une structure complexe avec des sections par école
     // On doit le parser manuellement
     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+    
+    console.log('📏 Range du fichier:', range.e.r, 'lignes');
     
     let imported = 0;
     let errors = 0;
