@@ -11,6 +11,8 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
 
+    console.log('🔐 Tentative de connexion:', username);
+
     if (!username || !password) {
       return NextResponse.json(
         { message: 'Nom d\'utilisateur et mot de passe requis' },
@@ -21,7 +23,13 @@ export async function POST(request: NextRequest) {
     // Récupérer l'utilisateur
     const user = await getUserByUsername(username);
 
+    console.log('👤 Utilisateur trouvé:', user ? 'OUI' : 'NON');
+    if (user) {
+      console.log('🔑 Hash dans DB:', user.password);
+    }
+
     if (!user) {
+      console.log('❌ Utilisateur non trouvé');
       return NextResponse.json(
         { message: 'Identifiants invalides' },
         { status: 401 }
@@ -31,7 +39,11 @@ export async function POST(request: NextRequest) {
     // Vérifier le mot de passe
     const isPasswordValid = bcrypt.compareSync(password, user.password);
 
+    console.log('🔓 Mot de passe valide:', isPasswordValid ? 'OUI ✅' : 'NON ❌');
+    console.log('🔐 Password envoyé:', password);
+
     if (!isPasswordValid) {
+      console.log('❌ Mot de passe invalide');
       return NextResponse.json(
         { message: 'Identifiants invalides' },
         { status: 401 }
