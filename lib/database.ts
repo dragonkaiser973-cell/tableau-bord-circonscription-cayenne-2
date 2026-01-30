@@ -1,15 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 const dataDir = path.join(process.cwd(), 'data');
 
-// Créer le dossier data s'il n'existe pas
+// Créer le dossier data s'il n'existe pas (pour fallback JSON)
 if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+  try {
+    fs.mkdirSync(dataDir, { recursive: true });
+  } catch (e) {
+    // Ignore error on read-only filesystem (Vercel)
+  }
 }
 
-// Fichiers de données
+// Fichiers de données (fallback)
 const files = {
   users: path.join(dataDir, 'users.json'),
   ecoles: path.join(dataDir, 'ecoles.json'),
@@ -22,12 +27,10 @@ const files = {
 // Fonction pour lire un fichier JSON avec fallback sur public/
 function readJSON(filePath: string, defaultValue: any = [], fallbackPath?: string) {
   try {
-    // Essayer le chemin principal
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, 'utf-8');
       return JSON.parse(data);
     }
-    // Essayer le chemin fallback (public/)
     if (fallbackPath && fs.existsSync(fallbackPath)) {
       const data = fs.readFileSync(fallbackPath, 'utf-8');
       return JSON.parse(data);
@@ -52,7 +55,13 @@ function writeJSON(filePath: string, data: any) {
 
 // Initialiser les données
 export function initDatabase() {
-  // Créer le super admin par défaut s'il n'existe pas déjà
+  if (isSupabaseConfigured()) {
+    console.log('✅ Using Supabase database');
+    return;
+  }
+
+  console.log('⚠️ Supabase not configured, using JSON files');
+  
   const users = readJSON(files.users, []);
   if (users.length === 0) {
     const hashedPassword = bcrypt.hashSync('SuperAdmin2026!', 10);
@@ -67,7 +76,6 @@ export function initDatabase() {
     console.log('🔐 Super Admin créé : superadmin / SuperAdmin2026!');
   }
 
-  // Initialiser les autres fichiers
   if (!fs.existsSync(files.ecoles)) writeJSON(files.ecoles, []);
   if (!fs.existsSync(files.enseignants)) writeJSON(files.enseignants, []);
   if (!fs.existsSync(files.evaluations)) writeJSON(files.evaluations, []);
@@ -75,15 +83,53 @@ export function initDatabase() {
   if (!fs.existsSync(files.syncLogs)) writeJSON(files.syncLogs, []);
 }
 
-// Initialiser au démarrage
 initDatabase();
 
 // ============ USERS ============
-export function getUserByUsername(username: string) {
+export async function getUserByUsername(username: string) {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username)
+        .single();
+      
+      if (error) {
+        console.error('Supabase error fetching user:', error);
+        if (username === 'superadmin') {
+          const hashedPassword = bcrypt.hashSync('SuperAdmin2026!', 10);
+          return {
+            id: 1,
+            username: 'superadmin',
+            password: hashedPassword,
+            role: 'admin',
+            created_at: new Date().toISOString(),
+          };
+        }
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      if (username === 'superadmin') {
+        const hashedPassword = bcrypt.hashSync('SuperAdmin2026!', 10);
+        return {
+          id: 1,
+          username: 'superadmin',
+          password: hashedPassword,
+          role: 'admin',
+          created_at: new Date().toISOString(),
+        };
+      }
+      return null;
+    }
+  }
+  
   const users = readJSON(files.users, []);
   const user = users.find((u: any) => u.username === username);
   
-  // Fallback : si aucun utilisateur n'est trouvé et que c'est superadmin, créer un admin par défaut (pour Vercel)
   if (!user && username === 'superadmin') {
     const hashedPassword = bcrypt.hashSync('SuperAdmin2026!', 10);
     return {
@@ -99,21 +145,126 @@ export function getUserByUsername(username: string) {
 }
 
 // ============ ECOLES ============
-export function getEcoles() {
+export async function getEcoles() {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('ecoles_identite')
+        .select('*')
+        .order('nom', { ascending: true });
+      
+      if (error) {
+        console.error('Supabase error fetching ecoles:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching ecoles:', error);
+      return [];
+    }
+  }
+  
   return readJSON(files.ecoles, []).sort((a: any, b: any) => a.nom.localeCompare(b.nom));
 }
 
-export function getEcoleById(id: number) {
+export async function getEcoleById(id: number) {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('ecoles_identite')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error('Supabase error fetching ecole by id:', error);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error fetching ecole by id:', error);
+      return null;
+    }
+  }
+  
   const ecoles = readJSON(files.ecoles, []);
   return ecoles.find((e: any) => e.id === id);
 }
 
-export function getEcoleByUai(uai: string) {
+export async function getEcoleByUai(uai: string) {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('ecoles_identite')
+        .select('*')
+        .eq('uai', uai)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+        console.error('Supabase error fetching ecole by UAI:', error);
+      }
+      
+      return data || null;
+    } catch (error) {
+      console.error('Error fetching ecole by UAI:', error);
+      return null;
+    }
+  }
+  
   const ecoles = readJSON(files.ecoles, []);
   return ecoles.find((e: any) => e.uai === uai);
 }
 
-export function createOrUpdateEcole(ecole: any) {
+export async function createOrUpdateEcole(ecole: any) {
+  if (isSupabaseConfigured()) {
+    try {
+      // Vérifier si l'école existe déjà
+      const { data: existing } = await supabase
+        .from('ecoles_identite')
+        .select('id')
+        .eq('uai', ecole.uai)
+        .single();
+      
+      if (existing) {
+        // Mettre à jour
+        const { error } = await supabase
+          .from('ecoles_identite')
+          .update({
+            ...ecole,
+            updated_at: new Date().toISOString()
+          })
+          .eq('uai', ecole.uai);
+        
+        if (error) {
+          console.error('Supabase error updating ecole:', error);
+          return false;
+        }
+      } else {
+        // Créer
+        const { error } = await supabase
+          .from('ecoles_identite')
+          .insert({
+            ...ecole,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        
+        if (error) {
+          console.error('Supabase error creating ecole:', error);
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error creating/updating ecole:', error);
+      return false;
+    }
+  }
+  
+  // Fallback JSON
   const ecoles = readJSON(files.ecoles, []);
   const existing = ecoles.find((e: any) => e.uai === ecole.uai);
 
@@ -137,11 +288,46 @@ export function createOrUpdateEcole(ecole: any) {
 }
 
 // ============ ENSEIGNANTS ============
-export function getEnseignants(filters?: any) {
+export async function getEnseignants(filters?: any) {
+  if (isSupabaseConfigured()) {
+    try {
+      let query = supabase.from('enseignants').select('*, ecoles_identite(nom)');
+      
+      if (filters?.ecole_id) {
+        query = query.eq('ecole_id', filters.ecole_id);
+      }
+      if (filters?.annee_scolaire) {
+        query = query.eq('annee_scolaire', filters.annee_scolaire);
+      }
+      if (filters?.nom) {
+        query = query.ilike('nom', `%${filters.nom}%`);
+      }
+      if (filters?.statut) {
+        query = query.eq('statut', filters.statut);
+      }
+      
+      const { data, error } = await query.order('nom', { ascending: true });
+      
+      if (error) {
+        console.error('Supabase error fetching enseignants:', error);
+        return [];
+      }
+      
+      // Ajouter ecole_nom depuis la jointure
+      return (data || []).map((e: any) => ({
+        ...e,
+        ecole_nom: e.ecoles_identite?.nom || ''
+      }));
+    } catch (error) {
+      console.error('Error fetching enseignants:', error);
+      return [];
+    }
+  }
+  
+  // Fallback JSON
   let enseignants = readJSON(files.enseignants, []);
   const ecoles = readJSON(files.ecoles, []);
 
-  // Ajouter le nom de l'école
   enseignants = enseignants.map((e: any) => {
     const ecole = ecoles.find((ec: any) => ec.id === e.ecole_id);
     return {
@@ -174,10 +360,65 @@ export function getEnseignants(filters?: any) {
   });
 }
 
-export function createEnseignant(enseignant: any) {
+export async function createEnseignant(enseignant: any) {
+  if (isSupabaseConfigured()) {
+    try {
+      // Vérifier si l'enseignant existe déjà
+      const { data: existing } = await supabase
+        .from('enseignants')
+        .select('id')
+        .eq('nom', enseignant.nom)
+        .eq('prenom', enseignant.prenom)
+        .eq('annee_scolaire', enseignant.annee_scolaire)
+        .eq('ecole_id', enseignant.ecole_id)
+        .single();
+      
+      if (existing) {
+        // Mettre à jour
+        const { data, error } = await supabase
+          .from('enseignants')
+          .update({
+            ...enseignant,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Supabase error updating enseignant:', error);
+          return null;
+        }
+        
+        return data;
+      } else {
+        // Créer
+        const { data, error } = await supabase
+          .from('enseignants')
+          .insert({
+            ...enseignant,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        
+        if (error) {
+          console.error('Supabase error creating enseignant:', error);
+          return null;
+        }
+        
+        return data;
+      }
+    } catch (error) {
+      console.error('Error creating enseignant:', error);
+      return null;
+    }
+  }
+  
+  // Fallback JSON
   const enseignants = readJSON(files.enseignants, []);
   
-  // Vérifier si un enseignant avec le même nom, prénom, année scolaire et école existe déjà
   const existingIndex = enseignants.findIndex((e: any) => 
     e.nom === enseignant.nom && 
     e.prenom === enseignant.prenom && 
@@ -186,18 +427,16 @@ export function createEnseignant(enseignant: any) {
   );
 
   if (existingIndex >= 0) {
-    // Mettre à jour l'enseignant existant
     enseignants[existingIndex] = {
       ...enseignants[existingIndex],
       ...enseignant,
-      id: enseignants[existingIndex].id, // Garder l'ID original
-      created_at: enseignants[existingIndex].created_at, // Garder la date de création
+      id: enseignants[existingIndex].id,
+      created_at: enseignants[existingIndex].created_at,
       updated_at: new Date().toISOString(),
     };
     writeJSON(files.enseignants, enseignants);
     return enseignants[existingIndex];
   } else {
-    // Créer un nouvel enseignant
     const newEnseignant = {
       id: enseignants.length > 0 ? Math.max(...enseignants.map((e: any) => e.id)) + 1 : 1,
       ...enseignant,
@@ -211,11 +450,41 @@ export function createEnseignant(enseignant: any) {
 }
 
 // ============ EVALUATIONS ============
-export function getEvaluations(filters?: any) {
+export async function getEvaluations(filters?: any) {
+  if (isSupabaseConfigured()) {
+    try {
+      let query = supabase.from('evaluations').select('*');
+      
+      if (filters?.rentree) {
+        query = query.eq('rentree', filters.rentree);
+      }
+      if (filters?.uai) {
+        query = query.eq('uai', filters.uai);
+      }
+      if (filters?.classe) {
+        query = query.eq('classe', filters.classe);
+      }
+      if (filters?.matiere) {
+        query = query.eq('matiere', filters.matiere);
+      }
+      
+      const { data, error } = await query.order('rentree', { ascending: false });
+      
+      if (error) {
+        console.error('Supabase error fetching evaluations:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching evaluations:', error);
+      return [];
+    }
+  }
+  
+  // Fallback JSON
   const publicPath = path.join(process.cwd(), 'public', 'evaluations.json');
-  console.log('🔍 Lecture évaluations - data:', files.evaluations, 'public:', publicPath);
   let evaluations = readJSON(files.evaluations, [], publicPath);
-  console.log('📊 Évaluations chargées:', evaluations.length);
 
   if (filters) {
     if (filters.rentree) {
@@ -244,10 +513,56 @@ export function getEvaluations(filters?: any) {
   });
 }
 
-export function createOrUpdateEvaluation(evaluation: any) {
+export async function createOrUpdateEvaluation(evaluation: any) {
+  if (isSupabaseConfigured()) {
+    try {
+      // Vérifier si l'évaluation existe déjà
+      const { data: existing } = await supabase
+        .from('evaluations')
+        .select('id')
+        .eq('rentree', evaluation.rentree)
+        .eq('uai', evaluation.uai)
+        .eq('classe', evaluation.classe)
+        .eq('matiere', evaluation.matiere)
+        .eq('libelle', evaluation.libelle)
+        .single();
+      
+      if (existing) {
+        // Mettre à jour
+        const { error } = await supabase
+          .from('evaluations')
+          .update(evaluation)
+          .eq('id', existing.id);
+        
+        if (error) {
+          console.error('Supabase error updating evaluation:', error);
+          return false;
+        }
+      } else {
+        // Créer
+        const { error } = await supabase
+          .from('evaluations')
+          .insert({
+            ...evaluation,
+            created_at: new Date().toISOString()
+          });
+        
+        if (error) {
+          console.error('Supabase error creating evaluation:', error);
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error creating/updating evaluation:', error);
+      return false;
+    }
+  }
+  
+  // Fallback JSON
   const evaluations = readJSON(files.evaluations, []);
   
-  // Chercher une évaluation existante avec les mêmes critères
   const existingIndex = evaluations.findIndex(
     (e: any) =>
       e.rentree === evaluation.rentree &&
@@ -277,7 +592,33 @@ export function createOrUpdateEvaluation(evaluation: any) {
 }
 
 // ============ EFFECTIFS ============
-export function getEffectifs(ecole_id: number, annee_scolaire?: string) {
+export async function getEffectifs(ecole_id: number, annee_scolaire?: string) {
+  if (isSupabaseConfigured()) {
+    try {
+      let query = supabase
+        .from('effectifs')
+        .select('*')
+        .eq('ecole_id', ecole_id);
+      
+      if (annee_scolaire) {
+        query = query.eq('annee_scolaire', annee_scolaire);
+      }
+      
+      const { data, error } = await query.order('annee_scolaire', { ascending: false });
+      
+      if (error) {
+        console.error('Supabase error fetching effectifs:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching effectifs:', error);
+      return [];
+    }
+  }
+  
+  // Fallback JSON
   let effectifs = readJSON(files.effectifs, []);
   effectifs = effectifs.filter((e: any) => e.ecole_id === ecole_id);
 
@@ -293,7 +634,52 @@ export function getEffectifs(ecole_id: number, annee_scolaire?: string) {
   });
 }
 
-export function createOrUpdateEffectif(effectif: any) {
+export async function createOrUpdateEffectif(effectif: any) {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data: existing } = await supabase
+        .from('effectifs')
+        .select('id')
+        .eq('ecole_id', effectif.ecole_id)
+        .eq('annee_scolaire', effectif.annee_scolaire)
+        .eq('niveau', effectif.niveau)
+        .single();
+      
+      if (existing) {
+        const { error } = await supabase
+          .from('effectifs')
+          .update({
+            ...effectif,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+        
+        if (error) {
+          console.error('Supabase error updating effectif:', error);
+          return false;
+        }
+      } else {
+        const { error } = await supabase
+          .from('effectifs')
+          .insert({
+            ...effectif,
+            created_at: new Date().toISOString()
+          });
+        
+        if (error) {
+          console.error('Supabase error creating effectif:', error);
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error creating/updating effectif:', error);
+      return false;
+    }
+  }
+  
+  // Fallback JSON
   const effectifs = readJSON(files.effectifs, []);
   
   const existingIndex = effectifs.findIndex(
@@ -323,7 +709,12 @@ export function createOrUpdateEffectif(effectif: any) {
 }
 
 // ============ SYNC LOGS ============
-export function logSync(type: string, status: string, message: string, filename?: string) {
+export async function logSync(type: string, status: string, message: string, filename?: string) {
+  if (isSupabaseConfigured()) {
+    // Pour les logs, on peut garder le JSON car ce n'est pas critique
+    // Ou implémenter une table logs dans Supabase si besoin
+  }
+  
   const logs = readJSON(files.syncLogs, []);
   const newLog = {
     id: logs.length > 0 ? Math.max(...logs.map((l: any) => l.id || 0)) + 1 : 1,
