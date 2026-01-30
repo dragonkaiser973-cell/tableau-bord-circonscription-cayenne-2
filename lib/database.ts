@@ -81,7 +81,21 @@ initDatabase();
 // ============ USERS ============
 export function getUserByUsername(username: string) {
   const users = readJSON(files.users, []);
-  return users.find((u: any) => u.username === username);
+  const user = users.find((u: any) => u.username === username);
+  
+  // Fallback : si aucun utilisateur n'est trouvé et que c'est superadmin, créer un admin par défaut (pour Vercel)
+  if (!user && username === 'superadmin') {
+    const hashedPassword = bcrypt.hashSync('SuperAdmin2026!', 10);
+    return {
+      id: 1,
+      username: 'superadmin',
+      password: hashedPassword,
+      role: 'admin',
+      created_at: new Date().toISOString(),
+    };
+  }
+  
+  return user;
 }
 
 // ============ ECOLES ============
