@@ -205,28 +205,9 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
             ecolesDetectees++;
             debugLogs.push(`🏫 École ${ecolesDetectees}: ${uai} - ${nom}`);
             
-            // Créer ou récupérer l'école (y compris la circonscription)
-            let ecole = await getEcoleByUai(uai);
-            debugLogs.push(`   → Récupération: ${ecole ? 'TROUVÉE' : 'NON TROUVÉE'}`);
-            if (!ecole) {
-              await createOrUpdateEcole({
-                uai,
-                nom,
-                sigle: parts[1]?.split(' ')[0] || '',
-                commune: 'CAYENNE',
-                rep_plus: false,
-                ips: null
-              });
-              debugLogs.push(`   → Création effectuée`);
-              ecole = await getEcoleByUai(uai);
-              debugLogs.push(`   → Récupération après création: ${ecole ? 'OK ✅' : 'ECHEC ❌'}`);
-            }
-            currentEcole = ecole;
+            // Stocker juste l'UAI, pas besoin de créer l'école
+            currentEcole = { uai, nom };
             currentDiscipline = ''; // Réinitialiser la discipline pour la nouvelle école
-            
-            if (uai === '9730456H') {
-              console.log(`✅ Circonscription trouvée, currentEcole:`, currentEcole);
-            }
           }
         }
 
@@ -380,7 +361,7 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
 
           // Créer l'enseignant
           const enseignantData = {
-            ecole_id: currentEcole.id,
+            ecole_uai: currentEcole.uai,
             annee_scolaire: anneeScolaire,
             civilite: '',
             nom: nomFamille,

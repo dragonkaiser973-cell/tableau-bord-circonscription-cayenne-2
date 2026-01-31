@@ -370,7 +370,7 @@ export async function createEnseignant(enseignant: any) {
         .eq('nom', enseignant.nom)
         .eq('prenom', enseignant.prenom)
         .eq('annee_scolaire', enseignant.annee_scolaire)
-        .eq('ecole_id', enseignant.ecole_id)
+        .eq('ecole_uai', enseignant.ecole_uai)
         .single();
       
       if (existing) {
