@@ -165,20 +165,22 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     
-    console.log('📄 Import TRM - Fichier:', filename);
-    console.log('📊 Sheet name:', sheetName);
+    const debugLogs: string[] = [];
+    debugLogs.push(`📄 Fichier: ${filename}`);
+    debugLogs.push(`📊 Sheet: ${sheetName}`);
     
     // Le fichier TRM a une structure complexe avec des sections par école
     // On doit le parser manuellement
     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
     
-    console.log('📏 Range du fichier:', range.e.r, 'lignes');
+    debugLogs.push(`📏 Nombre de lignes: ${range.e.r}`);
     
     let imported = 0;
     let errors = 0;
     let currentEcole: any = null;
     let currentDiscipline = '';
     const anneeScolaire = '2024-2025';
+    let ecolesDetectees = 0;
 
     for (let rowNum = 0; rowNum <= range.e.r; rowNum++) {
       try {
@@ -200,7 +202,8 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
             const uai = parts[0].trim();
             const nom = parts.slice(1).join('-').trim();
             
-            console.log(`🏫 École détectée: ${uai} - ${nom}`);
+            ecolesDetectees++;
+            debugLogs.push(`🏫 École ${ecolesDetectees}: ${uai} - ${nom}`);
             
             // Créer ou récupérer l'école (y compris la circonscription)
             let ecole = await getEcoleByUai(uai);
@@ -413,7 +416,9 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
     return NextResponse.json({
       message: `Import réussi: ${imported} enseignants importés`,
       imported,
-      errors
+      errors,
+      debug: debugLogs,
+      ecolesDetectees
     });
   } catch (error: any) {
     console.error('Erreur import TRM:', error);
