@@ -207,6 +207,7 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
             
             // Créer ou récupérer l'école (y compris la circonscription)
             let ecole = await getEcoleByUai(uai);
+            debugLogs.push(`   → Récupération: ${ecole ? 'TROUVÉE' : 'NON TROUVÉE'}`);
             if (!ecole) {
               await createOrUpdateEcole({
                 uai,
@@ -216,7 +217,9 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
                 rep_plus: false,
                 ips: null
               });
+              debugLogs.push(`   → Création effectuée`);
               ecole = await getEcoleByUai(uai);
+              debugLogs.push(`   → Récupération après création: ${ecole ? 'OK ✅' : 'ECHEC ❌'}`);
             }
             currentEcole = ecole;
             currentDiscipline = ''; // Réinitialiser la discipline pour la nouvelle école
