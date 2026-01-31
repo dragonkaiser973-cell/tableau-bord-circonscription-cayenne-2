@@ -363,6 +363,8 @@ export async function getEnseignants(filters?: any) {
 export async function createEnseignant(enseignant: any) {
   if (isSupabaseConfigured()) {
     try {
+      console.log('📝 Tentative création enseignant:', enseignant.nom, enseignant.prenom);
+      
       // Vérifier si l'enseignant existe déjà
       const { data: existing } = await supabase
         .from('enseignants')
@@ -374,6 +376,7 @@ export async function createEnseignant(enseignant: any) {
         .single();
       
       if (existing) {
+        console.log('  → Enseignant existe déjà, mise à jour');
         // Mettre à jour
         const { data, error } = await supabase
           .from('enseignants')
@@ -386,12 +389,15 @@ export async function createEnseignant(enseignant: any) {
           .single();
         
         if (error) {
-          console.error('Supabase error updating enseignant:', error);
+          console.error('❌ Supabase error updating enseignant:', error);
+          console.error('   Data:', enseignant);
           return null;
         }
         
+        console.log('  ✅ Mise à jour réussie');
         return data;
       } else {
+        console.log('  → Nouvel enseignant, création');
         // Créer
         const { data, error } = await supabase
           .from('enseignants')
@@ -404,14 +410,20 @@ export async function createEnseignant(enseignant: any) {
           .single();
         
         if (error) {
-          console.error('Supabase error creating enseignant:', error);
+          console.error('❌ Supabase error creating enseignant:', error);
+          console.error('   Code:', error.code);
+          console.error('   Message:', error.message);
+          console.error('   Details:', error.details);
+          console.error('   Hint:', error.hint);
+          console.error('   Data envoyée:', enseignant);
           return null;
         }
         
+        console.log('  ✅ Création réussie');
         return data;
       }
     } catch (error) {
-      console.error('Error creating enseignant:', error);
+      console.error('❌ Error creating enseignant:', error);
       return null;
     }
   }
