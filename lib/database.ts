@@ -291,10 +291,10 @@ export async function createOrUpdateEcole(ecole: any) {
 export async function getEnseignants(filters?: any) {
   if (isSupabaseConfigured()) {
     try {
-      let query = supabase.from('enseignants').select('*, ecoles_identite(nom)');
+      let query = supabase.from('enseignants').select('*');
       
-      if (filters?.ecole_id) {
-        query = query.eq('ecole_id', filters.ecole_id);
+      if (filters?.ecole_uai) {
+        query = query.eq('ecole_uai', filters.ecole_uai);
       }
       if (filters?.annee_scolaire) {
         query = query.eq('annee_scolaire', filters.annee_scolaire);
@@ -313,10 +313,11 @@ export async function getEnseignants(filters?: any) {
         return [];
       }
       
-      // Ajouter ecole_nom depuis la jointure
+      // Pas de jointure - ecole_nom sera vide pour l'instant
+      // TODO: Ajouter une table ecoles ou récupérer les noms autrement
       return (data || []).map((e: any) => ({
         ...e,
-        ecole_nom: e.ecoles_identite?.nom || ''
+        ecole_nom: e.ecole_uai || '' // Utiliser l'UAI en attendant
       }));
     } catch (error) {
       console.error('Error fetching enseignants:', error);
