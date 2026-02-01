@@ -723,21 +723,15 @@ export async function createOrUpdateEffectif(effectif: any) {
 
 // ============ SYNC LOGS ============
 export async function logSync(type: string, status: string, message: string, filename?: string) {
-  if (isSupabaseConfigured()) {
-    // Pour les logs, on peut garder le JSON car ce n'est pas critique
-    // Ou implémenter une table logs dans Supabase si besoin
-  }
-  
-  const logs = readJSON(files.syncLogs, []);
-  const newLog = {
-    id: logs.length > 0 ? Math.max(...logs.map((l: any) => l.id || 0)) + 1 : 1,
+  // Désactivé temporairement car writeJSON ne fonctionne pas sur Vercel
+  // TODO: Migrer vers une table logs dans Supabase si nécessaire
+  console.log(`[LOG SYNC] ${type} - ${status}: ${message} (${filename || 'no file'})`);
+  return {
+    id: 1,
     type,
     status,
     message,
     filename: filename || null,
     created_at: new Date().toISOString(),
   };
-  logs.push(newLog);
-  writeJSON(files.syncLogs, logs);
-  return newLog;
 }
