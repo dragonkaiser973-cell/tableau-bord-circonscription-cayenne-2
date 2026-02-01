@@ -1,15 +1,25 @@
 import { NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import path from 'path';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    // Lire depuis public/ (fichier importé via ZIP)
-    const filePath = path.join(process.cwd(), 'public', 'ecoles_identite.json');
-    const data = await readFile(filePath, 'utf-8');
-    return NextResponse.json(JSON.parse(data));
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json([], { status: 200 });
+    }
+
+    const { data, error } = await supabase
+      .from('ecoles_identite')
+      .select('*')
+      .order('nom', { ascending: true });
+
+    if (error) {
+      console.error('Erreur Supabase ecoles_identite:', error);
+      return NextResponse.json([], { status: 200 });
+    }
+
+    return NextResponse.json(data || []);
   } catch (error) {
-    console.error('Erreur lecture ecoles_identite.json:', error);
-    return NextResponse.json([]);
+    console.error('Erreur lecture ecoles_identite:', error);
+    return NextResponse.json([], { status: 200 });
   }
 }

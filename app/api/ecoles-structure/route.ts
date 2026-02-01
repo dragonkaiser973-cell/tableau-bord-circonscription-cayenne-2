@@ -1,15 +1,25 @@
 import { NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import path from 'path';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    // Lire depuis public/ (fichier importé via ZIP)
-    const filePath = path.join(process.cwd(), 'public', 'ecoles_structure.json');
-    const data = await readFile(filePath, 'utf-8');
-    return NextResponse.json(JSON.parse(data));
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json([]);
+    }
+
+    const { data, error } = await supabase
+      .from('ecoles_structure')
+      .select('*')
+      .order('uai', { ascending: true });
+
+    if (error) {
+      console.error('Supabase error fetching ecoles_structure:', error);
+      return NextResponse.json([]);
+    }
+
+    return NextResponse.json(data || []);
   } catch (error) {
-    console.error('Erreur lecture ecoles_structure.json:', error);
+    console.error('Erreur lecture ecoles_structure:', error);
     return NextResponse.json([]);
   }
 }

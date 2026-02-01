@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir, readFile } from 'fs/promises';
 import path from 'path';
 import * as XLSX from 'xlsx';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -118,16 +119,17 @@ function parseStagiairesFromExcel(data: any[][]): any[] {
 // GET - Récupérer les stagiaires
 export async function GET() {
   try {
-    // Lire depuis public/ (fichier importé)
-    const filePath = path.join(process.cwd(), 'public', 'stagiaires_m2.json');
-    
-    try {
-      const data = await readFile(filePath, 'utf-8');
-      return NextResponse.json(JSON.parse(data));
-    } catch (error) {
-      // Fichier n'existe pas encore
+    const { data, error } = await supabase
+      .from('stagiaires_m2')
+      .select('*')
+      .order('nom', { ascending: true });
+
+    if (error) {
+      console.error('Supabase error fetching stagiaires:', error);
       return NextResponse.json([]);
     }
+
+    return NextResponse.json(data || []);
   } catch (error) {
     console.error('Erreur lecture stagiaires:', error);
     return NextResponse.json([]);

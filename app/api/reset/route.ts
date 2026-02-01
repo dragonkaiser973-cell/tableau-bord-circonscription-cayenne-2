@@ -64,6 +64,42 @@ export async function POST(request: NextRequest) {
       errors.push(`Écoles identité: ${e.message}`);
     }
 
+    // Supprimer les écoles structure
+    try {
+      const { error } = await supabase.from('ecoles_structure').delete().neq('id', 0);
+      if (error) {
+        errors.push(`Écoles structure: ${error.message}`);
+      } else {
+        deletedCount++;
+      }
+    } catch (e: any) {
+      errors.push(`Écoles structure: ${e.message}`);
+    }
+
+    // Supprimer les statistiques écoles
+    try {
+      const { error } = await supabase.from('statistiques_ecoles').delete().neq('id', 0);
+      if (error) {
+        errors.push(`Statistiques: ${error.message}`);
+      } else {
+        deletedCount++;
+      }
+    } catch (e: any) {
+      errors.push(`Statistiques: ${e.message}`);
+    }
+
+    // Supprimer les stagiaires
+    try {
+      const { error } = await supabase.from('stagiaires_m2').delete().neq('id', 0);
+      if (error) {
+        errors.push(`Stagiaires: ${error.message}`);
+      } else {
+        deletedCount++;
+      }
+    } catch (e: any) {
+      errors.push(`Stagiaires: ${e.message}`);
+    }
+
     if (errors.length > 0) {
       return NextResponse.json({
         success: false,
