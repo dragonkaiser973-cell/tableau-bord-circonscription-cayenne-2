@@ -218,73 +218,54 @@ export async function getEcoleByUai(uai: string) {
 }
 
 export async function createOrUpdateEcole(ecole: any) {
-  if (isSupabaseConfigured()) {
-    try {
-      // Vérifier si l'école existe déjà
-      const { data: existing } = await supabase
-        .from('ecoles_identite')
-        .select('id')
-        .eq('uai', ecole.uai)
-        .single();
-      
-      if (existing) {
-        // Mettre à jour
-        const { error } = await supabase
-          .from('ecoles_identite')
-          .update({
-            ...ecole,
-            updated_at: new Date().toISOString()
-          })
-          .eq('uai', ecole.uai);
-        
-        if (error) {
-          console.error('Supabase error updating ecole:', error);
-          return false;
-        }
-      } else {
-        // Créer
-        const { error } = await supabase
-          .from('ecoles_identite')
-          .insert({
-            ...ecole,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-        
-        if (error) {
-          console.error('Supabase error creating ecole:', error);
-          return false;
-        }
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error creating/updating ecole:', error);
-      return false;
-    }
+  if (!isSupabaseConfigured()) {
+    console.error('Supabase non configuré');
+    return false;
   }
   
-  // Fallback JSON
-  const ecoles = readJSON(files.ecoles, []);
-  const existing = ecoles.find((e: any) => e.uai === ecole.uai);
-
-  if (existing) {
-    Object.assign(existing, {
-      ...ecole,
-      updated_at: new Date().toISOString(),
-    });
-  } else {
-    const newEcole = {
-      id: ecoles.length > 0 ? Math.max(...ecoles.map((e: any) => e.id)) + 1 : 1,
-      ...ecole,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    ecoles.push(newEcole);
+  try {
+    // Vérifier si l'école existe déjà
+    const { data: existing, error: selectError } = await supabase
+      .from('ecoles_identite')
+      .select('id')
+      .eq('uai', ecole.uai)
+      .single();
+    
+    if (existing) {
+      // Mettre à jour
+      const { error } = await supabase
+        .from('ecoles_identite')
+        .update({
+          ...ecole,
+          updated_at: new Date().toISOString()
+        })
+        .eq('uai', ecole.uai);
+      
+      if (error) {
+        console.error('Supabase error updating ecole:', error);
+        return false;
+      }
+    } else {
+      // Créer
+      const { error } = await supabase
+        .from('ecoles_identite')
+        .insert({
+          ...ecole,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) {
+        console.error('Supabase error creating ecole:', error);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error creating/updating ecole:', error);
+    return false;
   }
-
-  writeJSON(files.ecoles, ecoles);
-  return true;
 }
 
 // ============ ENSEIGNANTS ============
@@ -527,81 +508,55 @@ export async function getEvaluations(filters?: any) {
 }
 
 export async function createOrUpdateEvaluation(evaluation: any) {
-  if (isSupabaseConfigured()) {
-    try {
-      // Vérifier si l'évaluation existe déjà
-      const { data: existing } = await supabase
+  if (!isSupabaseConfigured()) {
+    console.error('Supabase non configuré');
+    return false;
+  }
+  
+  try {
+    // Vérifier si l'évaluation existe déjà
+    const { data: existing, error: selectError } = await supabase
+      .from('evaluations')
+      .select('id')
+      .eq('rentree', evaluation.rentree)
+      .eq('uai', evaluation.uai)
+      .eq('classe', evaluation.classe)
+      .eq('matiere', evaluation.matiere)
+      .eq('libelle', evaluation.libelle)
+      .single();
+    
+    if (existing) {
+      // Mettre à jour
+      const { error } = await supabase
         .from('evaluations')
-        .select('id')
-        .eq('rentree', evaluation.rentree)
-        .eq('uai', evaluation.uai)
-        .eq('classe', evaluation.classe)
-        .eq('matiere', evaluation.matiere)
-        .eq('libelle', evaluation.libelle)
-        .single();
+        .update(evaluation)
+        .eq('id', existing.id);
       
-      if (existing) {
-        // Mettre à jour
-        const { error } = await supabase
-          .from('evaluations')
-          .update(evaluation)
-          .eq('id', existing.id);
-        
-        if (error) {
-          console.error('Supabase error updating evaluation:', error);
-          return false;
-        }
-      } else {
-        // Créer
-        const { error } = await supabase
-          .from('evaluations')
-          .insert({
-            ...evaluation,
-            created_at: new Date().toISOString()
-          });
-        
-        if (error) {
-          console.error('Supabase error creating evaluation:', error);
-          return false;
-        }
+      if (error) {
+        console.error('Supabase error updating evaluation:', error);
+        return false;
       }
+    } else {
+      // Créer
+      const { error } = await supabase
+        .from('evaluations')
+        .insert({
+          ...evaluation,
+          created_at: new Date().toISOString()
+        });
       
-      return true;
-    } catch (error) {
-      console.error('Error creating/updating evaluation:', error);
-      return false;
+      if (error) {
+        console.error('Supabase error creating evaluation:', error);
+        console.error('Evaluation data:', evaluation);
+        return false;
+      }
     }
+    
+    return true;
+  } catch (error) {
+    console.error('Error creating/updating evaluation:', error);
+    return false;
   }
-  
-  // Fallback JSON
-  const evaluations = readJSON(files.evaluations, []);
-  
-  const existingIndex = evaluations.findIndex(
-    (e: any) =>
-      e.rentree === evaluation.rentree &&
-      e.uai === evaluation.uai &&
-      e.classe === evaluation.classe &&
-      e.matiere === evaluation.matiere &&
-      e.libelle === evaluation.libelle
-  );
-
-  if (existingIndex >= 0) {
-    evaluations[existingIndex] = {
-      ...evaluations[existingIndex],
-      ...evaluation,
-      updated_at: new Date().toISOString(),
-    };
-  } else {
-    const newEvaluation = {
-      id: evaluations.length > 0 ? Math.max(...evaluations.map((e: any) => e.id || 0)) + 1 : 1,
-      ...evaluation,
-      created_at: new Date().toISOString(),
-    };
-    evaluations.push(newEvaluation);
-  }
-
-  writeJSON(files.evaluations, evaluations);
-  return true;
 }
 
 // ============ EFFECTIFS ============
