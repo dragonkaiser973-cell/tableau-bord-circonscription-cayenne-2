@@ -57,27 +57,7 @@ async function importEvaluations(workbook: XLSX.WorkBook, filename: string) {
 
     let imported = 0;
     let errors = 0;
-    const ecolesCache = new Set();
     const evaluationsToSave: any[] = [];
-
-    // Créer d'abord toutes les écoles
-    console.log('🏫 Création des écoles...');
-    let ecoles_created = 0;
-    for (const row of data as any[]) {
-      if (row.uai && row.denomination && !ecolesCache.has(row.uai)) {
-        await createOrUpdateEcole({
-          uai: row.uai,
-          nom: row.denomination,
-          sigle: row.sigle || '',
-          commune: row.commune || '',
-          rep_plus: row.repplus === 'REP+',
-          ips: row.ips ? parseFloat(row.ips) : null
-        });
-        ecolesCache.add(row.uai);
-        ecoles_created++;
-      }
-    }
-    console.log(`✅ ${ecoles_created} écoles créées`);
 
     // Préparer toutes les évaluations en mémoire
     console.log('📝 Préparation des évaluations...');
@@ -89,9 +69,16 @@ async function importEvaluations(workbook: XLSX.WorkBook, filename: string) {
             rentree: parseInt(row.rentree),
             uai: row.uai,
             denomination: row.denomination,
+            sigle: row.sigle || '',
+            commune: row.commune || '',
             classe: row.classe,
             matiere: row.matiere,
             libelle: row.libelle,
+            domain_id: row.domain_id || '',
+            nb_eleves: row.nb_eleves ? parseInt(row.nb_eleves) : 0,
+            groupe_1: row.groupe_1 ? parseInt(row.groupe_1) : 0,
+            groupe_2: row.groupe_2 ? parseInt(row.groupe_2) : 0,
+            groupe_3: row.groupe_3 ? parseInt(row.groupe_3) : 0,
             tx_groupe_1: row.tx_groupe_1 ? parseFloat(row.tx_groupe_1) : 0,
             tx_groupe_2: row.tx_groupe_2 ? parseFloat(row.tx_groupe_2) : 0,
             tx_groupe_3: row.tx_groupe_3 ? parseFloat(row.tx_groupe_3) : 0,
@@ -101,8 +88,18 @@ async function importEvaluations(workbook: XLSX.WorkBook, filename: string) {
             tx_aca_groupe_1: row.tx_aca_groupe_1 ? parseFloat(row.tx_aca_groupe_1) : 0,
             tx_aca_groupe_2: row.tx_aca_groupe_2 ? parseFloat(row.tx_aca_groupe_2) : 0,
             tx_aca_groupe_3: row.tx_aca_groupe_3 ? parseFloat(row.tx_aca_groupe_3) : 0,
+            tx_nat_groupe_1: row.tx_nat_groupe_1 ? parseFloat(row.tx_nat_groupe_1) : 0,
+            tx_nat_groupe_2: row.tx_nat_groupe_2 ? parseFloat(row.tx_nat_groupe_2) : 0,
+            tx_nat_groupe_3: row.tx_nat_groupe_3 ? parseFloat(row.tx_nat_groupe_3) : 0,
+            tx_nat_repplus_groupe_1: row.tx_nat_repplus_groupe_1 ? parseFloat(row.tx_nat_repplus_groupe_1) : 0,
+            tx_nat_repplus_groupe_2: row.tx_nat_repplus_groupe_2 ? parseFloat(row.tx_nat_repplus_groupe_2) : 0,
+            tx_nat_repplus_groupe_3: row.tx_nat_repplus_groupe_3 ? parseFloat(row.tx_nat_repplus_groupe_3) : 0,
             ips: row.ips ? parseFloat(row.ips) : null,
-            ips_cir: row.ips_cir ? parseFloat(row.ips_cir) : null
+            ips_cir: row.ips_cir ? parseFloat(row.ips_cir) : null,
+            ips_aca: row.ips_aca ? parseFloat(row.ips_aca) : null,
+            repplus: row.repplus === 'REP+',
+            circonscription: row.circonscription || '',
+            lib_circonscription: row.lib_circonscription || ''
           };
           
           // Logger un exemple pour debug
@@ -143,15 +140,14 @@ async function importEvaluations(workbook: XLSX.WorkBook, filename: string) {
       await new Promise(resolve => setTimeout(resolve, 50));
     }
 
-    console.log(`✅ Import terminé: ${imported} évaluations, ${ecoles_created} écoles, ${errors} erreurs`);
+    console.log(`✅ Import terminé: ${imported} évaluations, ${errors} erreurs`);
 
-    logSync('evaluations', 'success', `${imported} évaluations importées, ${ecoles_created} écoles, ${errors} erreurs`, filename);
+    logSync('evaluations', 'success', `${imported} évaluations importées, ${errors} erreurs`, filename);
 
     return NextResponse.json({
       message: `Import réussi: ${imported} évaluations importées`,
       imported,
-      errors,
-      ecoles_created
+      errors
     });
   } catch (error: any) {
     console.error('❌ Erreur import évaluations:', error);
