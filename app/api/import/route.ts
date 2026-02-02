@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
+import { supabase } from '@/lib/supabase';
 import { 
   createOrUpdateEcole,
   getEcoleByUai,
@@ -121,8 +122,8 @@ async function importEvaluations(workbook: XLSX.WorkBook, filename: string) {
       }
     }
 
-    // Sauvegarder par gros lots
-    console.log(`💾 Sauvegarde de ${evaluationsToSave.length} évaluations...`);
+    // Sauvegarder par gros lots avec bulk insert
+    console.log(`💾 Sauvegarde de ${evaluationsToSave.length} évaluations en bulk...`);
     const batchSize = 500;
     for (let i = 0; i < evaluationsToSave.length; i += batchSize) {
       const batch = evaluationsToSave.slice(i, i + batchSize);
@@ -131,13 +132,22 @@ async function importEvaluations(workbook: XLSX.WorkBook, filename: string) {
       
       console.log(`💾 Batch ${batchNum}/${totalBatches} (${batch.length} évaluations)`);
       
-      for (const evaluation of batch) {
-        await createOrUpdateEvaluation(evaluation);
-        imported++;
-      }
+      // Insérer tout le batch en une seule fois
+      const batchToInsert = batch.map(evaluation => ({
+        ...evaluation,
+        created_at: new Date().toISOString()
+      }));
       
-      // Petite pause
-      await new Promise(resolve => setTimeout(resolve, 50));
+      const { error } = await supabase
+        .from('evaluations')
+        .insert(batchToInsert);
+      
+      if (error) {
+        console.error(`❌ Erreur batch ${batchNum}:`, error);
+        errors += batch.length;
+      } else {
+        imported += batch.length;
+      }
     }
 
     console.log(`✅ Import terminé: ${imported} évaluations, ${errors} erreurs`);
