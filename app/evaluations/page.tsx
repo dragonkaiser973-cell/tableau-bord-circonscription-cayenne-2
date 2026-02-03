@@ -76,16 +76,20 @@ export default function EvaluationsPage() {
         const nom = (e.nom || '').toUpperCase();
         const nomClean = nom.replace(/\./g, '').replace(/\s/g, '');
         
+        // DEBUG: Afficher toutes les écoles pour diagnostic
+        console.log('🏫 École:', e.uai, '-', nom);
+        
         // Exclure les écoles maternelles
         const isMaternelle = nomClean.includes('EMPU') || nom.includes('MATERNELLE');
         
         // Exclure la circonscription
         const isCirconscription = e.uai === '9730456H' || nom.includes('CIRCONSCRIPTION') || nom.includes('IEN');
         
-        return !isMaternelle && !isCirconscription;
+        // TEMPORAIRE: Tout afficher pour diagnostic
+        return true; // !isMaternelle && !isCirconscription;
       });
       
-      console.log('✅ Écoles élémentaires conservées:', ecolesFiltered.length);
+      console.log('✅ Écoles conservées (DEBUG - toutes affichées):', ecolesFiltered.length);
       setEcoles(ecolesFiltered);
 
       // Ne pas présélectionner d'école (laisser "Toutes les écoles")
