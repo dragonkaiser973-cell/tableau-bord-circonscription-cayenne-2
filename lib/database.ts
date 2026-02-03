@@ -447,34 +447,49 @@ export async function createEnseignant(enseignant: any) {
 export async function getEvaluations(filters?: any) {
   if (isSupabaseConfigured()) {
     try {
-      let query = supabase.from('evaluations').select('*', { count: 'exact' });
+      let allData: any[] = [];
+      let start = 0;
+      const batchSize = 1000;
+      let hasMore = true;
       
-      if (filters?.rentree) {
-        query = query.eq('rentree', filters.rentree);
-      }
-      if (filters?.uai) {
-        query = query.eq('uai', filters.uai);
-      }
-      if (filters?.classe) {
-        query = query.eq('classe', filters.classe);
-      }
-      if (filters?.matiere) {
-        query = query.eq('matiere', filters.matiere);
+      // Récupérer toutes les données par lots de 1000
+      while (hasMore) {
+        let query = supabase.from('evaluations').select('*');
+        
+        if (filters?.rentree) {
+          query = query.eq('rentree', filters.rentree);
+        }
+        if (filters?.uai) {
+          query = query.eq('uai', filters.uai);
+        }
+        if (filters?.classe) {
+          query = query.eq('classe', filters.classe);
+        }
+        if (filters?.matiere) {
+          query = query.eq('matiere', filters.matiere);
+        }
+        
+        const { data, error } = await query
+          .order('rentree', { ascending: false })
+          .range(start, start + batchSize - 1);
+        
+        if (error) {
+          console.error('Supabase error fetching evaluations:', error);
+          return allData; // Retourner ce qu'on a déjà
+        }
+        
+        if (data && data.length > 0) {
+          allData = allData.concat(data);
+          start += batchSize;
+          hasMore = data.length === batchSize; // S'il y a moins de 1000, on a tout
+        } else {
+          hasMore = false;
+        }
       }
       
-      // Supabase limite à 1000 par défaut, on doit spécifier une limite plus haute
-      const { data, error, count } = await query
-        .order('rentree', { ascending: false })
-        .range(0, 9999); // Récupérer jusqu'à 10000 évaluations
+      console.log(`📊 getEvaluations: ${allData.length} évaluations retournées au total`);
       
-      if (error) {
-        console.error('Supabase error fetching evaluations:', error);
-        return [];
-      }
-      
-      console.log(`📊 getEvaluations: ${data?.length || 0} évaluations retournées (total: ${count})`);
-      
-      return data || [];
+      return allData;
     } catch (error) {
       console.error('Error fetching evaluations:', error);
       return [];
