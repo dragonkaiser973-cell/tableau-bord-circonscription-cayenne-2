@@ -348,6 +348,79 @@ export default function DonneesPage() {
             text: result.error || 'Erreur lors de l\'importation'
           });
         }
+} else if (type === 'ecoles-identite') {
+  setProgressText('Extraction des écoles (identité)...');
+  setProgress(30);
+
+  const response = await fetch('/api/import-ecoles-identite', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const result = await response.json();
+  setProgress(100);
+
+  if (response.ok) {
+    setMessage({
+      type: 'success',
+      text: `✅ ${result.count} écoles importées`
+    });
+    setImportStatus(prev => ({ ...prev, ecolesIdentite: true }));
+  } else {
+    setMessage({
+      type: 'error',
+      text: result.error || 'Erreur lors de l\'importation'
+    });
+  }
+} else if (type === 'ecoles-structure') {
+  setProgressText('Extraction des structures d\'écoles...');
+  setProgress(30);
+
+  const response = await fetch('/api/import-ecoles-structure', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const result = await response.json();
+  setProgress(100);
+
+  if (response.ok) {
+    setMessage({
+      type: 'success',
+      text: `✅ ${result.count} structures importées`
+    });
+    setImportStatus(prev => ({ ...prev, ecolesStructure: true }));
+  } else {
+    setMessage({
+      type: 'error',
+      text: result.error || 'Erreur lors de l\'importation'
+    });
+  }
+} else if (type === 'statistiques') {
+  setProgressText('Extraction des statistiques ONDE...');
+  setProgress(30);
+
+  const response = await fetch('/api/import-statistiques-onde', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const result = await response.json();
+  setProgress(100);
+
+  if (response.ok) {
+    setMessage({
+      type: 'success',
+      text: `✅ ${result.count} statistiques importées`
+    });
+    setImportStatus(prev => ({ ...prev, statistiques: true }));
+  } else {
+    setMessage({
+      type: 'error',
+      text: result.error || 'Erreur lors de l\'importation'
+    });
+  }
+}
       } else if (type === 'stagiaires') {
         setProgressText('Extraction des stagiaires SOPA...');
         setProgress(30);
