@@ -69,6 +69,9 @@ export default function EvaluationsPage() {
       const evalData = await evalRes.json();
       const ecolesData = await ecolesRes.json();
 
+      console.log(`📊 Total évaluations chargées: ${evalData.length}`);
+      console.log(`📊 Années présentes:`, [...new Set(evalData.map((e: any) => e.rentree))].sort());
+
       setEvaluations(evalData);
       
       // Filtrer les écoles maternelles et la circonscription

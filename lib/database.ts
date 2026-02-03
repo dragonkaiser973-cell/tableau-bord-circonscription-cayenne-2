@@ -447,7 +447,7 @@ export async function createEnseignant(enseignant: any) {
 export async function getEvaluations(filters?: any) {
   if (isSupabaseConfigured()) {
     try {
-      let query = supabase.from('evaluations').select('*');
+      let query = supabase.from('evaluations').select('*', { count: 'exact' });
       
       if (filters?.rentree) {
         query = query.eq('rentree', filters.rentree);
@@ -462,12 +462,17 @@ export async function getEvaluations(filters?: any) {
         query = query.eq('matiere', filters.matiere);
       }
       
-      const { data, error } = await query.order('rentree', { ascending: false });
+      // Supabase limite à 1000 par défaut, on doit spécifier une limite plus haute
+      const { data, error, count } = await query
+        .order('rentree', { ascending: false })
+        .range(0, 9999); // Récupérer jusqu'à 10000 évaluations
       
       if (error) {
         console.error('Supabase error fetching evaluations:', error);
         return [];
       }
+      
+      console.log(`📊 getEvaluations: ${data?.length || 0} évaluations retournées (total: ${count})`);
       
       return data || [];
     } catch (error) {
