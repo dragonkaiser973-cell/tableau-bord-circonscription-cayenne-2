@@ -301,7 +301,7 @@ export default function DonneesPage() {
     }
   };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'trm' | 'evaluations' | 'stagiaires' | 'ecoles-identite' | 'ecoles-structure' | 'statistiques') => {
+const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'trm' | 'evaluations' | 'stagiaires' | 'ecoles-identite' | 'ecoles-structure' | 'statistiques') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -484,131 +484,6 @@ export default function DonneesPage() {
       if (e.target) e.target.value = '';
     }
   };
-}
-      else if (type === 'stagiaires') {
-        setProgressText('Extraction des stagiaires SOPA...');
-        setProgress(30);
-
-        const response = await fetch('/api/import-stagiaires', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const result = await response.json();
-        setProgress(100);
-
-        if (response.ok) {
-          setMessage({
-            type: 'success',
-            text: `✅ ${result.count} stagiaires SOPA importés`
-          });
-          // Mettre à jour le statut d'import
-          setImportStatus(prev => ({
-            ...prev,
-            stagiaires: true
-          }));
-        } else {
-          setMessage({
-            type: 'error',
-            text: result.error || 'Erreur lors de l\'importation'
-          });
-        }
-      } else if (type === 'statistiques') {
-        setProgressText('Extraction des tableaux de bord...');
-        setProgress(30);
-
-        const response = await fetch('/api/import-statistiques', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const result = await response.json();
-        setProgress(100);
-
-        if (response.ok) {
-          setMessage({
-            type: 'success',
-            text: `✅ ${result.count} tableaux de bord importés`
-          });
-          // Mettre à jour le statut d'import
-          setImportStatus(prev => ({
-            ...prev,
-            statistiques: true
-          }));
-        } else {
-          setMessage({
-            type: 'error',
-            text: result.error || 'Erreur lors de l\'importation'
-          });
-        }
-      } else {
-        // Import TRM ou Évaluations (existant)
-        formData.append('type', type);
-
-        // Timeout de 15 minutes pour les gros fichiers
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 900000); // 15 min
-
-        setProgressText('Envoi du fichier...');
-        setProgress(10);
-
-        const startTime = Date.now();
-
-        const response = await fetch('/api/import', {
-          method: 'POST',
-          body: formData,
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-        
-        const elapsed = Math.round((Date.now() - startTime) / 1000);
-        setProgressText(`Traitement terminé en ${elapsed}s`);
-        setProgress(100);
-
-        const data = await response.json();
-
-        if (response.ok) {
-          const statsText = data.ecoles_created 
-            ? ` (${data.imported} entrées, ${data.ecoles_created} écoles, ${data.errors} erreurs)`
-            : ` (${data.imported} entrées, ${data.errors} erreurs)`;
-            
-          setMessage({
-            type: 'success',
-            text: data.message + statsText
-          });
-          // Mettre à jour le statut d'import
-          setImportStatus(prev => ({
-            ...prev,
-            [type]: true
-          }));
-        } else {
-          setMessage({
-            type: 'error',
-            text: data.message || 'Erreur lors de l\'importation'
-          });
-        }
-      }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        setMessage({
-          type: 'error',
-          text: 'Import timeout (plus de 15 minutes). Contactez le support.'
-        });
-      } else {
-        setMessage({
-          type: 'error',
-          text: 'Erreur lors de l\'importation : ' + error.message
-        });
-      }
-    } finally {
-      setUploading(false);
-      setProgress(0);
-      setProgressText('');
-      if (e.target) e.target.value = '';
-    }
-  };
-
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
