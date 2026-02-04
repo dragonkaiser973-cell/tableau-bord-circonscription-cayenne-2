@@ -301,7 +301,7 @@ export default function DonneesPage() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'trm' | 'evaluations' | 'stagiaires' | 'ecoles-identite' | 'ecoles-structure' | 'statistiques') => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'trm' | 'evaluations' | 'stagiaires' | 'ecoles-identite' | 'ecoles-structure' | 'statistiques') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -314,14 +314,12 @@ export default function DonneesPage() {
       const formData = new FormData();
       formData.append('file', file);
       
-      // Pour les écoles et statistiques, on utilise des APIs spécifiques
-      if (type === 'ecoles-identite' || type === 'ecoles-structure') {
-        formData.append('type', type === 'ecoles-identite' ? 'identite' : 'structure');
-        
-        setProgressText('Extraction des données ZIP...');
+      // Import Identité des écoles (ZIP)
+      if (type === 'ecoles-identite') {
+        setProgressText('Extraction des écoles (identité)...');
         setProgress(30);
 
-        const response = await fetch('/api/import-ecoles-pdf', {
+        const response = await fetch('/api/import-ecoles-identite', {
           method: 'POST',
           body: formData,
         });
@@ -330,98 +328,164 @@ export default function DonneesPage() {
         setProgress(100);
 
         if (response.ok) {
-          const msg = type === 'ecoles-identite' 
-            ? `✅ ${result.count} écoles importées avec informations complètes`
-            : `✅ ${result.count} écoles importées avec ${result.totalClasses} classes au total`;
           setMessage({
             type: 'success',
-            text: msg
+            text: `✅ ${result.count} écoles importées`
           });
-          // Mettre à jour le statut d'import
-          setImportStatus(prev => ({
-            ...prev,
-            [type === 'ecoles-identite' ? 'ecolesIdentite' : 'ecolesStructure']: true
-          }));
+          setImportStatus(prev => ({ ...prev, ecolesIdentite: true }));
         } else {
           setMessage({
             type: 'error',
             text: result.error || 'Erreur lors de l\'importation'
           });
         }
-} else if (type === 'ecoles-identite') {
-  setProgressText('Extraction des écoles (identité)...');
-  setProgress(30);
+      } 
+      // Import Structure des écoles (ZIP)
+      else if (type === 'ecoles-structure') {
+        setProgressText('Extraction des structures d\'écoles...');
+        setProgress(30);
 
-  const response = await fetch('/api/import-ecoles-identite', {
-    method: 'POST',
-    body: formData,
-  });
+        const response = await fetch('/api/import-ecoles-structure', {
+          method: 'POST',
+          body: formData,
+        });
 
-  const result = await response.json();
-  setProgress(100);
+        const result = await response.json();
+        setProgress(100);
 
-  if (response.ok) {
-    setMessage({
-      type: 'success',
-      text: `✅ ${result.count} écoles importées`
-    });
-    setImportStatus(prev => ({ ...prev, ecolesIdentite: true }));
-  } else {
-    setMessage({
-      type: 'error',
-      text: result.error || 'Erreur lors de l\'importation'
-    });
-  }
-} else if (type === 'ecoles-structure') {
-  setProgressText('Extraction des structures d\'écoles...');
-  setProgress(30);
+        if (response.ok) {
+          setMessage({
+            type: 'success',
+            text: `✅ ${result.count} structures importées`
+          });
+          setImportStatus(prev => ({ ...prev, ecolesStructure: true }));
+        } else {
+          setMessage({
+            type: 'error',
+            text: result.error || 'Erreur lors de l\'importation'
+          });
+        }
+      }
+      // Import Statistiques ONDE (ZIP)
+      else if (type === 'statistiques') {
+        setProgressText('Extraction des statistiques ONDE...');
+        setProgress(30);
 
-  const response = await fetch('/api/import-ecoles-structure', {
-    method: 'POST',
-    body: formData,
-  });
+        const response = await fetch('/api/import-statistiques-onde', {
+          method: 'POST',
+          body: formData,
+        });
 
-  const result = await response.json();
-  setProgress(100);
+        const result = await response.json();
+        setProgress(100);
 
-  if (response.ok) {
-    setMessage({
-      type: 'success',
-      text: `✅ ${result.count} structures importées`
-    });
-    setImportStatus(prev => ({ ...prev, ecolesStructure: true }));
-  } else {
-    setMessage({
-      type: 'error',
-      text: result.error || 'Erreur lors de l\'importation'
-    });
-  }
-} else if (type === 'statistiques') {
-  setProgressText('Extraction des statistiques ONDE...');
-  setProgress(30);
+        if (response.ok) {
+          setMessage({
+            type: 'success',
+            text: `✅ ${result.count} statistiques importées`
+          });
+          setImportStatus(prev => ({ ...prev, statistiques: true }));
+        } else {
+          setMessage({
+            type: 'error',
+            text: result.error || 'Erreur lors de l\'importation'
+          });
+        }
+      } 
+      // Import Stagiaires SOPA (Excel)
+      else if (type === 'stagiaires') {
+        setProgressText('Extraction des stagiaires SOPA...');
+        setProgress(30);
 
-  const response = await fetch('/api/import-statistiques-onde', {
-    method: 'POST',
-    body: formData,
-  });
+        const response = await fetch('/api/import-stagiaires', {
+          method: 'POST',
+          body: formData,
+        });
 
-  const result = await response.json();
-  setProgress(100);
+        const result = await response.json();
+        setProgress(100);
 
-  if (response.ok) {
-    setMessage({
-      type: 'success',
-      text: `✅ ${result.count} statistiques importées`
-    });
-    setImportStatus(prev => ({ ...prev, statistiques: true }));
-  } else {
-    setMessage({
-      type: 'error',
-      text: result.error || 'Erreur lors de l\'importation'
-    });
-  }
+        if (response.ok) {
+          setMessage({
+            type: 'success',
+            text: `✅ ${result.count} stagiaires SOPA importés`
+          });
+          setImportStatus(prev => ({ ...prev, stagiaires: true }));
+        } else {
+          setMessage({
+            type: 'error',
+            text: result.error || 'Erreur lors de l\'importation'
+          });
+        }
+      } 
+      // Import TRM ou Évaluations (Excel existant)
+      else {
+        formData.append('type', type);
+
+        // Timeout de 15 minutes pour les gros fichiers
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 900000); // 15 min
+
+        setProgressText('Envoi du fichier...');
+        setProgress(10);
+
+        const startTime = Date.now();
+
+        const response = await fetch('/api/import', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        setProgressText(`Traitement terminé en ${elapsed}s`);
+        setProgress(100);
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const statsText = data.ecoles_created 
+            ? ` (${data.imported} entrées, ${data.ecoles_created} écoles, ${data.errors} erreurs)`
+            : ` (${data.imported} entrées, ${data.errors} erreurs)`;
+            
+          setMessage({
+            type: 'success',
+            text: data.message + statsText
+          });
+          setImportStatus(prev => ({
+            ...prev,
+            [type]: true
+          }));
+        } else {
+          setMessage({
+            type: 'error',
+            text: data.message || 'Erreur lors de l\'importation'
+          });
+        }
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        setMessage({
+          type: 'error',
+          text: 'Import timeout (plus de 15 minutes). Contactez le support.'
+        });
+      } else {
+        setMessage({
+          type: 'error',
+          text: 'Erreur lors de l\'importation : ' + error.message
+        });
+      }
+    } finally {
+      setUploading(false);
+      setProgress(0);
+      setProgressText('');
+      if (e.target) e.target.value = '';
+    }
+  };
 }
-      } else if (type === 'stagiaires') {
+      else if (type === 'stagiaires') {
         setProgressText('Extraction des stagiaires SOPA...');
         setProgress(30);
 
