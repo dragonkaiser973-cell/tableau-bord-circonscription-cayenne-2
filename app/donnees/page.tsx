@@ -284,17 +284,47 @@ export default function DonneesPage() {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'trm' | 'evaluations' | 'stagiaires') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-    setUploading(true);
-    setMessage(null);
-    setProgress(0);
-    setProgressText('Lecture du fichier...');
+  setUploading(true);
+  setMessage(null);
+  setProgress(0);
+  setProgressText('Lecture du fichier...');
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Import Stagiaires (API séparée)
+    if (type === 'stagiaires') {
+      setProgressText('Extraction des stagiaires SOPA...');
+      setProgress(30);
+
+      const response = await fetch('/api/import-stagiaires', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+      setProgress(100);
+
+      if (response.ok) {
+        setMessage({
+          type: 'success',
+          text: `✅ ${result.count} stagiaires SOPA importés`
+        });
+        setImportStatus(prev => ({ ...prev, stagiaires: true }));
+        checkImportStatus();
+      } else {
+        setMessage({
+          type: 'error',
+          text: result.error || 'Erreur lors de l\'importation'
+        });
+      }
+    } 
+    // Import TRM ou Évaluations
+    else {
       formData.append('type', type);
 
       const controller = new AbortController();
@@ -327,19 +357,20 @@ export default function DonneesPage() {
       } else {
         setMessage({ type: 'error', text: data.message || 'Erreur' });
       }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        setMessage({ type: 'error', text: 'Timeout (plus de 15 min)' });
-      } else {
-        setMessage({ type: 'error', text: error.message });
-      }
-    } finally {
-      setUploading(false);
-      setProgress(0);
-      setProgressText('');
-      if (e.target) e.target.value = '';
     }
-  };
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      setMessage({ type: 'error', text: 'Timeout (plus de 15 min)' });
+    } else {
+      setMessage({ type: 'error', text: error.message });
+    }
+  } finally {
+    setUploading(false);
+    setProgress(0);
+    setProgressText('');
+    if (e.target) e.target.value = '';
+  }
+};
 
   if (!isAuthenticated) {
     return (
