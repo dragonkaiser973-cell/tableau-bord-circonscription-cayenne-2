@@ -233,7 +233,7 @@ export default function EnseignantsPage() {
 
       // Charger les stagiaires M2
       try {
-        const stagiaireRes = await fetch('/stagiaires_m2.json');
+        const stagiaireRes = await fetch('/api/stagiaires-m2');
         if (stagiaireRes.ok) {
           const stagiaireData = await stagiaireRes.json();
           setStagiaireM2(stagiaireData);
