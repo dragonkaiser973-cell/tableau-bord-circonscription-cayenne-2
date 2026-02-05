@@ -245,7 +245,7 @@ export default function EnseignantsPage() {
         console.error('Erreur chargement stagiaires M2:', err);
         setStagiaireM2([]);
       }
-  };
+  }
 
   const getFilteredEnseignants = () => {
     return enseignants.filter(e => {
