@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     // Lire le fichier HTML
     const arrayBuffer = await file.arrayBuffer();
-    const decoder = new TextDecoder('iso-8859-1'); // ONDE utilise ISO-8859-1
+    const decoder = new TextDecoder('iso-8859-1');
     const content = decoder.decode(arrayBuffer);
     
     const root = parse(content);
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     // Extraire toutes les tables
     const tables = root.querySelectorAll('table');
     
-    // TABLE 1 : Informations générales (UAI, Secteur, Type, Nom, SIRET, État, Date ouverture)
+    // TABLEAU 1 : Informations générales (UAI, Secteur, Type, Nom, SIRET, État, Date ouverture)
     if (tables[0]) {
       const rows = tables[0].querySelectorAll('tr');
       for (const row of rows) {
@@ -33,16 +33,16 @@ export async function POST(request: NextRequest) {
 
           if (label.includes('UAI')) ecoleData.uai = value;
           else if (label.includes('Secteur')) ecoleData.secteur = value;
-          else if (label.includes('École') || label.includes('Ecole')) ecoleData.type = value;
-          else if (label.includes('Libellé') || label.includes('Libelle')) ecoleData.nom = value;
+          else if (label.includes('École') || label.includes('Ecole') || label.includes('cole')) ecoleData.type = value;
+          else if (label.includes('Libellé') || label.includes('Libelle') || label.includes('bell')) ecoleData.nom = value;
           else if (label.includes('SIRET')) ecoleData.siret = value;
-          else if (label.includes('État') || label.includes('Etat')) ecoleData.etat = value;
+          else if (label.includes('État') || label.includes('Etat') || label.includes('tat')) ecoleData.etat = value;
           else if (label.toLowerCase().includes('ouverture')) ecoleData.date_ouverture = value;
         }
       }
     }
 
-    // TABLE 2 : Localisation (Commune, etc.)
+    // TABLEAU 2 : Localisation (Commune, etc.)
     if (tables[1]) {
       const rows = tables[1].querySelectorAll('tr');
       for (const row of rows) {
@@ -55,9 +55,33 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // TABLE 4 : Direction et contact (Directeur, Adresse, Téléphone, Email)
-    if (tables[3]) {
-      const rows = tables[3].querySelectorAll('tr');
+    // CHERCHER le tableau qui contient les infos de Direction
+    // (peut être tableau 3 ou 4 selon les écoles)
+    let tableDirection = null;
+    let tableCollege = null;
+
+    for (let i = 2; i < tables.length; i++) {
+      const rows = tables[i].querySelectorAll('tr');
+      if (rows.length > 0) {
+        const firstRow = rows[0].querySelectorAll('td');
+        if (firstRow.length > 0) {
+          const firstCell = firstRow[0].text.trim();
+          
+          // Tableau Direction : contient "Directeur" ou "Directrice"
+          if (firstCell.includes('Directeur') || firstCell.includes('Directrice')) {
+            tableDirection = tables[i];
+          }
+          // Tableau Collège : contient un UAI (8 caractères)
+          else if (firstCell.match(/^\d{7}[A-Z]/)) {
+            tableCollege = tables[i];
+          }
+        }
+      }
+    }
+
+    // Extraire les infos du tableau Direction
+    if (tableDirection) {
+      const rows = tableDirection.querySelectorAll('tr');
       let adresse = '';
       let ville = '';
       
@@ -67,7 +91,7 @@ export async function POST(request: NextRequest) {
           const label = cells[0]?.text.trim() || '';
           const value = cells.length === 2 ? cells[1].text.trim() : '';
 
-          if (label.includes('Directeur')) {
+          if (label.includes('Directeur') || label.includes('Directrice')) {
             // Extraire civilité + nom
             const fullText = value.replace(/\s+/g, ' ').trim();
             if (fullText.startsWith('M.') || fullText.startsWith('Mme')) {
@@ -75,6 +99,12 @@ export async function POST(request: NextRequest) {
               ecoleData.directeur = fullText.replace(/^(M\.|Mme)\s*/, '');
             } else {
               ecoleData.directeur = fullText;
+              // Tenter d'extraire civilité du label
+              if (label.includes('Directrice')) {
+                ecoleData.civilite = 'Mme';
+              } else if (label.includes('Directeur')) {
+                ecoleData.civilite = 'M.';
+              }
             }
           }
           else if (label.includes('Adresse')) {
@@ -84,10 +114,10 @@ export async function POST(request: NextRequest) {
             // Ligne vide avec code postal + ville
             ville = value;
           }
-          else if (label.includes('Téléphone') || label.includes('Telephone')) {
+          else if (label.includes('Téléphone') || label.includes('Telephone') || label.includes('phone')) {
             ecoleData.telephone = value;
           }
-          else if (label.includes('Courriel') || label.includes('Mél') || label.includes('Email')) {
+          else if (label.includes('Courriel') || label.includes('Mél') || label.includes('Email') || label.includes('Mel')) {
             ecoleData.email = value;
           }
         }
@@ -97,9 +127,9 @@ export async function POST(request: NextRequest) {
       ecoleData.ville = ville;
     }
 
-    // TABLE 5 : Collège de secteur
-    if (tables[4]) {
-      const cells = tables[4].querySelectorAll('td');
+    // Extraire le collège de secteur
+    if (tableCollege) {
+      const cells = tableCollege.querySelectorAll('td');
       if (cells.length > 0) {
         const text = cells[0].text.trim();
         // Format: "9730247F - COLLEGE JUSTIN CATAYEE 97327"
@@ -128,7 +158,7 @@ export async function POST(request: NextRequest) {
     ecoleData.adresse = ecoleData.adresse || '';
     ecoleData.commune = ecoleData.commune || '';
 
-    console.log(`✅ Import identité: ${ecoleData.uai} - ${ecoleData.nom}`);
+    console.log(`✅ Import identité: ${ecoleData.uai} - ${ecoleData.nom} - Directeur: ${ecoleData.directeur || 'NON RENSEIGNÉ'}`);
 
     // Insérer ou mettre à jour dans Supabase
     const { error } = await supabase
