@@ -231,7 +231,7 @@ export default function EnseignantsPage() {
       // L'utilisateur pourra filtrer manuellement si besoin
       setSelectedAnnee('');
 
-      /// Charger les stagiaires M2 depuis Supabase
+      // Charger les stagiaires M2 depuis Supabase
       try {
         const stagiaireRes = await fetch('/api/stagiaires-m2');
         if (stagiaireRes.ok) {
