@@ -231,23 +231,20 @@ export default function EnseignantsPage() {
       // L'utilisateur pourra filtrer manuellement si besoin
       setSelectedAnnee('');
 
-      // Charger les stagiaires M2
+      /// Charger les stagiaires M2 depuis Supabase
       try {
         const stagiaireRes = await fetch('/api/stagiaires-m2');
         if (stagiaireRes.ok) {
           const stagiaireData = await stagiaireRes.json();
           setStagiaireM2(stagiaireData);
+        } else {
+          console.warn('API stagiaires M2 non accessible');
+          setStagiaireM2([]);
         }
       } catch (err) {
-        console.warn('Fichier stagiaires M2 non trouvé');
+        console.error('Erreur chargement stagiaires M2:', err);
         setStagiaireM2([]);
       }
-
-      setLoading(false);
-    } catch (error) {
-      console.error('Erreur lors du chargement:', error);
-      setLoading(false);
-    }
   };
 
   const getFilteredEnseignants = () => {
