@@ -112,10 +112,11 @@ export default function CirconscriptionPage() {
 
   // Statistiques circonscription (personnel IEN)
   const getStatsCirconscription = () => {
-    const personnelCirco = enseignants.filter(e => 
-      e.ecole_nom.includes('IEN CAYENNE') || 
-      e.ecole_nom.includes('CIRCONSCRIPTION')
-    );
+   const personnelCirco = enseignants.filter(e => 
+  (e.ecole_nom && e.ecole_nom.includes('IEN CAYENNE')) || 
+  (e.ecole_nom && e.ecole_nom.includes('CIRCONSCRIPTION')) ||
+  (e.ecole_uai === '9730456H')  // ← Filtre de secours par UAI
+);
 
     const total = personnelCirco.length;
     
