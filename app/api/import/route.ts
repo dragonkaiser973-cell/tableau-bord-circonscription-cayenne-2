@@ -368,6 +368,7 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
           // Créer l'enseignant
           const enseignantData = {
             ecole_uai: currentEcole.uai,
+			ecole_nom: currentEcole.nom,
             annee_scolaire: anneeScolaire,
             nom: nomFamille,
             prenom: prenom,
