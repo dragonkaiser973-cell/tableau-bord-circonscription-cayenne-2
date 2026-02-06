@@ -138,24 +138,23 @@ export default function EnseignantsPage() {
     let nbTentes = 0;
 
     const enseignantsEnrichis = enseignants.map(ens => {
-      // Si niveau et effectif déjà renseignés, ne rien faire
-      if (ens.niveau_classe && ens.niveau_classe !== '' && ens.effectif_classe > 0) {
-        return ens;
-      }
+  // Si niveau et effectif déjà renseignés, ne rien faire
+  if (ens.niveau_classe && ens.niveau_classe !== '' && ens.effectif_classe > 0) {
+    return ens;
+  }
 
-      nbTentes++;
+  nbTentes++;
 
-      // Trouver l'UAI de l'école de l'enseignant
-      const nomEcoleNorm = normaliserNom(ens.ecole_nom);
-      const uai = nomToUai.get(nomEcoleNorm);
+  // Utiliser directement l'UAI de l'enseignant
+  const uai = ens.ecole_uai;
 
-      if (!uai) {
-        console.log(`⚠️  École non trouvée: "${ens.ecole_nom}" (normalisé: "${nomEcoleNorm}")`);
-        return ens;
-      }
+  if (!uai) {
+    console.log(`⚠️  UAI manquant pour: ${ens.nom} ${ens.prenom}`);
+    return ens;
+  }
 
-      // Trouver la structure correspondante
-      const structure = uaiToStructure.get(uai);
+  // Trouver la structure correspondante
+  const structure = uaiToStructure.get(uai);
 
       if (!structure || !structure.classes) {
         console.log(`⚠️  Structure non trouvée pour UAI ${uai}`);
