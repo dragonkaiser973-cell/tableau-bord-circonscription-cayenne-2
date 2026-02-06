@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir, readFile } from 'fs/promises';
-import path from 'path';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/lib/supabase';
 
@@ -13,14 +11,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 });
     }
 
-    // S'assurer que le dossier public existe
-    const publicDir = path.join(process.cwd(), 'public');
-    try {
-      await mkdir(publicDir, { recursive: true });
-    } catch (error) {
-      // Le dossier existe déjà
-    }
-
     // Lire le fichier Excel
     const buffer = Buffer.from(await file.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: 'buffer' });
@@ -31,24 +21,58 @@ export async function POST(request: NextRequest) {
     console.log('=== EXTRACTION STAGIAIRES SOPA ===');
     console.log(`Nombre de lignes: ${data.length}`);
 
-    // Parser les stagiaires
+    // Parser les stagiaires (données commencent à la ligne 3, index 2 après skip des headers)
     const stagiaires = parseStagiairesFromExcel(data as any[][]);
 
     console.log(`✅ ${stagiaires.length} stagiaires extraits`);
 
-    // Sauvegarder dans public/ (cohérent avec les autres imports)
-    const outputPath = path.join(publicDir, 'stagiaires_m2.json');
-    await writeFile(outputPath, JSON.stringify(stagiaires, null, 2), 'utf-8');
+    if (stagiaires.length === 0) {
+      return NextResponse.json({ 
+        error: 'Aucun stagiaire trouvé dans le fichier' 
+      }, { status: 400 });
+    }
+
+    // SAUVEGARDER DANS SUPABASE
+    console.log('💾 Sauvegarde dans Supabase...');
+
+    // Vider la table
+    await supabase.from('stagiaires_m2').delete().neq('id', 0);
+
+    // Insérer en batch
+    const batchSize = 50;
+    let imported = 0;
+
+    for (let i = 0; i < stagiaires.length; i += batchSize) {
+      const batch = stagiaires.slice(i, i + batchSize);
+      
+      const stagairesToInsert = batch.map(stag => ({
+        ...stag,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
+
+      const { error } = await supabase
+        .from('stagiaires_m2')
+        .insert(stagairesToInsert);
+
+      if (error) {
+        console.error(`❌ Erreur insertion batch ${i / batchSize + 1}:`, error);
+      } else {
+        imported += batch.length;
+        console.log(`✅ Batch ${i / batchSize + 1}: ${batch.length} stagiaires`);
+      }
+    }
+
+    console.log(`✅ Import terminé: ${imported} stagiaires dans Supabase`);
 
     return NextResponse.json({
       success: true,
       message: 'Stagiaires SOPA importés avec succès',
-      count: stagiaires.length,
-      stagiaires: stagiaires
+      count: imported
     });
 
   } catch (error: any) {
-    console.error('Erreur lors de l\'import des stagiaires:', error);
+    console.error('❌ Erreur lors de l\'import des stagiaires:', error);
     return NextResponse.json({ 
       error: error.message || 'Erreur lors de l\'import' 
     }, { status: 500 });
@@ -58,56 +82,56 @@ export async function POST(request: NextRequest) {
 function parseStagiairesFromExcel(data: any[][]): any[] {
   const stagiaires: any[] = [];
   
-  // Les données commencent à la ligne 2 (index 2, après les 2 lignes d'en-tête)
-  for (let i = 2; i < data.length; i++) {
+  // Les données commencent à la ligne 4 (index 3)
+  // Ligne 0 = Titre
+  // Ligne 1 = En-têtes principaux
+  // Ligne 2 = Sous-en-têtes
+  // Ligne 3+ = Données
+  
+  for (let i = 3; i < data.length; i++) {
     const row = data[i];
     
     // Vérifier que la ligne contient des données
     if (!row || row.length < 3) continue;
     
-    const numero = row[0]; // Colonne A (Unnamed: 0)
-    const nom = row[1];    // Colonne B (IEN CAYENNE 2...)
-    const prenom = row[2]; // Colonne C (Unnamed: 2)
-    const statut = row[3]; // Colonne D (Unnamed: 3)
+    const nom = row[1];
+    const prenom = row[2];
     
     // Vérifier que c'est bien une ligne de stagiaire
-    if (!numero || !nom || !prenom) continue;
+    if (!nom || !prenom) continue;
     
-    console.log(`Stagiaire trouvé: ${numero}. ${nom} ${prenom}`);
+    console.log(`Stagiaire trouvé: ${nom} ${prenom}`);
     
-    // Stage 1 (Période 1 - colonnes 4-8) - Stage Filé
-    const stageFile = row[5] ? {
-      ecole: row[5],     // EEPU G. HERMINE
-      tuteur: row[6],    // Mme DOMPUT
-      prenom_tuteur: row[7], // Cindy
-      niveau: row[8]     // CP
-    } : { ecole: '', tuteur: '', prenom_tuteur: '', niveau: '' };
+    // Stage filé (colonnes 4-8)
+    const stageFile = {
+      commune: row[4] || '',
+      ecole: row[5] || '',
+      tuteur: `${row[6] || ''} ${row[7] || ''}`.trim(),
+      niveau: row[8] || ''
+    };
     
-    // Stage 2 (Période 2 - colonnes 9-12) - Stage Massé 1
-    const stageMasse1 = row[9] ? {
-      ecole: row[9],     // EMPU G. HERMINE
-      tuteur: row[10],   // Mme BOUSSATON DEFERT
-      prenom_tuteur: row[11], // Sophie
-      niveau: row[12]    // PS
-    } : { ecole: '', tuteur: '', prenom_tuteur: '', niveau: '' };
+    // Stage masse 1 (colonnes 9-12)
+    const stageMasse1 = {
+      ecole: row[9] || '',
+      tuteur: `${row[10] || ''} ${row[11] || ''}`.trim(),
+      niveau: row[12] || ''
+    };
     
-    // Stage 3 (Période 3 - colonnes 13-16) - Stage Massé 2
-    const stageMasse2 = row[13] ? {
-      ecole: row[13],    // EEPU G. HERMINE
-      tuteur: row[14],   // M. DORLIPO
-      prenom_tuteur: row[15], // Steddy
-      niveau: row[16]    // CM2
-    } : { ecole: '', tuteur: '', prenom_tuteur: '', niveau: '' };
+    // Stage masse 2 (colonnes 13-16)
+    const stageMasse2 = {
+      ecole: row[13] || '',
+      tuteur: `${row[14] || ''} ${row[15] || ''}`.trim(),
+      niveau: row[16] || ''
+    };
     
     const stagiaire = {
-      numero: parseInt(String(numero)),
-      nom: nom,
-      prenom: prenom,
-      statut: statut || 'M2 SOPA',
+      nom: String(nom).trim(),
+      prenom: String(prenom).trim(),
+      statut: row[3] || 'M2 SOPA',
       stage_file: stageFile,
       stage_masse_1: stageMasse1,
       stage_masse_2: stageMasse2,
-      annee_scolaire: '2025-2026' // TODO: Récupérer depuis la config
+      annee_scolaire: '2025-2026'
     };
     
     stagiaires.push(stagiaire);
@@ -116,7 +140,7 @@ function parseStagiairesFromExcel(data: any[][]): any[] {
   return stagiaires;
 }
 
-// GET - Récupérer les stagiaires
+// GET - Récupérer les stagiaires depuis Supabase
 export async function GET() {
   try {
     const { data, error } = await supabase
