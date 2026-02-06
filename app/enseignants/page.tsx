@@ -201,19 +201,19 @@ export default function EnseignantsPage() {
   const loadData = async () => {
     try {
       const [ensRes, ecolesRes, structuresRes] = await Promise.all([
-        fetch('/api/enseignants'),
-        fetch('/api/ecoles'),
-        fetch('/ecoles_structure.json').catch(() => ({ ok: false }))
-      ]);
+  fetch('/api/enseignants'),
+  fetch('/api/ecoles'),
+  fetch('/api/ecoles-structure')  // ← CHANGEMENT ICI
+]);
 
       const ensData = await ensRes.json();
       const ecolesData = await ecolesRes.json();
 
-      // Charger les structures si disponibles
-      let structuresData = [];
-      if (structuresRes.ok && 'json' in structuresRes) {
-        structuresData = await structuresRes.json();
-      }
+      // Charger les structures depuis Supabase
+let structuresData = [];
+if (structuresRes.ok) {
+  structuresData = await structuresRes.json();
+}
 
       console.log('📊 Données chargées:', {
         enseignants: ensData.length,
