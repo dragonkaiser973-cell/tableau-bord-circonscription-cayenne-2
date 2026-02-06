@@ -11,6 +11,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 });
     }
 
+    console.log('📂 Lecture fichier Excel stagiaires...');
+
     // Lire le fichier Excel
     const buffer = Buffer.from(await file.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: 'buffer' });
@@ -18,17 +20,16 @@ export async function POST(request: NextRequest) {
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-    console.log('=== EXTRACTION STAGIAIRES SOPA ===');
-    console.log(`Nombre de lignes: ${data.length}`);
+    console.log(`📊 Nombre de lignes dans Excel: ${data.length}`);
 
-    // Parser les stagiaires (données commencent à la ligne 3, index 2 après skip des headers)
+    // Parser les stagiaires
     const stagiaires = parseStagiairesFromExcel(data as any[][]);
 
     console.log(`✅ ${stagiaires.length} stagiaires extraits`);
 
     if (stagiaires.length === 0) {
       return NextResponse.json({ 
-        error: 'Aucun stagiaire trouvé dans le fichier' 
+        error: 'Aucun stagiaire trouvé dans le fichier. Vérifiez la structure du fichier Excel.' 
       }, { status: 400 });
     }
 
@@ -36,7 +37,14 @@ export async function POST(request: NextRequest) {
     console.log('💾 Sauvegarde dans Supabase...');
 
     // Vider la table
-    await supabase.from('stagiaires_m2').delete().neq('id', 0);
+    const { error: deleteError } = await supabase
+      .from('stagiaires_m2')
+      .delete()
+      .neq('id', 0);
+
+    if (deleteError) {
+      console.error('Erreur vidage table:', deleteError);
+    }
 
     // Insérer en batch
     const batchSize = 50;
@@ -56,23 +64,26 @@ export async function POST(request: NextRequest) {
         .insert(stagairesToInsert);
 
       if (error) {
-        console.error(`❌ Erreur insertion batch ${i / batchSize + 1}:`, error);
+        console.error(`❌ Erreur insertion batch:`, error);
+        return NextResponse.json({ 
+          error: `Erreur Supabase: ${error.message}` 
+        }, { status: 500 });
       } else {
         imported += batch.length;
-        console.log(`✅ Batch ${i / batchSize + 1}: ${batch.length} stagiaires`);
+        console.log(`✅ Batch: ${batch.length} stagiaires importés`);
       }
     }
 
-    console.log(`✅ Import terminé: ${imported} stagiaires dans Supabase`);
+    console.log(`🎉 Import terminé: ${imported} stagiaires dans Supabase`);
 
     return NextResponse.json({
       success: true,
-      message: 'Stagiaires SOPA importés avec succès',
+      message: `${imported} stagiaires SOPA importés avec succès`,
       count: imported
     });
 
   } catch (error: any) {
-    console.error('❌ Erreur lors de l\'import des stagiaires:', error);
+    console.error('❌ Erreur import stagiaires:', error);
     return NextResponse.json({ 
       error: error.message || 'Erreur lors de l\'import' 
     }, { status: 500 });
@@ -82,25 +93,36 @@ export async function POST(request: NextRequest) {
 function parseStagiairesFromExcel(data: any[][]): any[] {
   const stagiaires: any[] = [];
   
-  // Les données commencent à la ligne 4 (index 3)
-  // Ligne 0 = Titre
-  // Ligne 1 = En-têtes principaux
-  // Ligne 2 = Sous-en-têtes
-  // Ligne 3+ = Données
+  console.log('\n=== PARSING STAGIAIRES ===');
+  
+  // Les données commencent à data[3] (ligne 4 dans Excel)
+  // data[0] = Titre
+  // data[1] = En-têtes principaux
+  // data[2] = Sous-en-têtes
+  // data[3+] = Données stagiaires
   
   for (let i = 3; i < data.length; i++) {
     const row = data[i];
     
+    // Debug: afficher la ligne
+    console.log(`\nLigne ${i}: ${row.length} colonnes`);
+    
     // Vérifier que la ligne contient des données
-    if (!row || row.length < 3) continue;
+    if (!row || row.length < 3) {
+      console.log(`  ⚠️ Ligne ${i} ignorée (trop courte)`);
+      continue;
+    }
     
     const nom = row[1];
     const prenom = row[2];
     
     // Vérifier que c'est bien une ligne de stagiaire
-    if (!nom || !prenom) continue;
+    if (!nom || nom === '' || !prenom || prenom === '') {
+      console.log(`  ⚠️ Ligne ${i} ignorée (nom ou prénom vide)`);
+      continue;
+    }
     
-    console.log(`Stagiaire trouvé: ${nom} ${prenom}`);
+    console.log(`  ✅ Stagiaire: ${nom} ${prenom}`);
     
     // Stage filé (colonnes 4-8)
     const stageFile = {
@@ -127,7 +149,7 @@ function parseStagiairesFromExcel(data: any[][]): any[] {
     const stagiaire = {
       nom: String(nom).trim(),
       prenom: String(prenom).trim(),
-      statut: row[3] || 'M2 SOPA',
+      statut: row[3] ? String(row[3]).trim() : 'M2 SOPA',
       stage_file: stageFile,
       stage_masse_1: stageMasse1,
       stage_masse_2: stageMasse2,
@@ -136,6 +158,8 @@ function parseStagiairesFromExcel(data: any[][]): any[] {
     
     stagiaires.push(stagiaire);
   }
+  
+  console.log(`\n📊 Total stagiaires parsés: ${stagiaires.length}\n`);
   
   return stagiaires;
 }
@@ -149,7 +173,7 @@ export async function GET() {
       .order('nom', { ascending: true });
 
     if (error) {
-      console.error('Supabase error fetching stagiaires:', error);
+      console.error('Erreur Supabase stagiaires:', error);
       return NextResponse.json([]);
     }
 
