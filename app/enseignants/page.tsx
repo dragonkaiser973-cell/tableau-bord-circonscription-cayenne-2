@@ -245,7 +245,13 @@ export default function EnseignantsPage() {
         console.error('Erreur chargement stagiaires M2:', err);
         setStagiaireM2([]);
       }
-  }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Erreur lors du chargement:', error);
+      setLoading(false);
+    }
+  };
 
   const getFilteredEnseignants = () => {
     return enseignants.filter(e => {
