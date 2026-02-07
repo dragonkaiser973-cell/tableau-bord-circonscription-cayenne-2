@@ -9,6 +9,7 @@ import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 interface Enseignant {
   id: number;
   ecole_nom: string;
+  ecole_uai: string;        // ← AJOUTER CETTE LIGNE
   annee_scolaire: string;
   nom: string;
   prenom: string;
