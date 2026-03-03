@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import path from 'path';
-
-const archivesDir = path.join(process.cwd(), 'data', 'archives');
+import { supabase } from '@/lib/supabase';
 
 // GET - Récupérer les données d'une archive spécifique
+// Compatible avec l'ancien système de paramètres
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -16,9 +14,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Année scolaire manquante' }, { status: 400 });
     }
     
-    const archivePath = path.join(archivesDir, `${anneeScolaire}.json`);
-    const content = await readFile(archivePath, 'utf-8');
-    const archive = JSON.parse(content);
+    console.log(`📖 Chargement archive: ${anneeScolaire}, type: ${type}, section: ${section}`);
+    
+    // Charger l'archive depuis Supabase
+    const { data: archive, error } = await supabase
+      .from('archives')
+      .select('*')
+      .eq('annee_scolaire', anneeScolaire)
+      .single();
+
+    if (error || !archive) {
+      console.error('Archive non trouvée:', error);
+      return NextResponse.json({ 
+        error: 'Archive non trouvée' 
+      }, { status: 404 });
+    }
+    
+    console.log(`✅ Archive trouvée: ${archive.annee_scolaire}`);
     
     // ====================================================================
     // RÉTROCOMPATIBILITÉ - Support ancien format
@@ -42,15 +54,18 @@ export async function GET(request: NextRequest) {
       
       // Essayer nouveau format d'abord
       if (archive.donnees_brutes && archive.donnees_brutes[newKey]) {
+        console.log(`✅ Retour données brutes: ${newKey}`);
         return NextResponse.json(archive.donnees_brutes[newKey]);
       }
       
-      // Fallback ancien format
+      // Fallback ancien format (si migration partielle)
       if (archive.data && archive.data[type]) {
+        console.log(`✅ Retour données anciennes: ${type}`);
         return NextResponse.json(archive.data[type]);
       }
       
       // Retourner tableau vide si pas trouvé
+      console.warn(`⚠️  Données non trouvées pour type: ${type}`);
       return NextResponse.json([]);
     }
     
@@ -83,12 +98,25 @@ export async function GET(request: NextRequest) {
     // ====================================================================
     // PAR DÉFAUT - Retourner toute l'archive
     // ====================================================================
-    return NextResponse.json(archive);
+    
+    // Construire la structure complète pour compatibilité
+    const fullArchive = {
+      anneeScolaire: archive.annee_scolaire,
+      dateArchivage: archive.date_creation,
+      version: archive.version || '3.0',
+      metadata: archive.metadata || {},
+      donnees_brutes: archive.donnees_brutes || {},
+      donnees_calculees: archive.donnees_calculees || {},
+      // Rétrocompatibilité ancien format
+      data: archive.donnees_brutes || {}
+    };
+    
+    return NextResponse.json(fullArchive);
     
   } catch (error: any) {
-    console.error('Erreur lecture archive:', error);
+    console.error('❌ Erreur lecture archive:', error);
     return NextResponse.json({ 
-      error: error.message || 'Archive non trouvée' 
-    }, { status: 404 });
+      error: error.message || 'Erreur lors de la lecture de l\'archive' 
+    }, { status: 500 });
   }
 }
