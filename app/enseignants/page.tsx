@@ -70,7 +70,7 @@ export default function EnseignantsPage() {
     return { nom: nettoye, prenom: '' };
   };
 
-  // Fonction pour comparer deux enseignants (matching fuzzy amélioré)
+  // Fonction pour comparer deux enseignants (matching ultra-permissif)
 const enseignantsCorrespondent = (ens1Nom: string, ens1Prenom: string, ens2Texte: string): boolean => {
   const nom1 = normaliserNom(ens1Nom);
   const prenom1 = normaliserNom(ens1Prenom);
@@ -79,13 +79,23 @@ const enseignantsCorrespondent = (ens1Nom: string, ens1Prenom: string, ens2Texte
   const nom2Norm = normaliserNom(nom2);
   const prenom2Norm = normaliserNom(prenom2);
   
-  // Nettoyer les noms pour variations tiret/espace/ep
-  const cleanNom1 = nom1.replace(/[\s\-]+/g, '').replace(/\bep\b/gi, '');
-  const cleanNom2 = nom2Norm.replace(/[\s\-]+/g, '').replace(/\bep\b/gi, '');
+  // Nettoyer de manière ultra-agressive : retirer espaces, tirets, EP, particules
+  const cleanNom1 = nom1
+    .replace(/\bep\b/gi, '')           // Retirer "ep"
+    .replace(/\b(de|du|dos|van|von)\b/gi, '')  // Retirer particules
+    .replace(/[\s\-]+/g, '')           // Retirer espaces et tirets
+    .trim();
+  
+  const cleanNom2 = nom2Norm
+    .replace(/\bep\b/gi, '')
+    .replace(/\b(de|du|dos|van|von)\b/gi, '')
+    .replace(/[\s\-]+/g, '')
+    .trim();
+  
   const cleanPrenom1 = prenom1.replace(/[\s\-]+/g, '');
   const cleanPrenom2 = prenom2Norm.replace(/[\s\-]+/g, '');
   
-  // Match 1: Noms et prénoms identiques (sans espaces/tirets)
+  // Match 1: Noms et prénoms identiques (ultra nettoyés)
   if (cleanNom1 === cleanNom2 && cleanPrenom1 === cleanPrenom2) {
     return true;
   }
@@ -97,23 +107,46 @@ const enseignantsCorrespondent = (ens1Nom: string, ens1Prenom: string, ens2Texte
     }
   }
   
-  // Match 3: Nom contient l'autre (pour cas comme "NG" vs "NG HORTH")
-  if (cleanNom1.length >= 3 && cleanNom2.length >= 3) {
+  // Match 3: Un nom contient l'autre (au moins 4 caractères)
+  if (cleanNom1.length >= 4 && cleanNom2.length >= 4) {
     if (cleanNom1.includes(cleanNom2) || cleanNom2.includes(cleanNom1)) {
-      if (cleanPrenom1[0] === cleanPrenom2[0]) {
+      if (cleanPrenom1.length > 0 && cleanPrenom2.length > 0 && cleanPrenom1[0] === cleanPrenom2[0]) {
         return true;
       }
     }
   }
   
-  // Match 4: Prénom contient l'autre (pour prénoms composés incomplets)
+  // Match 4: Prénom contient l'autre (au moins 3 caractères)
   if (cleanNom1 === cleanNom2 && cleanPrenom1.length >= 3 && cleanPrenom2.length >= 3) {
     if (cleanPrenom1.includes(cleanPrenom2) || cleanPrenom2.includes(cleanPrenom1)) {
       return true;
     }
   }
   
+  // Match 5: Levenshtein-like pour fautes de frappe (seulement si très proche)
+  if (cleanNom1.length > 4 && cleanNom2.length > 4) {
+    const similarity = calculateSimilarity(cleanNom1, cleanNom2);
+    if (similarity > 0.85 && cleanPrenom1[0] === cleanPrenom2[0]) {
+      return true;
+    }
+  }
+  
   return false;
+};
+
+// Fonction helper pour calculer similarité
+const calculateSimilarity = (str1: string, str2: string): number => {
+  const longer = str1.length > str2.length ? str1 : str2;
+  const shorter = str1.length > str2.length ? str2 : str1;
+  
+  if (longer.length === 0) return 1.0;
+  
+  let matches = 0;
+  for (let i = 0; i < shorter.length; i++) {
+    if (shorter[i] === longer[i]) matches++;
+  }
+  
+  return matches / longer.length;
 };
 
   // Fonction d'enrichissement principale
