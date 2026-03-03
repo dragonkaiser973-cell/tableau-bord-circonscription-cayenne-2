@@ -4,10 +4,10 @@ import { supabase } from '@/lib/supabase';
 // GET une archive spécifique par année
 export async function GET(
   request: NextRequest,
-  { params }: { params: { annee: string } }
+  { params }: { params: Promise<{ annee: string }> }
 ) {
   try {
-    const annee = params.annee;
+    const { annee } = await params;
 
     console.log(`📖 Chargement archive: ${annee}`);
 
