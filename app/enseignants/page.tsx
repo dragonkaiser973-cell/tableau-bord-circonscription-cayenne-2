@@ -172,24 +172,9 @@ const classeCorrespondante = structure.classes.find((classe: any) => {
   // Gérer le cas de multi-enseignants (séparés par " / " ou " - ")
   const enseignants = enseignantNormalise.split(/\s*[\/\-]\s*/).map((e: string) => e.trim());
   
-  // DEBUG: Afficher pour JONNAIS
-  if (ens.nom === 'JONNAIS') {
-    console.log(`🔍 DEBUG JONNAIS:`);
-    console.log(`  Classe: ${classe.niveau} - ${classe.enseignant}`);
-    console.log(`  Enseignants extraits:`, enseignants);
-  }
-  
-  return enseignants.some((enseignantTexte: string) => {
-    const match = enseignantsCorrespondent(ens.nom, ens.prenom, enseignantTexte);
-    
-    // DEBUG pour JONNAIS
-    if (ens.nom === 'JONNAIS') {
-      console.log(`  Test "${enseignantTexte}" → ${match ? '✅' : '❌'}`);
-    }
-    
-    return match;
-  });
-});
+  return enseignants.some((enseignantTexte: string) => 
+  enseignantsCorrespondent(ens.nom, ens.prenom, enseignantTexte)
+);
 
       if (classeCorrespondante) {
         nbEnrichis++;
