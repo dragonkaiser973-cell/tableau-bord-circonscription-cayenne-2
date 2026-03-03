@@ -1,16 +1,34 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function ConsulterArchivePage() {
+function ConsulterArchiveContent() {
   const [archive, setArchive] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const annee = searchParams.get('annee');
+
+  // ... reste du code inchangé
+}
+
+export default function ConsulterArchivePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
+        <div className="text-center text-white">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-xl">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <ConsulterArchiveContent />
+    </Suspense>
+  );
+}
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
