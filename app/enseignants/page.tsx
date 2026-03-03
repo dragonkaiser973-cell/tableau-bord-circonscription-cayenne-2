@@ -166,8 +166,11 @@ export default function EnseignantsPage() {
 const classeCorrespondante = structure.classes.find((classe: any) => {
   if (!classe.enseignant) return false;
   
-  // Gérer le cas de multi-enseignants (séparés par des espaces multiples)
-  const enseignants = classe.enseignant.split(/\s{2,}/).map((e: string) => e.trim());
+  // Normaliser les espaces multiples en un seul espace d'abord
+  const enseignantNormalise = classe.enseignant.replace(/\s+/g, ' ').trim();
+  
+  // Gérer le cas de multi-enseignants (séparés par " / " ou " - ")
+  const enseignants = enseignantNormalise.split(/\s*[\/\-]\s*/).map((e: string) => e.trim());
   
   // DEBUG: Afficher pour JONNAIS
   if (ens.nom === 'JONNAIS') {
