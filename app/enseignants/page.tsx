@@ -173,8 +173,9 @@ const classeCorrespondante = structure.classes.find((classe: any) => {
   const enseignants = enseignantNormalise.split(/\s*[\/\-]\s*/).map((e: string) => e.trim());
   
   return enseignants.some((enseignantTexte: string) => 
-  enseignantsCorrespondent(ens.nom, ens.prenom, enseignantTexte)
-);
+    enseignantsCorrespondent(ens.nom, ens.prenom, enseignantTexte)
+  );
+});
 
       if (classeCorrespondante) {
         nbEnrichis++;
