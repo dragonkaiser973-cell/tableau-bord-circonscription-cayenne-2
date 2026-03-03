@@ -80,17 +80,21 @@ const enseignantsCorrespondent = (ens1Nom: string, ens1Prenom: string, ens2Texte
   const prenom2Norm = normaliserNom(prenom2);
   
   // Nettoyer de manière ultra-agressive : retirer espaces, tirets, EP, particules
-  const cleanNom1 = nom1
-    .replace(/\bep\b/gi, '')           // Retirer "ep"
-    .replace(/\b(de|du|dos|van|von)\b/gi, '')  // Retirer particules
-    .replace(/[\s\-]+/g, '')           // Retirer espaces et tirets
-    .trim();
-  
-  const cleanNom2 = nom2Norm
-    .replace(/\bep\b/gi, '')
-    .replace(/\b(de|du|dos|van|von)\b/gi, '')
-    .replace(/[\s\-]+/g, '')
-    .trim();
+const cleanNom1 = nom1
+  .replace(/\s+ep\s+/gi, '')           // Retirer " EP " (avec espaces)
+  .replace(/^ep\s+/gi, '')             // Retirer "EP " au début
+  .replace(/\s+ep$/gi, '')             // Retirer " EP" à la fin
+  .replace(/\b(de|du|dos|van|von)\b/gi, '')  // Retirer particules
+  .replace(/[\s\-]+/g, '')             // Retirer espaces et tirets
+  .trim();
+
+const cleanNom2 = nom2Norm
+  .replace(/\s+ep\s+/gi, '')           // Retirer " EP " (avec espaces)
+  .replace(/^ep\s+/gi, '')             // Retirer "EP " au début
+  .replace(/\s+ep$/gi, '')             // Retirer " EP" à la fin
+  .replace(/\b(de|du|dos|van|von)\b/gi, '')  // Retirer particules
+  .replace(/[\s\-]+/g, '')             // Retirer espaces et tirets
+  .trim();
   
   const cleanPrenom1 = prenom1.replace(/[\s\-]+/g, '');
   const cleanPrenom2 = prenom2Norm.replace(/[\s\-]+/g, '');
