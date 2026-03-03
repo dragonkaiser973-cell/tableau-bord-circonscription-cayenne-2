@@ -70,36 +70,51 @@ export default function EnseignantsPage() {
     return { nom: nettoye, prenom: '' };
   };
 
-  // Fonction pour comparer deux enseignants (matching fuzzy)
-  const enseignantsCorrespondent = (ens1Nom: string, ens1Prenom: string, ens2Texte: string): boolean => {
-    const nom1 = normaliserNom(ens1Nom);
-    const prenom1 = normaliserNom(ens1Prenom);
-    
-    const { nom: nom2, prenom: prenom2 } = extraireNomPrenom(ens2Texte);
-    const nom2Norm = normaliserNom(nom2);
-    const prenom2Norm = normaliserNom(prenom2);
-    
-    // Match exact
-    if (nom1 === nom2Norm && prenom1 === prenom2Norm) {
+  // Fonction pour comparer deux enseignants (matching fuzzy amélioré)
+const enseignantsCorrespondent = (ens1Nom: string, ens1Prenom: string, ens2Texte: string): boolean => {
+  const nom1 = normaliserNom(ens1Nom);
+  const prenom1 = normaliserNom(ens1Prenom);
+  
+  const { nom: nom2, prenom: prenom2 } = extraireNomPrenom(ens2Texte);
+  const nom2Norm = normaliserNom(nom2);
+  const prenom2Norm = normaliserNom(prenom2);
+  
+  // Nettoyer les noms pour variations tiret/espace/ep
+  const cleanNom1 = nom1.replace(/[\s\-]+/g, '').replace(/\bep\b/gi, '');
+  const cleanNom2 = nom2Norm.replace(/[\s\-]+/g, '').replace(/\bep\b/gi, '');
+  const cleanPrenom1 = prenom1.replace(/[\s\-]+/g, '');
+  const cleanPrenom2 = prenom2Norm.replace(/[\s\-]+/g, '');
+  
+  // Match 1: Noms et prénoms identiques (sans espaces/tirets)
+  if (cleanNom1 === cleanNom2 && cleanPrenom1 === cleanPrenom2) {
+    return true;
+  }
+  
+  // Match 2: Nom identique + première lettre prénom
+  if (cleanNom1 === cleanNom2 && cleanPrenom1.length > 0 && cleanPrenom2.length > 0) {
+    if (cleanPrenom1[0] === cleanPrenom2[0]) {
       return true;
     }
-    
-    // Match nom exact et première lettre du prénom
-    if (nom1 === nom2Norm && prenom1.length > 0 && prenom2Norm.length > 0) {
-      if (prenom1[0] === prenom2Norm[0]) {
+  }
+  
+  // Match 3: Nom contient l'autre (pour cas comme "NG" vs "NG HORTH")
+  if (cleanNom1.length >= 3 && cleanNom2.length >= 3) {
+    if (cleanNom1.includes(cleanNom2) || cleanNom2.includes(cleanNom1)) {
+      if (cleanPrenom1[0] === cleanPrenom2[0]) {
         return true;
       }
     }
-    
-    // Match avec nom composé (ex: "JEAN-PIERRE" vs "JEAN PIERRE")
-    const nom1SansEspace = nom1.replace(/[\s-]/g, '');
-    const nom2SansEspace = nom2Norm.replace(/[\s-]/g, '');
-    if (nom1SansEspace === nom2SansEspace && prenom1[0] === prenom2Norm[0]) {
+  }
+  
+  // Match 4: Prénom contient l'autre (pour prénoms composés incomplets)
+  if (cleanNom1 === cleanNom2 && cleanPrenom1.length >= 3 && cleanPrenom2.length >= 3) {
+    if (cleanPrenom1.includes(cleanPrenom2) || cleanPrenom2.includes(cleanPrenom1)) {
       return true;
     }
-    
-    return false;
-  };
+  }
+  
+  return false;
+};
 
   // Fonction d'enrichissement principale
   const enrichirEnseignantsAvecStructure = (enseignants: Enseignant[], structures: any[], ecoles: any[]): Enseignant[] => {
