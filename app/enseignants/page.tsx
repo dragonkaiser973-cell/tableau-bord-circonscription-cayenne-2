@@ -163,16 +163,30 @@ export default function EnseignantsPage() {
       }
 
       // Chercher une classe correspondant à cet enseignant
-      const classeCorrespondante = structure.classes.find((classe: any) => {
-        if (!classe.enseignant) return false;
-        
-        // Gérer le cas de multi-enseignants (séparés par des espaces multiples)
-        const enseignants = classe.enseignant.split(/\s{2,}/).map((e: string) => e.trim());
-        
-        return enseignants.some((enseignantTexte: string) => 
-          enseignantsCorrespondent(ens.nom, ens.prenom, enseignantTexte)
-        );
-      });
+const classeCorrespondante = structure.classes.find((classe: any) => {
+  if (!classe.enseignant) return false;
+  
+  // Gérer le cas de multi-enseignants (séparés par des espaces multiples)
+  const enseignants = classe.enseignant.split(/\s{2,}/).map((e: string) => e.trim());
+  
+  // DEBUG: Afficher pour JONNAIS
+  if (ens.nom === 'JONNAIS') {
+    console.log(`🔍 DEBUG JONNAIS:`);
+    console.log(`  Classe: ${classe.niveau} - ${classe.enseignant}`);
+    console.log(`  Enseignants extraits:`, enseignants);
+  }
+  
+  return enseignants.some((enseignantTexte: string) => {
+    const match = enseignantsCorrespondent(ens.nom, ens.prenom, enseignantTexte);
+    
+    // DEBUG pour JONNAIS
+    if (ens.nom === 'JONNAIS') {
+      console.log(`  Test "${enseignantTexte}" → ${match ? '✅' : '❌'}`);
+    }
+    
+    return match;
+  });
+});
 
       if (classeCorrespondante) {
         nbEnrichis++;
