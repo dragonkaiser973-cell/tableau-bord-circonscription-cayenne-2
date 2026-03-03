@@ -169,8 +169,8 @@ const classeCorrespondante = structure.classes.find((classe: any) => {
   // Normaliser les espaces multiples en un seul espace d'abord
   const enseignantNormalise = classe.enseignant.replace(/\s+/g, ' ').trim();
   
-  // Gérer le cas de multi-enseignants (séparés par " / " ou " - ")
-  const enseignants = enseignantNormalise.split(/\s*[\/\-]\s*/).map((e: string) => e.trim());
+  // Gérer le cas de multi-enseignants (séparés par "/" ou " et " ou ";")
+const enseignants = enseignantNormalise.split(/\s*(?:\/|\bet\b|;)\s*/i).map((e: string) => e.trim());
   
   // DEBUG: Afficher pour ANTON-SAMPSON
   if (ens.nom === 'ANTON-SAMPSON') {
