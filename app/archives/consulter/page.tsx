@@ -29,25 +29,19 @@ function ConsulterArchiveContent() {
   }, [annee, router]);
 
   const loadArchive = async () => {
-    try {
-      console.log(`Chargement archive: ${annee}`);
-      const res = await fetch(`/api/archives/${annee}`);
-      
-      if (!res.ok) {
-        throw new Error('Archive non trouvée');
-      }
-      
-      const data = await res.json();
-      console.log('Archive chargée:', data);
-      setArchive(data);
-      setError(null);
-    } catch (err: any) {
-      console.error('Erreur chargement archive:', err);
-      setError(err.message || 'Erreur lors du chargement');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    // AVANT : const res = await fetch(`/api/archives/data?annee=${annee}`);
+    // APRÈS :
+    const res = await fetch(`/api/archives?annee=${annee}`);
+    
+    const data = await res.json();
+    setArchive(data);
+  } catch (error) {
+    console.error('Erreur chargement archive:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const downloadJSON = () => {
     if (!archive) return;
