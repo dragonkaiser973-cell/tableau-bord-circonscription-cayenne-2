@@ -128,10 +128,41 @@ function fixUTF8(text: string): string {
 }
 
 // ====================================================================
-// GET - Liste toutes les archives depuis Supabase
+// GET - Liste toutes les archives OU récupère une archive spécifique
 // ====================================================================
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const annee = searchParams.get('annee');
+
+    // CAS 1 : Récupérer une archive spécifique
+    if (annee) {
+      console.log(`📖 Chargement archive: ${annee}`);
+
+      const { data, error } = await supabase
+        .from('archives')
+        .select('*')
+        .eq('annee_scolaire', annee)
+        .single();
+
+      if (error || !data) {
+        console.error('Erreur Supabase:', error);
+        return NextResponse.json({ error: 'Archive non trouvée' }, { status: 404 });
+      }
+
+      console.log(`✅ Archive trouvée: ${data.annee_scolaire}`);
+
+      return NextResponse.json({
+        anneeScolaire: data.annee_scolaire,
+        dateArchivage: data.date_creation,
+        version: data.version || '3.0',
+        metadata: data.metadata || {},
+        donnees_brutes: data.donnees_brutes || {},
+        donnees_calculees: data.donnees_calculees || {}
+      });
+    }
+
+    // CAS 2 : Lister toutes les archives
     const { data, error } = await supabase
       .from('archives')
       .select('annee_scolaire, date_creation, metadata')
