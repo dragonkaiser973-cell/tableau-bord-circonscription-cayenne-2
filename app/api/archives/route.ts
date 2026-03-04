@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
 // ====================================================================
@@ -89,22 +89,22 @@ function genererDonneesClassement(statistiques: any[]) {
     .map(stat => ({
       uai: stat.uai,
       nom: stat.nom,
-      effectif: stat.effectifs?.['Admis définitifs'] || stat.effectifs?.['Admis'] || 0
+      effectif: stat.effectifs?.['Admis dÃ©finitifs'] || stat.effectifs?.['Admis'] || 0
     }))
     .sort((a, b) => b.effectif - a.effectif);
 }
 
 // ====================================================================
-// GET - Liste toutes les archives OU récupère une archive spécifique
+// GET - Liste toutes les archives OU rÃ©cupÃ¨re une archive spÃ©cifique
 // ====================================================================
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const annee = searchParams.get('annee');
 
-    // CAS 1 : Récupérer une archive spécifique
+    // CAS 1 : RÃ©cupÃ©rer une archive spÃ©cifique
     if (annee) {
-      console.log(`📖 Chargement archive: ${annee}`);
+      console.log(`ðŸ“– Chargement archive: ${annee}`);
 
       const { data, error } = await supabase
         .from('archives')
@@ -114,10 +114,10 @@ export async function GET(request: NextRequest) {
 
       if (error || !data) {
         console.error('Erreur Supabase:', error);
-        return NextResponse.json({ error: 'Archive non trouvée' }, { status: 404 });
+        return NextResponse.json({ error: 'Archive non trouvÃ©e' }, { status: 404 });
       }
 
-      console.log(`✅ Archive trouvée: ${data.annee_scolaire}`);
+      console.log(`âœ… Archive trouvÃ©e: ${data.annee_scolaire}`);
 
       return NextResponse.json({
         anneeScolaire: data.annee_scolaire,
@@ -150,23 +150,23 @@ export async function GET(request: NextRequest) {
 }
 
 // ====================================================================
-// POST - Créer une nouvelle archive COMPLÈTE depuis Supabase
+// POST - CrÃ©er une nouvelle archive COMPLÃˆTE depuis Supabase
 // ====================================================================
 export async function POST(request: NextRequest) {
   try {
     const { anneeScolaire } = await request.json();
     
     if (!anneeScolaire) {
-      return NextResponse.json({ error: 'Année scolaire manquante' }, { status: 400 });
+      return NextResponse.json({ error: 'AnnÃ©e scolaire manquante' }, { status: 400 });
     }
     
-    console.log(`📦 Début de l'archivage pour ${anneeScolaire}`);
+    console.log(`ðŸ“¦ DÃ©but de l'archivage pour ${anneeScolaire}`);
     
     // ====================================================================
-    // ÉTAPE 1 : CHARGER TOUTES LES DONNÉES DEPUIS SUPABASE
+    // Ã‰TAPE 1 : CHARGER TOUTES LES DONNÃ‰ES DEPUIS SUPABASE
     // ====================================================================
     
-    console.log('📥 Chargement des données depuis Supabase...');
+    console.log('ðŸ“¥ Chargement des donnÃ©es depuis Supabase...');
     
     const [
       resEnseignants,
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
       resStagiaires,
       resEvenementsData
     ] = await Promise.all([
-      supabase.from('enseignants').select('*').eq('annee_scolaire', anneeScolaire),
+      supabase.from('enseignants').select('*'),
       supabase.from('evaluations').select('*'),
       supabase.from('ecoles').select('*'),
       supabase.from('stagiaires_m2').select('*').eq('annee_scolaire', anneeScolaire),
@@ -188,12 +188,12 @@ export async function POST(request: NextRequest) {
     const stagiaires_m2 = resStagiaires.data || [];
     const evenements = Array.isArray(resEvenementsData) ? resEvenementsData : [];
     
-    console.log(`✅ Données chargées:`);
+    console.log(`âœ… DonnÃ©es chargÃ©es:`);
     console.log(`   - ${enseignants.length} enseignants`);
-    console.log(`   - ${evaluations.length} évaluations`);
-    console.log(`   - ${ecoles.length} écoles`);
+    console.log(`   - ${evaluations.length} Ã©valuations`);
+    console.log(`   - ${ecoles.length} Ã©coles`);
     console.log(`   - ${stagiaires_m2.length} stagiaires M2`);
-    console.log(`   - ${evenements.length} événements`);
+    console.log(`   - ${evenements.length} Ã©vÃ©nements`);
     
     // Charger les structures et stats depuis les API
     const [structuresRes, statsRes, identiteRes] = await Promise.all([
@@ -208,13 +208,13 @@ export async function POST(request: NextRequest) {
     
     console.log(`   - ${ecoles_structure.length} structures`);
     console.log(`   - ${statistiques_ecoles.length} statistiques`);
-    console.log(`   - ${ecoles_identite.length} identités`);
+    console.log(`   - ${ecoles_identite.length} identitÃ©s`);
     
     // ====================================================================
-    // ÉTAPE 2 : CALCULER LES DONNÉES AGRÉGÉES
+    // Ã‰TAPE 2 : CALCULER LES DONNÃ‰ES AGRÃ‰GÃ‰ES
     // ====================================================================
     
-    console.log('📊 Calcul des statistiques...');
+    console.log('ðŸ“Š Calcul des statistiques...');
     
     const sources = {
       enseignants,
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
     const bottom5 = classementEcoles.slice(-5).reverse();
     
     // ====================================================================
-    // ÉTAPE 3 : CONSTRUIRE L'ARCHIVE COMPLÈTE
+    // Ã‰TAPE 3 : CONSTRUIRE L'ARCHIVE COMPLÃˆTE
     // ====================================================================
     
     const metadata = {
@@ -314,10 +314,10 @@ export async function POST(request: NextRequest) {
       }
     };
     
-    console.log('✅ Archive construite');
+    console.log('âœ… Archive construite');
     
     // ====================================================================
-    // ÉTAPE 4 : SAUVEGARDER DANS SUPABASE
+    // Ã‰TAPE 4 : SAUVEGARDER DANS SUPABASE
     // ====================================================================
     
     const { data, error } = await supabase
@@ -333,17 +333,17 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('❌ Erreur Supabase:', error);
+      console.error('âŒ Erreur Supabase:', error);
       return NextResponse.json({ 
         error: error.message || 'Erreur lors de la sauvegarde' 
       }, { status: 500 });
     }
     
-    console.log(`✅ Archive sauvegardée dans Supabase pour ${anneeScolaire}`);
+    console.log(`âœ… Archive sauvegardÃ©e dans Supabase pour ${anneeScolaire}`);
     
     return NextResponse.json({
       success: true,
-      message: `Archive créée pour l'année ${anneeScolaire}`,
+      message: `Archive crÃ©Ã©e pour l'annÃ©e ${anneeScolaire}`,
       anneeScolaire,
       metadata,
       taille: {
@@ -353,9 +353,9 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error: any) {
-    console.error('❌ Erreur création archive:', error);
+    console.error('âŒ Erreur crÃ©ation archive:', error);
     return NextResponse.json({ 
-      error: error.message || 'Erreur lors de la création de l\'archive' 
+      error: error.message || 'Erreur lors de la crÃ©ation de l\'archive' 
     }, { status: 500 });
   }
 }
@@ -369,7 +369,7 @@ export async function DELETE(request: NextRequest) {
     const anneeScolaire = searchParams.get('annee');
     
     if (!anneeScolaire) {
-      return NextResponse.json({ error: 'Année scolaire manquante' }, { status: 400 });
+      return NextResponse.json({ error: 'AnnÃ©e scolaire manquante' }, { status: 400 });
     }
     
     const { error } = await supabase
