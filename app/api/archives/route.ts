@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
     
     console.log('ðŸ“¥ Chargement des donnÃ©es depuis Supabase...');
     
-    const [
+    cFonst [
       resEnseignants,
       resEvaluations,
       resEcoles,
@@ -297,7 +297,10 @@ console.log(`   - ${Array.isArray(ecoles_identite) ? ecoles_identite.length : 0}
       }
     };
     
-    const donnees_brutes = {
+    console.log(`📊 Nombre d'évaluations chargées: ${evaluations.length}`);
+
+const donnees_brutes = {
+  // ...
       ecoles_identite,
       ecoles_structure,
       evaluations,
