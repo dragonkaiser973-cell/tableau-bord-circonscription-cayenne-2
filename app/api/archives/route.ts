@@ -89,7 +89,7 @@ function genererDonneesClassement(statistiques: any[]) {
     .map(stat => ({
       uai: stat.uai,
       nom: stat.nom,
-      effectif: stat.effectifs?.['Admis dÃ©finitifs'] || stat.effectifs?.['Admis'] || 0
+      effectif: stat.effectifs?.['Admis définitifs'] || stat.effectifs?.['Admis'] || 0
     }))
     .sort((a, b) => b.effectif - a.effectif);
 }
@@ -160,15 +160,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'AnnÃ©e scolaire manquante' }, { status: 400 });
     }
     
-    console.log(`ðŸ“¦ DÃ©but de l'archivage pour ${anneeScolaire}`);
+    console.log(`📦 Début de l'archivage pour ${anneeScolaire}`);
     
     // ====================================================================
     // Ã‰TAPE 1 : CHARGER TOUTES LES DONNÃ‰ES DEPUIS SUPABASE
     // ====================================================================
     
-    console.log('ðŸ“¥ Chargement des donnÃ©es depuis Supabase...');
+    console.log('📥 Chargement des données depuis Supabase...');
     
-    cFonst [
+    const [
       resEnseignants,
       resEvaluations,
       resEcoles,
@@ -188,12 +188,12 @@ export async function POST(request: NextRequest) {
     const stagiaires_m2 = resStagiaires.data || [];
     const evenements = Array.isArray(resEvenementsData) ? resEvenementsData : [];
     
-    console.log(`âœ… DonnÃ©es chargÃ©es:`);
+    console.log(`✅ Données chargées:`);
     console.log(`   - ${enseignants.length} enseignants`);
-    console.log(`   - ${evaluations.length} Ã©valuations`);
-    console.log(`   - ${ecoles.length} Ã©coles`);
+    console.log(`   - ${evaluations.length} évaluations`);
+    console.log(`   - ${ecoles.length} écoles`);
     console.log(`   - ${stagiaires_m2.length} stagiaires M2`);
-    console.log(`   - ${evenements.length} Ã©vÃ©nements`);
+    console.log(`   - ${evenements.length} événements`);
     
     // Charger directement depuis Supabase (plus fiable que fetch)
     console.log('📥 Chargement structures et stats depuis Supabase...');
