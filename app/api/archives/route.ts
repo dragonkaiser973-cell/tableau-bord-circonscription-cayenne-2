@@ -198,15 +198,23 @@ export async function POST(request: NextRequest) {
     // Charger directement depuis Supabase (plus fiable que fetch)
     console.log('📥 Chargement structures et stats depuis Supabase...');
 
-    const [resStructures, resStats, resIdentite] = await Promise.all([
-      supabase.from('ecoles_structure').select('*'),
-      supabase.from('statistiques_ecoles').select('*'),
-      supabase.from('ecoles').select('*')
-    ]);
+    // Charger structures et stats depuis Supabase
+const [resStructures, resStats] = await Promise.all([
+  supabase.from('ecoles_structure').select('*'),
+  supabase.from('statistiques_ecoles').select('*')
+]);
 
-    const ecoles_structure = resStructures.data || [];
-    const statistiques_ecoles = resStats.data || [];
-    const ecoles_identite = resIdentite.data || [];
+const ecoles_structure = resStructures.data || [];
+const statistiques_ecoles = resStats.data || [];
+
+// Charger ecoles_identite depuis l'API (plus complet que table ecoles)
+console.log('📥 Chargement ecoles_identite depuis API...');
+const identiteResponse = await fetch(`${request.nextUrl.origin}/api/ecoles-identite`);
+const ecoles_identite = await identiteResponse.json();
+
+console.log(`   - ${ecoles_structure.length} structures chargées`);
+console.log(`   - ${statistiques_ecoles.length} statistiques chargées`);
+console.log(`   - ${Array.isArray(ecoles_identite) ? ecoles_identite.length : 0} identités chargées`);
 
     console.log(`   - ${ecoles_structure.length} structures chargées`);
     console.log(`   - ${statistiques_ecoles.length} statistiques chargées`);
