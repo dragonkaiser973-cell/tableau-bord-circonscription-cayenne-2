@@ -209,8 +209,32 @@ const statistiques_ecoles = resStats.data || [];
 
 // Charger ecoles_identite depuis l'API (plus complet que table ecoles)
 console.log('📥 Chargement ecoles_identite depuis API...');
-const identiteResponse = await fetch(`${request.nextUrl.origin}/api/ecoles-identite`);
-const ecoles_identite = await identiteResponse.json();
+let ecoles_identite = [];
+
+try {
+  // Essayer avec l'origine de la requête
+  const baseUrl = request.nextUrl.origin;
+  console.log(`Tentative fetch depuis: ${baseUrl}/api/ecoles-identite`);
+  
+  const identiteResponse = await fetch(`${baseUrl}/api/ecoles-identite`, {
+    headers: { 'Accept': 'application/json' }
+  });
+  
+  if (!identiteResponse.ok) {
+    console.error(`Erreur API ecoles-identite: ${identiteResponse.status}`);
+    throw new Error('API failed');
+  }
+  
+  const data = await identiteResponse.json();
+  ecoles_identite = Array.isArray(data) ? data : [];
+  
+} catch (error) {
+  console.error('Erreur chargement ecoles_identite via API, fallback vers table ecoles:', error);
+  
+  // Fallback: charger depuis la table ecoles
+  const { data } = await supabase.from('ecoles').select('*');
+  ecoles_identite = data || [];
+}
 
 console.log(`   - ${ecoles_structure.length} structures chargées`);
 console.log(`   - ${statistiques_ecoles.length} statistiques chargées`);
