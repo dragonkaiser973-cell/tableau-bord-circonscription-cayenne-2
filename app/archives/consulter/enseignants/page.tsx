@@ -164,7 +164,7 @@ export default function EnseignantsArchivesPage() {
       ens.ecole_nom,
       ens.statut,
       ens.niveau_classe || '-',
-      calculerEchelonComplet(ens.code_grade, ens.anciennete.toString())
+      calculerEchelonComplet(parseInt(ens.code_grade) || 0, ens.anciennete.toString())
     ]);
     
     exportTableToPDF(
