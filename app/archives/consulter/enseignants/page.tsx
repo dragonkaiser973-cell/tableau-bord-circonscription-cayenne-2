@@ -9,6 +9,7 @@ import { exportTableToPDF } from '@/lib/pdfExport';
 interface Enseignant {
   id: number;
   ecole_nom: string;
+  ecole_uai: string;
   annee_scolaire: string;
   nom: string;
   prenom: string;
