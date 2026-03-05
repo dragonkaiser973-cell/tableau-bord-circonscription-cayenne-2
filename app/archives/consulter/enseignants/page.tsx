@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -52,7 +52,7 @@ function EnseignantsArchivesPageContent() {
 
   const loadData = async () => {
     try {
-      // Charger les données depuis l'API archives
+      // Charger les donnÃ©es depuis l'API archives
       const [ensRes, ecolesRes, stagRes] = await Promise.all([
         fetch(`/api/archives/data?annee=${annee}&type=enseignants`),
         fetch(`/api/archives/data?annee=${annee}&type=ecoles`),
@@ -63,7 +63,15 @@ function EnseignantsArchivesPageContent() {
       const ecolesData = await ecolesRes.json();
       const stagData = await stagRes.json();
 
-      setEnseignants(Array.isArray(ensData) ? ensData : []);
+      const structRes = await fetch(`/api/archives/data?annee=${annee}&type=ecoles_structure`);
+      const structData = await structRes.json();
+
+      const enseignantsEnrichis = enrichirEnseignants(
+        Array.isArray(ensData) ? ensData : [],
+        Array.isArray(structData) ? structData : []
+      );
+
+      setEnseignants(enseignantsEnrichis);
       setEcoles(Array.isArray(ecolesData) ? ecolesData : []);
       setStagiaireM2(Array.isArray(stagData) ? stagData : []);
     } catch (error) {
@@ -76,6 +84,37 @@ function EnseignantsArchivesPageContent() {
     }
   };
 
+  const enrichirEnseignants = (enseignants: Enseignant[], structures: any[]) => {
+    return enseignants.map(ens => {
+      const uai = ens.ecole_uai;
+      if (!uai) return ens;
+
+      const structure = structures.find((s: any) => s.uai === uai);
+      if (!structure?.classes) return ens;
+
+      const ensNom = `${ens.nom} ${ens.prenom}`.toLowerCase().replace(/\s+/g, ' ').trim();
+
+      for (const classe of structure.classes) {
+        if (!classe.enseignant) continue;
+        
+        const ensClasse = classe.enseignant.toLowerCase()
+          .replace(/\s+/g, ' ')
+          .replace(/^(m\.|mme|mlle)\s*/i, '')
+          .trim();
+
+        if (ensClasse.includes(ens.nom.toLowerCase()) && 
+            ensClasse.includes(ens.prenom.toLowerCase())) {
+          return {
+            ...ens,
+            niveau_classe: classe.niveau || '',
+            effectif_classe: classe.nbEleves || 0
+          };
+        }
+      }
+      return ens;
+    });
+  };
+
   const getFilteredEnseignants = () => {
     return enseignants.filter(ens => {
       // Filtre nom
@@ -85,7 +124,7 @@ function EnseignantsArchivesPageContent() {
         if (!nomComplet.includes(search)) return false;
       }
 
-      // Filtre école
+      // Filtre Ã©cole
       if (selectedEcole && ens.ecole_nom !== selectedEcole) return false;
 
       // Filtre statut
@@ -115,7 +154,7 @@ function EnseignantsArchivesPageContent() {
 
   const handleExportPDF = () => {
     const filtered = getFilteredEnseignants();
-    const headers = ['Nom', 'Prénom', 'École', 'Statut', 'Niveau', 'Échelon'];
+    const headers = ['Nom', 'PrÃ©nom', 'Ã‰cole', 'Statut', 'Niveau', 'Ã‰chelon'];
     const data = filtered.map(ens => [
       ens.nom,
       ens.prenom,
@@ -137,8 +176,8 @@ function EnseignantsArchivesPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement des enseignants archivés...</p>
+          <div className="text-6xl mb-4">â³</div>
+          <p className="text-xl">Chargement des enseignants archivÃ©s...</p>
         </div>
       </div>
     );
@@ -155,16 +194,16 @@ function EnseignantsArchivesPageContent() {
       <div className="text-white py-16 px-6">
         <div className="container mx-auto">
           <Link href={`/archives/consulter?annee=${annee}`} className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'archive {annee}
+            â† Retour Ã  l'archive {annee}
           </Link>
           
           {/* Banner mode archive */}
           <div className="bg-amber-500/20 border-2 border-amber-300 rounded-lg p-4 mb-6 backdrop-blur-sm">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">📖</span>
+              <span className="text-3xl">ðŸ“–</span>
               <div>
                 <h3 className="text-lg font-bold">Mode Consultation Archive</h3>
-                <p className="opacity-90">Vous consultez les enseignants de l'année scolaire {annee}</p>
+                <p className="opacity-90">Vous consultez les enseignants de l'annÃ©e scolaire {annee}</p>
               </div>
             </div>
           </div>
@@ -172,7 +211,7 @@ function EnseignantsArchivesPageContent() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-                👨‍🏫
+                ðŸ‘¨â€ðŸ«
               </div>
               <div>
                 <h1 className="text-5xl font-bold">Enseignants {annee}</h1>
@@ -183,7 +222,7 @@ function EnseignantsArchivesPageContent() {
               onClick={handleExportPDF}
               className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
             >
-              📄 Exporter en PDF
+              ðŸ“„ Exporter en PDF
             </button>
           </div>
         </div>
@@ -214,10 +253,10 @@ function EnseignantsArchivesPageContent() {
 
         {/* Filtres */}
         <div className="card mb-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">🔍 Filtres</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-4">ðŸ” Filtres</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Recherche nom/prénom</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Recherche nom/prÃ©nom</label>
               <input
                 type="text"
                 value={searchNom}
@@ -228,13 +267,13 @@ function EnseignantsArchivesPageContent() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">École</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Ã‰cole</label>
               <select
                 value={selectedEcole}
                 onChange={(e) => setSelectedEcole(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
-                <option value="">Toutes les écoles</option>
+                <option value="">Toutes les Ã©coles</option>
                 {ecoles.map((ecole, idx) => (
                   <option key={idx} value={ecole.nom}>{ecole.nom}</option>
                 ))}
@@ -274,12 +313,12 @@ function EnseignantsArchivesPageContent() {
         {/* Tableau des enseignants */}
         <div className="card">
           <h3 className="text-xl font-bold text-gray-800 mb-4">
-            📋 Liste des enseignants ({filteredEnseignants.length})
+            ðŸ“‹ Liste des enseignants ({filteredEnseignants.length})
           </h3>
           
           {filteredEnseignants.length === 0 ? (
             <div className="text-center py-8 text-gray-600">
-              Aucun enseignant trouvé avec ces filtres
+              Aucun enseignant trouvÃ© avec ces filtres
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -287,13 +326,13 @@ function EnseignantsArchivesPageContent() {
                 <thead>
                   <tr>
                     <th>Nom</th>
-                    <th>École</th>
+                    <th>Ã‰cole</th>
                     <th>Statut</th>
-                    <th>Ancienneté dans l'école</th>
-                    <th>Classe / Échelon</th>
+                    <th>AnciennetÃ© dans l'Ã©cole</th>
+                    <th>Classe / Ã‰chelon</th>
                     <th>Niveau</th>
                     <th>Effectif</th>
-                    <th>Quotité</th>
+                    <th>QuotitÃ©</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -323,7 +362,7 @@ function EnseignantsArchivesPageContent() {
                             </span>
                           ) : (
                             <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-sm">
-                              ✨ Nouveau
+                              âœ¨ Nouveau
                             </span>
                           )}
                         </td>
@@ -331,7 +370,7 @@ function EnseignantsArchivesPageContent() {
                           {echelonInfo.affichage !== '-' ? (
                             <div className="text-sm">
                               <div className="font-semibold text-primary-700">{echelonInfo.classe}</div>
-                              <div className="text-gray-600">Échelon {echelonInfo.echelon}</div>
+                              <div className="text-gray-600">Ã‰chelon {echelonInfo.echelon}</div>
                             </div>
                           ) : (
                             <span className="text-gray-400">-</span>
@@ -355,10 +394,10 @@ function EnseignantsArchivesPageContent() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                  🎓 Stagiaires M2 SOPA
+                  ðŸŽ“ Stagiaires M2 SOPA
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Stagiaires non contractualisés - Année {annee}
+                  Stagiaires non contractualisÃ©s - AnnÃ©e {annee}
                 </p>
               </div>
               <div className="bg-orange-100 text-orange-800 px-4 py-2 rounded-lg font-semibold">
@@ -368,21 +407,21 @@ function EnseignantsArchivesPageContent() {
 
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
               <div className="flex items-start gap-3">
-                <span className="text-2xl">ℹ️</span>
+                <span className="text-2xl">â„¹ï¸</span>
                 <div>
                   <h4 className="font-bold text-blue-900 mb-2">Informations sur les stages</h4>
                   <ul className="text-sm text-blue-800 space-y-2">
                     <li className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-green-500 rounded"></div>
-                      <strong>Stage filé :</strong> Tous les lundis (accompagnement continu)
+                      <strong>Stage filÃ© :</strong> Tous les lundis (accompagnement continu)
                     </li>
                     <li className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                      <strong>Stage massé période 1 :</strong> Du 01/12 au 13/12/2025
+                      <strong>Stage massÃ© pÃ©riode 1 :</strong> Du 01/12 au 13/12/2025
                     </li>
                     <li className="flex items-center gap-2">
                       <div className="w-4 h-4 bg-purple-500 rounded"></div>
-                      <strong>Stage massé période 2 :</strong> Du 02/03 au 14/03/2026
+                      <strong>Stage massÃ© pÃ©riode 2 :</strong> Du 02/03 au 14/03/2026
                     </li>
                   </ul>
                 </div>
@@ -393,35 +432,35 @@ function EnseignantsArchivesPageContent() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th rowSpan={2} className="text-center border-r-2 border-gray-300">N°</th>
+                    <th rowSpan={2} className="text-center border-r-2 border-gray-300">NÂ°</th>
                     <th rowSpan={2} className="border-r-4 border-gray-400">Stagiaire</th>
                     <th colSpan={3} className="text-center bg-green-100 border-r-4 border-gray-400">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-3 h-3 bg-green-500 rounded"></div>
-                        Stage Filé (Lundis)
+                        Stage FilÃ© (Lundis)
                       </div>
                     </th>
                     <th colSpan={3} className="text-center bg-blue-100 border-r-4 border-gray-400">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                        Stage Massé 1 (01/12-13/12)
+                        Stage MassÃ© 1 (01/12-13/12)
                       </div>
                     </th>
                     <th colSpan={3} className="text-center bg-purple-100">
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                        Stage Massé 2 (02/03-14/03)
+                        Stage MassÃ© 2 (02/03-14/03)
                       </div>
                     </th>
                   </tr>
                   <tr>
-                    <th className="bg-green-100">École</th>
+                    <th className="bg-green-100">Ã‰cole</th>
                     <th className="bg-green-100">Tuteur</th>
                     <th className="bg-green-100 border-r-4 border-gray-400">Niveau</th>
-                    <th className="bg-blue-100">École</th>
+                    <th className="bg-blue-100">Ã‰cole</th>
                     <th className="bg-blue-100">Tuteur</th>
                     <th className="bg-blue-100 border-r-4 border-gray-400">Niveau</th>
-                    <th className="bg-purple-100">École</th>
+                    <th className="bg-purple-100">Ã‰cole</th>
                     <th className="bg-purple-100">Tuteur</th>
                     <th className="bg-purple-100">Niveau</th>
                   </tr>
@@ -434,7 +473,7 @@ function EnseignantsArchivesPageContent() {
                         <div className="font-bold text-gray-800">{stag.nom}</div>
                         <div className="text-sm text-gray-600">{stag.prenom}</div>
                       </td>
-                      {/* Stage Filé */}
+                      {/* Stage FilÃ© */}
                       <td className="bg-green-50/50">
                         <div className="text-sm font-semibold">{stag.stage_file?.ecole || '-'}</div>
                       </td>
@@ -446,7 +485,7 @@ function EnseignantsArchivesPageContent() {
                           {stag.stage_file?.niveau || '-'}
                         </span>
                       </td>
-                      {/* Stage Massé 1 */}
+                      {/* Stage MassÃ© 1 */}
                       <td className="bg-blue-50/50">
                         <div className="text-sm font-semibold">{stag.stage_masse_1?.ecole || '-'}</div>
                       </td>
@@ -458,7 +497,7 @@ function EnseignantsArchivesPageContent() {
                           {stag.stage_masse_1?.niveau || '-'}
                         </span>
                       </td>
-                      {/* Stage Massé 2 */}
+                      {/* Stage MassÃ© 2 */}
                       <td className="bg-purple-50/50">
                         <div className="text-sm font-semibold">{stag.stage_masse_2?.ecole || '-'}</div>
                       </td>
@@ -477,8 +516,8 @@ function EnseignantsArchivesPageContent() {
             </div>
 
             <div className="mt-4 text-sm text-gray-600 bg-gray-50 p-4 rounded-lg">
-              <p className="font-semibold mb-2">📋 Responsable : Madame Chantal LAUTRIC - IEN CAYENNE 2 ROURA</p>
-              <p><strong>Note :</strong> Ces stagiaires ne sont pas comptabilisés dans les effectifs enseignants car non contractualisés par le rectorat.</p>
+              <p className="font-semibold mb-2">ðŸ“‹ Responsable : Madame Chantal LAUTRIC - IEN CAYENNE 2 ROURA</p>
+              <p><strong>Note :</strong> Ces stagiaires ne sont pas comptabilisÃ©s dans les effectifs enseignants car non contractualisÃ©s par le rectorat.</p>
             </div>
           </div>
         )}
