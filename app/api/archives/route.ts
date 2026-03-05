@@ -297,10 +297,11 @@ console.log(`   - ${Array.isArray(ecoles_identite) ? ecoles_identite.length : 0}
       }
     };
     
+	// Debug: vérifier combien d'évaluations
     console.log(`📊 Nombre d'évaluations chargées: ${evaluations.length}`);
-
-const donnees_brutes = {
-  // ...
+    console.log(`📊 Années présentes:`, [...new Set(evaluations.map((e: any) => e.rentree))].sort());
+    
+    const donnees_brutes = {
       ecoles_identite,
       ecoles_structure,
       evaluations,
