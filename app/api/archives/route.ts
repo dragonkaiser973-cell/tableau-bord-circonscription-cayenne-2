@@ -229,11 +229,12 @@ try {
   ecoles_identite = Array.isArray(data) ? data : [];
   
 } catch (error) {
-  console.error('Erreur chargement ecoles_identite via API, fallback vers table ecoles:', error);
+  console.error('Erreur chargement ecoles_identite via API, fallback vers table Supabase:', error);
   
-  // Fallback: charger depuis la table ecoles
-  const { data } = await supabase.from('ecoles').select('*');
+  // Fallback: charger depuis la table ecoles_identite
+  const { data } = await supabase.from('ecoles_identite').select('*');
   ecoles_identite = data || [];
+  console.log(`   - Fallback: ${ecoles_identite.length} identités chargées depuis Supabase`);
 }
 
 console.log(`   - ${ecoles_structure.length} structures chargées`);
