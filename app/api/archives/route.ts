@@ -202,19 +202,16 @@ while (hasMore) {
     evaluations = evaluations.concat(data);
     console.log(`  Page ${page + 1}: ${data.length} évaluations (total: ${evaluations.length})`);
     page++;
-    hasMore = data.length === pageSize; // Continue si on a eu 1000 résultats
+    hasMore = data.length === pageSize;
   } else {
     hasMore = false;
   }
 }
 
 const enseignants = resEnseignants.data || [];
-
-    const enseignants = resEnseignants.data || [];
-    const evaluations = resEvaluations.data || [];
-    const ecoles = resEcoles.data || [];
-    const stagiaires_m2 = resStagiaires.data || [];
-    const evenements = Array.isArray(resEvenementsData) ? resEvenementsData : [];
+const ecoles = resEcoles.data || [];
+const stagiaires_m2 = resStagiaires.data || [];
+const evenements = Array.isArray(resEvenementsData) ? resEvenementsData : [];
     
     console.log(`✅ Données chargées:`);
     console.log(`   - ${enseignants.length} enseignants`);
