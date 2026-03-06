@@ -169,18 +169,46 @@ export async function POST(request: NextRequest) {
     console.log('📥 Chargement des données depuis Supabase...');
     
     const [
-      resEnseignants,
-      resEvaluations,
-      resEcoles,
-      resStagiaires,
-      resEvenementsData
-    ] = await Promise.all([
-      supabase.from('enseignants').select('*'),
-      supabase.from('evaluations').select('*').range(0, 9999),
-      supabase.from('ecoles').select('*'),
-      supabase.from('stagiaires_m2').select('*').eq('annee_scolaire', anneeScolaire),
-      fetch(`${request.nextUrl.origin}/api/evenements`).then(r => r.json()).catch(() => [])
-    ]);
+  resEnseignants,
+  resEcoles,
+  resStagiaires,
+  resEvenementsData
+] = await Promise.all([
+  supabase.from('enseignants').select('*'),
+  supabase.from('ecoles').select('*'),
+  supabase.from('stagiaires_m2').select('*').eq('annee_scolaire', anneeScolaire),
+  fetch(`${request.nextUrl.origin}/api/evenements`).then(r => r.json()).catch(() => [])
+]);
+
+// Charger TOUTES les évaluations avec pagination
+console.log('📥 Chargement évaluations avec pagination...');
+let evaluations: any[] = [];
+let page = 0;
+const pageSize = 1000;
+let hasMore = true;
+
+while (hasMore) {
+  const { data, error } = await supabase
+    .from('evaluations')
+    .select('*')
+    .range(page * pageSize, (page + 1) * pageSize - 1);
+  
+  if (error) {
+    console.error('Erreur chargement évaluations page', page, error);
+    break;
+  }
+  
+  if (data && data.length > 0) {
+    evaluations = evaluations.concat(data);
+    console.log(`  Page ${page + 1}: ${data.length} évaluations (total: ${evaluations.length})`);
+    page++;
+    hasMore = data.length === pageSize; // Continue si on a eu 1000 résultats
+  } else {
+    hasMore = false;
+  }
+}
+
+const enseignants = resEnseignants.data || [];
 
     const enseignants = resEnseignants.data || [];
     const evaluations = resEvaluations.data || [];
