@@ -37,11 +37,6 @@ function CirconscriptionArchiveContent() {
       const ecolesData = await ecolesRes.json();
       const evalData = await evalRes.json();
 
-      console.log('=== DEBUG CIRCONSCRIPTION ARCHIVE ===');
-      console.log('Total enseignants:', ensData.length);
-      console.log('Total écoles:', ecolesData.length);
-      console.log('Total évaluations:', evalData.length);
-
       setEnseignants(Array.isArray(ensData) ? ensData : []);
       setEcoles(Array.isArray(ecolesData) ? ecolesData : []);
       setEvaluations(Array.isArray(evalData) ? evalData : []);
@@ -56,12 +51,6 @@ function CirconscriptionArchiveContent() {
   const getIpsEcole = (ecoleUai: string) => {
     const evalEcole = evaluations.find(e => e.uai === ecoleUai && e.ips);
     return evalEcole?.ips || null;
-  };
-
-  // Récupérer l'UAI d'une école par son nom
-  const getEcoleUai = (ecoleNom: string) => {
-    const ecole = ecoles.find(e => e.nom === ecoleNom);
-    return ecole?.uai || null;
   };
 
   // Statistiques enseignants (hors circonscription SAUF personnel de direction)
@@ -126,17 +115,50 @@ function CirconscriptionArchiveContent() {
     return { total, parSpecialite, personnelCirco, ipsMoyen, elevesTotal };
   };
 
-  // Statistiques écoles (hors circonscription)
+  // ✅ CORRECTION BUG 1 : Comptage enseignants par école
+  // Correspondance multi-critères : nom d'abord, puis UAI en fallback
   const getStatsEcoles = () => {
     const ecolesHorsCirco = ecoles.filter(e => e.uai !== '9730456H');
     
     return {
       total: ecolesHorsCirco.length,
-      liste: ecolesHorsCirco.map(e => ({
-        ...e,
-        enseignants: enseignants.filter(ens => ens.ecole_nom === e.nom).length,
-        ips: getIpsEcole(e.uai)
-      }))
+      liste: ecolesHorsCirco.map(ecole => {
+        // Tentative 1 : correspondance par nom exact
+        let nbEns = enseignants.filter(ens => ens.ecole_nom === ecole.nom).length;
+
+        // Tentative 2 : si résultat = 0, correspondance par UAI
+        if (nbEns === 0 && ecole.uai) {
+          nbEns = enseignants.filter(ens => ens.ecole_uai === ecole.uai).length;
+        }
+
+        // Tentative 3 : si résultat = 0, correspondance par ecole_id
+        if (nbEns === 0 && ecole.id) {
+          nbEns = enseignants.filter(ens => ens.ecole_id === ecole.id).length;
+        }
+
+        // ✅ CORRECTION BUG 3 : Récupérer sigle et commune depuis l'école
+        // Déterminer le sigle automatiquement si absent
+        let sigle = ecole.sigle || '';
+        if (!sigle) {
+          const nomUpper = (ecole.nom || '').toUpperCase();
+          if (nomUpper.includes('E.M.PU') || nomUpper.includes('EMPU') || nomUpper.includes('MATERNELLE')) {
+            sigle = 'E.M.PU';
+          } else if (nomUpper.includes('E.E.PU') || nomUpper.includes('EEPU') || nomUpper.includes('ELEMENTAIRE')) {
+            sigle = 'E.E.PU';
+          } else if (nomUpper.includes('E.P.PU') || nomUpper.includes('EPPU') || nomUpper.includes('PRIMAIRE')) {
+            sigle = 'E.P.PU';
+          } else {
+            sigle = 'E.PU';
+          }
+        }
+
+        return {
+          ...ecole,
+          sigle,
+          enseignants: nbEns,
+          ips: getIpsEcole(ecole.uai)
+        };
+      })
     };
   };
 
@@ -155,30 +177,6 @@ function CirconscriptionArchiveContent() {
   const statsCirco = getStatsCirconscription();
   const statsEcoles = getStatsEcoles();
 
-  // Préparer données graphiques
-  const prepareDataCamembert = (data: any, label: string) => {
-    const entries = Object.entries(data).sort((a: any, b: any) => b[1] - a[1]);
-    return {
-      labels: entries.map(([key]) => key),
-      datasets: [{
-        label,
-        data: entries.map(([_, value]) => value),
-        backgroundColor: [
-          'rgba(34, 197, 94, 0.8)',
-          'rgba(249, 115, 22, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(168, 85, 247, 0.8)',
-          'rgba(236, 72, 153, 0.8)',
-          'rgba(14, 165, 233, 0.8)',
-          'rgba(251, 191, 36, 0.8)',
-        ],
-        borderColor: 'white',
-        borderWidth: 2,
-      }]
-    };
-  };
-
   const prepareDataBarresHorizontales = (data: any, label: string) => {
     const entries = Object.entries(data).sort((a: any, b: any) => b[1] - a[1]);
     return {
@@ -191,6 +189,77 @@ function CirconscriptionArchiveContent() {
         borderWidth: 1,
       }]
     };
+  };
+
+  // ✅ CORRECTION BUG 2 : Plugin externalLabels pour les étiquettes du camembert
+  const externalLabelsPlugin = {
+    id: 'externalLabels',
+    afterDatasetsDraw: (chart: any) => {
+      const { ctx, chartArea } = chart;
+      const { top, left, width, height } = chartArea;
+      const centerX = left + width / 2;
+      const centerY = top + height / 2;
+
+      chart.data.datasets.forEach((dataset: any, datasetIndex: number) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+
+        meta.data.forEach((element: any, index: number) => {
+          const label = chart.data.labels[index];
+          const value = dataset.data[index];
+          const total = dataset.data.reduce((a: number, b: number) => a + b, 0);
+          const percentage = ((value / total) * 100).toFixed(1);
+
+          const startAngle = element.startAngle;
+          const endAngle = element.endAngle;
+          const midAngle = startAngle + (endAngle - startAngle) / 2;
+          const outerRadius = element.outerRadius;
+
+          const lineStartX = centerX + Math.cos(midAngle) * outerRadius;
+          const lineStartY = centerY + Math.sin(midAngle) * outerRadius;
+
+          const extendDistance = 15;
+          const lineMidX = centerX + Math.cos(midAngle) * (outerRadius + extendDistance);
+          const lineMidY = centerY + Math.sin(midAngle) * (outerRadius + extendDistance);
+
+          const labelLower = (label as string).toLowerCase();
+          let isRightSide: boolean;
+          if (labelLower.includes('stagiaire')) {
+            isRightSide = true;
+          } else if (labelLower.includes('contractuel')) {
+            isRightSide = false;
+          } else {
+            isRightSide = Math.cos(midAngle) >= 0;
+          }
+
+          const horizontalLineLength = 25;
+          const lineEndX = isRightSide ? lineMidX + horizontalLineLength : lineMidX - horizontalLineLength;
+          const lineEndY = lineMidY;
+
+          ctx.save();
+          ctx.strokeStyle = dataset.backgroundColor[index];
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(lineStartX, lineStartY);
+          ctx.lineTo(lineMidX, lineMidY);
+          ctx.lineTo(lineEndX, lineEndY);
+          ctx.stroke();
+
+          ctx.fillStyle = dataset.backgroundColor[index];
+          ctx.font = 'bold 14px sans-serif';
+          ctx.textAlign = isRightSide ? 'left' : 'right';
+          ctx.textBaseline = 'bottom';
+          const textX = isRightSide ? lineEndX + 5 : lineEndX - 5;
+          ctx.fillText(`${percentage}%`, textX, lineEndY - 2);
+
+          ctx.font = '12px sans-serif';
+          ctx.fillStyle = '#666';
+          ctx.textBaseline = 'top';
+          ctx.fillText(label as string, textX, lineEndY + 2);
+
+          ctx.restore();
+        });
+      });
+    }
   };
 
   return (
@@ -255,14 +324,59 @@ function CirconscriptionArchiveContent() {
           </div>
         </div>
 
-        {/* Enseignants par statut */}
+        {/* ✅ CORRECTION BUG 2 : Camembert avec plugin externalLabels */}
         <div id="ens-par-statut" className="card mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
             <span className="text-3xl">👥</span>
             Enseignants par statut
           </h2>
-          <div className="max-w-md mx-auto">
-            <Pie data={prepareDataCamembert(statsEns.parStatut, 'Enseignants')} />
+          <div className="h-[400px] flex items-center justify-center">
+            <div style={{ width: '110%', height: '110%', maxWidth: '440px', maxHeight: '440px' }}>
+              <Pie
+                data={{
+                  labels: Object.keys(statsEns.parStatut),
+                  datasets: [{
+                    data: Object.values(statsEns.parStatut),
+                    backgroundColor: [
+                      'rgba(16, 185, 129, 0.8)',
+                      'rgba(251, 146, 60, 0.8)',
+                      'rgba(239, 68, 68, 0.8)',
+                      'rgba(59, 130, 246, 0.8)',
+                      'rgba(156, 163, 175, 0.8)'
+                    ],
+                    borderWidth: 3,
+                    borderColor: '#fff',
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: true,
+                  layout: {
+                    padding: {
+                      top: 30,
+                      bottom: 30,
+                      left: 85,
+                      right: 85
+                    }
+                  },
+                  plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                      callbacks: {
+                        label: (context: any) => {
+                          const label = context.label || '';
+                          const value = context.parsed || 0;
+                          const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                          const percentage = ((value / total) * 100).toFixed(1);
+                          return `${label}: ${value} enseignants (${percentage}%)`;
+                        }
+                      }
+                    }
+                  }
+                }}
+                plugins={[externalLabelsPlugin]}
+              />
+            </div>
           </div>
         </div>
 
@@ -287,7 +401,7 @@ function CirconscriptionArchiveContent() {
           </div>
         </div>
 
-        {/* Liste des écoles */}
+        {/* ✅ CORRECTION BUG 3 : Tableau avec colonnes Sigle et Commune ajoutées */}
         <div id="liste-ecoles" className="card mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
             <span className="text-3xl">📋</span>
@@ -298,7 +412,8 @@ function CirconscriptionArchiveContent() {
               <thead>
                 <tr className="bg-gray-50">
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">École</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">UAI</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Sigle</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Commune</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Enseignants</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">IPS</th>
                 </tr>
@@ -306,8 +421,9 @@ function CirconscriptionArchiveContent() {
               <tbody>
                 {statsEcoles.liste.map((ecole: any, i: number) => (
                   <tr key={i} className="border-t border-gray-200 hover:bg-gray-50">
-                    <td className="px-4 py-3">{ecole.nom}</td>
-                    <td className="px-4 py-3 font-mono text-sm">{ecole.uai}</td>
+                    <td className="px-4 py-3 font-semibold">{ecole.nom}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{ecole.sigle || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{ecole.commune || '-'}</td>
                     <td className="px-4 py-3 text-center font-semibold">{ecole.enseignants}</td>
                     <td className="px-4 py-3 text-center">
                       {ecole.ips ? (
