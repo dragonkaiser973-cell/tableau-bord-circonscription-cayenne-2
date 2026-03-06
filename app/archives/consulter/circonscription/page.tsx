@@ -8,8 +8,10 @@ import { Bar, Pie } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
-function CirconscriptionArchivePageContent() {
-  const [archive, setArchive] = useState<any>(null);
+function CirconscriptionArchiveContent() {
+  const [enseignants, setEnseignants] = useState<any[]>([]);
+  const [ecoles, setEcoles] = useState<any[]>([]);
+  const [evaluations, setEvaluations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const annee = searchParams.get('annee');
@@ -20,19 +22,122 @@ function CirconscriptionArchivePageContent() {
       router.push('/archives');
       return;
     }
-    loadArchive();
+    loadData();
   }, [annee, router]);
 
-  const loadArchive = async () => {
+  const loadData = async () => {
     try {
-      const res = await fetch(`/api/archives/data?annee=${annee}`);
-      const data = await res.json();
-      setArchive(data);
+      const [ensRes, ecolesRes, evalRes] = await Promise.all([
+        fetch(`/api/archives/data?annee=${annee}&type=enseignants`),
+        fetch(`/api/archives/data?annee=${annee}&type=ecoles_identite`),
+        fetch(`/api/archives/data?annee=${annee}&type=evaluations`)
+      ]);
+
+      const ensData = await ensRes.json();
+      const ecolesData = await ecolesRes.json();
+      const evalData = await evalRes.json();
+
+      console.log('=== DEBUG CIRCONSCRIPTION ARCHIVE ===');
+      console.log('Total enseignants:', ensData.length);
+      console.log('Total écoles:', ecolesData.length);
+      console.log('Total évaluations:', evalData.length);
+
+      setEnseignants(Array.isArray(ensData) ? ensData : []);
+      setEcoles(Array.isArray(ecolesData) ? ecolesData : []);
+      setEvaluations(Array.isArray(evalData) ? evalData : []);
+      setLoading(false);
     } catch (error) {
       console.error('Erreur chargement:', error);
-    } finally {
       setLoading(false);
     }
+  };
+
+  // Récupérer l'IPS d'une école depuis les évaluations (par UAI)
+  const getIpsEcole = (ecoleUai: string) => {
+    const evalEcole = evaluations.find(e => e.uai === ecoleUai && e.ips);
+    return evalEcole?.ips || null;
+  };
+
+  // Récupérer l'UAI d'une école par son nom
+  const getEcoleUai = (ecoleNom: string) => {
+    const ecole = ecoles.find(e => e.nom === ecoleNom);
+    return ecole?.uai || null;
+  };
+
+  // Statistiques enseignants (hors circonscription SAUF personnel de direction)
+  const getStatsEnseignants = () => {
+    const ensHorsCirco = enseignants.filter(e => {
+      if (e.statut && e.statut.toLowerCase().includes('direction')) {
+        return true;
+      }
+      return !e.ecole_nom?.includes('IEN CAYENNE') && 
+             !e.ecole_nom?.includes('CIRCONSCRIPTION');
+    });
+    
+    const total = ensHorsCirco.length;
+    const parStatut = ensHorsCirco.reduce((acc: any, e) => {
+      acc[e.statut] = (acc[e.statut] || 0) + 1;
+      return acc;
+    }, {});
+    
+    const parEcole = ensHorsCirco.reduce((acc: any, e) => {
+      acc[e.ecole_nom] = (acc[e.ecole_nom] || 0) + 1;
+      return acc;
+    }, {});
+
+    const avecSpecialite = ensHorsCirco.filter(e => 
+      e.discipline && 
+      !e.discipline.toUpperCase().includes('SANS SPECIALITE')
+    ).length;
+
+    return { total, parStatut, parEcole, avecSpecialite };
+  };
+
+  // Statistiques circonscription (personnel IEN)
+  const getStatsCirconscription = () => {
+    const personnelCirco = enseignants.filter(e => 
+      (e.ecole_nom && e.ecole_nom.includes('IEN CAYENNE')) || 
+      (e.ecole_nom && e.ecole_nom.includes('CIRCONSCRIPTION')) ||
+      (e.ecole_uai === '9730456H')
+    );
+
+    const total = personnelCirco.length;
+    
+    const parSpecialite = personnelCirco.reduce((acc: any, e) => {
+      const spec = e.discipline && !e.discipline.toUpperCase().includes('SANS SPECIALITE') 
+        ? e.discipline 
+        : 'Sans spécialité';
+      acc[spec] = (acc[spec] || 0) + 1;
+      return acc;
+    }, {});
+
+    const ipsUniques = new Map<string, number>();
+    evaluations.forEach(e => {
+      if (e.ips && e.uai) {
+        ipsUniques.set(e.uai, e.ips);
+      }
+    });
+    const ipsMoyen = ipsUniques.size > 0 
+      ? Array.from(ipsUniques.values()).reduce((sum, ips) => sum + ips, 0) / ipsUniques.size
+      : 0;
+
+    const elevesTotal = evaluations.reduce((sum, e) => sum + (e.effectif || 0), 0);
+
+    return { total, parSpecialite, personnelCirco, ipsMoyen, elevesTotal };
+  };
+
+  // Statistiques écoles (hors circonscription)
+  const getStatsEcoles = () => {
+    const ecolesHorsCirco = ecoles.filter(e => e.uai !== '9730456H');
+    
+    return {
+      total: ecolesHorsCirco.length,
+      liste: ecolesHorsCirco.map(e => ({
+        ...e,
+        enseignants: enseignants.filter(ens => ens.ecole_nom === e.nom).length,
+        ips: getIpsEcole(e.uai)
+      }))
+    };
   };
 
   if (loading) {
@@ -40,40 +145,15 @@ function CirconscriptionArchivePageContent() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
         <div className="text-center text-white">
           <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement...</p>
+          <p className="text-xl">Chargement de l'archive...</p>
         </div>
       </div>
     );
   }
 
-  if (!archive) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">❌</div>
-          <p className="text-xl mb-4">Archive non trouvée</p>
-          <Link href="/archives" className="btn-primary inline-block">
-            ← Retour aux archives
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // Récupérer les données
-  const donnees = archive.donnees_calculees || {};
-  const circonscription = donnees.circonscription || {};
-  const brutes = archive.donnees_brutes || archive.data || {};
-  
-  // Données circonscription
-  const personnelIEN = circonscription.personnel_ien || [];
-  const statsParStatut = circonscription.stats_par_statut || {};
-  const statsParEcole = circonscription.stats_par_ecole || {};
-  const graphiqueIPS = circonscription.graphique_ips || [];
-  const listeEcoles = circonscription.liste_ecoles_complete || [];
-
-  // Statistiques générales
-  const statsGenerales = circonscription.statistiques_generales || {};
+  const statsEns = getStatsEnseignants();
+  const statsCirco = getStatsCirconscription();
+  const statsEcoles = getStatsEcoles();
 
   // Préparer données graphiques
   const prepareDataCamembert = (data: any, label: string) => {
@@ -84,14 +164,14 @@ function CirconscriptionArchivePageContent() {
         label,
         data: entries.map(([_, value]) => value),
         backgroundColor: [
-          'rgba(34, 197, 94, 0.8)',   // vert
-          'rgba(249, 115, 22, 0.8)',  // orange
-          'rgba(239, 68, 68, 0.8)',   // rouge
-          'rgba(59, 130, 246, 0.8)',  // bleu
-          'rgba(168, 85, 247, 0.8)',  // violet
-          'rgba(236, 72, 153, 0.8)',  // rose
-          'rgba(14, 165, 233, 0.8)',  // cyan
-          'rgba(251, 191, 36, 0.8)',  // jaune
+          'rgba(34, 197, 94, 0.8)',
+          'rgba(249, 115, 22, 0.8)',
+          'rgba(239, 68, 68, 0.8)',
+          'rgba(59, 130, 246, 0.8)',
+          'rgba(168, 85, 247, 0.8)',
+          'rgba(236, 72, 153, 0.8)',
+          'rgba(14, 165, 233, 0.8)',
+          'rgba(251, 191, 36, 0.8)',
         ],
         borderColor: 'white',
         borderWidth: 2,
@@ -99,41 +179,36 @@ function CirconscriptionArchivePageContent() {
     };
   };
 
-  // Préparer données IPS
-  const dataIPS = graphiqueIPS.length > 0 ? {
-    labels: graphiqueIPS.map((e: any) => {
-      const nom = e.nom || 'Inconnu';
-      return nom.replace('E.E.PU ', '').replace('E.M.PU ', '').replace('E.P.PU ', '');
-    }),
-    datasets: [{
-      label: 'IPS',
-      data: graphiqueIPS.map((e: any) => e.ips),
-      backgroundColor: graphiqueIPS.map((e: any) => 
-        e.ips >= 110 ? 'rgba(34, 197, 94, 0.8)' :
-        e.ips >= 100 ? 'rgba(59, 130, 246, 0.8)' :
-        e.ips >= 90 ? 'rgba(249, 115, 22, 0.8)' :
-        'rgba(239, 68, 68, 0.8)'
-      ),
-      borderColor: 'white',
-      borderWidth: 1,
-    }]
-  } : null;
+  const prepareDataBarresHorizontales = (data: any, label: string) => {
+    const entries = Object.entries(data).sort((a: any, b: any) => b[1] - a[1]);
+    return {
+      labels: entries.map(([key]) => key),
+      datasets: [{
+        label,
+        data: entries.map(([_, value]) => value),
+        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 1,
+      }]
+    };
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
+      {/* Header */}
       <div className="text-white py-16 px-6">
         <div className="container mx-auto">
           <Link href={`/archives/consulter?annee=${annee}`} className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
             ← Retour à l'archive {annee}
           </Link>
-          
+
           {/* Banner mode archive */}
           <div className="bg-amber-500/20 border-2 border-amber-300 rounded-lg p-4 mb-6 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <span className="text-3xl">📖</span>
               <div>
                 <h3 className="text-lg font-bold">Mode Consultation Archive</h3>
-                <p className="opacity-90">Circonscription - Année scolaire {annee}</p>
+                <p className="opacity-90">Vue d'ensemble de la circonscription pour l'année scolaire {annee}</p>
               </div>
             </div>
           </div>
@@ -143,287 +218,140 @@ function CirconscriptionArchivePageContent() {
               🌍
             </div>
             <div>
-              <h1 className="text-5xl font-bold">Circonscription</h1>
-              <p className="text-xl opacity-90 mt-2">Vue d'ensemble</p>
+              <h1 className="text-5xl font-bold">Circonscription {annee}</h1>
+              <p className="text-xl opacity-90 mt-2">Vue d'ensemble et données statistiques</p>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Contenu principal */}
       <div className="container mx-auto px-6 py-8">
+        
         {/* Statistiques générales */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="card text-center">
-            <div className="text-5xl mb-2">🏫</div>
-            <div className="text-4xl font-bold text-primary-700">{statsGenerales.nombreEcoles || 0}</div>
-            <div className="text-gray-600 mt-2">Écoles</div>
-          </div>
-          <div className="card text-center">
-            <div className="text-5xl mb-2">👨‍🏫</div>
-            <div className="text-4xl font-bold text-primary-700">{statsGenerales.nombreEnseignants || 0}</div>
-            <div className="text-gray-600 mt-2">Enseignants</div>
-          </div>
-          <div className="card text-center">
-            <div className="text-5xl mb-2">🎓</div>
-            <div className="text-4xl font-bold text-primary-700">{statsGenerales.nombreClasses || 0}</div>
-            <div className="text-gray-600 mt-2">Classes</div>
-            {statsGenerales.classesDedoublees > 0 && (
-              <div className="text-xs text-gray-500 mt-1">
-                {statsGenerales.classesDedoublees} dédoublées / {statsGenerales.classesStandard} standard
-              </div>
-            )}
-          </div>
-          <div className="card text-center">
-            <div className="text-5xl mb-2">📊</div>
-            <div className="text-4xl font-bold text-primary-700">{statsGenerales.moyenneElevesParClasse || 0}</div>
-            <div className="text-gray-600 mt-2">Moyenne Élèves/Classe</div>
-            {statsGenerales.moyenneClassesDedoublees > 0 && (
-              <div className="text-xs text-gray-500 mt-1 space-y-1">
-                <div className="flex justify-between px-4">
-                  <span>Dédoublées:</span>
-                  <span className="font-bold">{statsGenerales.moyenneClassesDedoublees}</span>
-                </div>
-                <div className="flex justify-between px-4">
-                  <span>Standard:</span>
-                  <span className="font-bold">{statsGenerales.moyenneClassesStandard}</span>
-                </div>
-              </div>
-            )}
+        <div id="stats-generales" className="card mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <span className="text-3xl">📊</span>
+            Statistiques générales
+          </h2>
+          
+          <div className="grid md:grid-cols-4 gap-6">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border-2 border-blue-200">
+              <div className="text-sm text-blue-600 font-semibold mb-1">ÉCOLES</div>
+              <div className="text-4xl font-bold text-blue-900">{statsEcoles.total}</div>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border-2 border-green-200">
+              <div className="text-sm text-green-600 font-semibold mb-1">ENSEIGNANTS</div>
+              <div className="text-4xl font-bold text-green-900">{statsEns.total}</div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg border-2 border-purple-200">
+              <div className="text-sm text-purple-600 font-semibold mb-1">PERSONNEL IEN</div>
+              <div className="text-4xl font-bold text-purple-900">{statsCirco.total}</div>
+            </div>
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-lg border-2 border-orange-200">
+              <div className="text-sm text-orange-600 font-semibold mb-1">IPS MOYEN</div>
+              <div className="text-4xl font-bold text-orange-900">{statsCirco.ipsMoyen.toFixed(1)}</div>
+            </div>
           </div>
         </div>
 
-        {/* Personnel de Circonscription (IEN) */}
-        {personnelIEN && personnelIEN.length > 0 && (
-          <div className="card mb-8">
-            <h3 className="text-2xl font-bold text-purple-900 mb-6 flex items-center gap-3">
-              <span className="text-3xl">📋</span>
-              Personnel de Circonscription (IEN)
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="bg-purple-50">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase">Nom</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase">Prénom</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase">Fonction</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase">Statut</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {personnelIEN.map((personne: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-purple-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{personne.nom}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{personne.prenom}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{personne.discipline || 'N/A'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{personne.statut || 'N/A'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        {/* Enseignants par statut */}
+        <div id="ens-par-statut" className="card mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <span className="text-3xl">👥</span>
+            Enseignants par statut
+          </h2>
+          <div className="max-w-md mx-auto">
+            <Pie data={prepareDataCamembert(statsEns.parStatut, 'Enseignants')} />
           </div>
-        )}
+        </div>
 
-        {/* Graphiques */}
-        {(Object.keys(statsParStatut).length > 0 || Object.keys(statsParEcole).length > 0) && (
-          <div className="card mb-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <span className="text-3xl">📊</span>
-              Répartition des Enseignants
-            </h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Par Statut - Camembert */}
-              {Object.keys(statsParStatut).length > 0 && (
-                <div>
-                  <h4 className="text-lg font-bold text-gray-700 mb-4 text-center">Par Statut</h4>
-                  <div className="flex justify-center items-center min-h-[400px]">
-                    <div style={{ maxWidth: '400px', maxHeight: '400px' }}>
-                      <Pie 
-                        data={prepareDataCamembert(statsParStatut, 'Enseignants')}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: true,
-                          plugins: {
-                            legend: { position: 'bottom' },
-                            title: { display: false }
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-4 text-center">
-                    <div className="text-sm text-gray-600 space-y-1">
-                      {Object.entries(statsParStatut).map(([statut, nb]: any) => (
-                        <div key={statut}>
-                          <span className="font-semibold">{statut}</span>: {nb} enseignant{nb > 1 ? 's' : ''}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Par École - Barres Horizontales */}
-              {Object.keys(statsParEcole).length > 0 && (
-                <div>
-                  <h4 className="text-lg font-bold text-gray-700 mb-4 text-center">Par École</h4>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <Bar 
-                      data={{
-                        labels: Object.entries(statsParEcole)
-                          .sort((a: any, b: any) => b[1] - a[1])
-                          .map(([ecole]) => ecole.replace('E.E.PU ', '').replace('E.M.PU ', '').replace('E.P.PU ', '')),
-                        datasets: [{
-                          label: 'Nombre d\'enseignants',
-                          data: Object.entries(statsParEcole)
-                            .sort((a: any, b: any) => b[1] - a[1])
-                            .map(([_, nb]) => nb),
-                          backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                          borderColor: 'white',
-                          borderWidth: 1,
-                        }]
-                      }}
-                      options={{
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: { display: false },
-                          title: { display: false }
-                        },
-                        scales: {
-                          x: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                          },
-                          y: {
-                            grid: { display: false }
-                          }
-                        }
-                      }}
-                      height={Object.keys(statsParEcole).length * 30}
-                    />
-                  </div>
-                  <div className="mt-4 text-center">
-                    <p className="text-sm text-gray-600">
-                      {Object.keys(statsParEcole).length} écoles
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* Enseignants par école */}
+        <div id="ens-par-ecole" className="card mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <span className="text-3xl">🏫</span>
+            Enseignants par école
+          </h2>
+          <div className="h-[600px]">
+            <Bar 
+              data={prepareDataBarresHorizontales(statsEns.parEcole, 'Enseignants')}
+              options={{
+                indexAxis: 'y' as const,
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false }
+                }
+              }}
+            />
           </div>
-        )}
-
-        {/* Graphique IPS */}
-        {dataIPS && (
-          <div className="card mb-8">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <span className="text-3xl">📊</span>
-              Indice de Position Sociale (IPS) par École
-            </h3>
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <Bar 
-                data={dataIPS}
-                options={{
-                  indexAxis: 'y',
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: { display: false },
-                    title: { display: false }
-                  },
-                  scales: {
-                    x: {
-                      beginAtZero: true,
-                      max: 130,
-                      grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                    },
-                    y: {
-                      grid: { display: false }
-                    }
-                  }
-                }}
-                height={graphiqueIPS.length * 40}
-              />
-            </div>
-            <div className="mt-4 flex gap-6 justify-center text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-green-500 rounded"></div>
-                <span>IPS ≥ 110 (Très favorable)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                <span>100 ≤ IPS &lt; 110 (Favorable)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-orange-500 rounded"></div>
-                <span>90 ≤ IPS &lt; 100 (Moyen)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-red-500 rounded"></div>
-                <span>IPS &lt; 90 (Défavorable)</span>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Liste des écoles */}
-        {listeEcoles && listeEcoles.length > 0 && (
-          <div className="card">
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <span className="text-3xl">🏫</span>
-              Liste des Écoles
-            </h3>
+        <div id="liste-ecoles" className="card mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <span className="text-3xl">📋</span>
+            Liste des écoles ({statsEcoles.total})
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">École</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">UAI</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Enseignants</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">IPS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {statsEcoles.liste.map((ecole: any, i: number) => (
+                  <tr key={i} className="border-t border-gray-200 hover:bg-gray-50">
+                    <td className="px-4 py-3">{ecole.nom}</td>
+                    <td className="px-4 py-3 font-mono text-sm">{ecole.uai}</td>
+                    <td className="px-4 py-3 text-center font-semibold">{ecole.enseignants}</td>
+                    <td className="px-4 py-3 text-center">
+                      {ecole.ips ? (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold text-sm">
+                          {ecole.ips.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Personnel IEN */}
+        {statsCirco.personnelCirco.length > 0 && (
+          <div id="personnel-ien" className="card">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <span className="text-3xl">👨‍💼</span>
+              Personnel de la circonscription ({statsCirco.total})
+            </h2>
             <div className="overflow-x-auto">
-              <table className="min-w-full">
+              <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">École</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Commune</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Type</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Enseignants</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Classes</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">IPS</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Nom</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Prénom</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Discipline</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Statut</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {listeEcoles.map((ecole: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {ecole.nom || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {ecole.commune || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                          ecole.type === 'E.E.PU' ? 'bg-blue-100 text-blue-800' :
-                          ecole.type === 'E.M.PU' ? 'bg-purple-100 text-purple-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {ecole.type}
+                <tbody>
+                  {statsCirco.personnelCirco.map((pers: any, i: number) => (
+                    <tr key={i} className="border-t border-gray-200 hover:bg-gray-50">
+                      <td className="px-4 py-3 font-semibold">{pers.nom}</td>
+                      <td className="px-4 py-3">{pers.prenom}</td>
+                      <td className="px-4 py-3 text-sm">{pers.discipline || '-'}</td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm font-semibold">
+                          {pers.statut}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 text-center">
-                        <span className="font-bold text-gray-800">{ecole.nb_enseignants || 0}</span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 text-center">
-                        <span className="font-bold text-gray-800">{ecole.nb_classes || 0}</span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-center">
-                        {ecole.ips ? (
-                          <span className={`px-2 py-1 rounded font-semibold ${
-                            ecole.ips >= 110 ? 'bg-green-100 text-green-800' :
-                            ecole.ips >= 100 ? 'bg-blue-100 text-blue-800' :
-                            ecole.ips >= 90 ? 'bg-orange-100 text-orange-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {ecole.ips}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">N/A</span>
-                        )}
                       </td>
                     </tr>
                   ))}
@@ -439,8 +367,15 @@ function CirconscriptionArchivePageContent() {
 
 export default function CirconscriptionArchivePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]"><div className="text-white">Chargement...</div></div>}>
-      <CirconscriptionArchivePageContent />
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
+        <div className="text-center text-white">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-xl">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <CirconscriptionArchiveContent />
     </Suspense>
   );
 }
