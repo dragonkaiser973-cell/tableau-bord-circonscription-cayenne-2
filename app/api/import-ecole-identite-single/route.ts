@@ -158,6 +158,21 @@ export async function POST(request: NextRequest) {
     ecoleData.adresse = ecoleData.adresse || '';
     ecoleData.commune = ecoleData.commune || '';
 
+    // Calculer le sigle depuis le type (champ utilisé dans les tableaux et l'archive)
+    if (!ecoleData.sigle && ecoleData.type) {
+      const typeUpper = ecoleData.type.toUpperCase();
+      if (typeUpper.includes('MATERNELLE')) {
+        ecoleData.sigle = 'E.M.PU';
+      } else if (typeUpper.includes('LEMENTAIRE')) {
+        ecoleData.sigle = 'E.E.PU';
+      } else if (typeUpper.includes('PRIMAIRE')) {
+        ecoleData.sigle = 'E.P.PU';
+      } else {
+        ecoleData.sigle = 'E.PU';
+      }
+    }
+    ecoleData.sigle = ecoleData.sigle || '';
+
     console.log(`✅ Import identité: ${ecoleData.uai} - ${ecoleData.nom} - Directeur: ${ecoleData.directeur || 'NON RENSEIGNÉ'}`);
 
     // Insérer ou mettre à jour dans Supabase
