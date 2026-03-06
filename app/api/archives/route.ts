@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
       resEvenementsData
     ] = await Promise.all([
       supabase.from('enseignants').select('*'),
-      supabase.from('evaluations').select('*').limit(10000),
+      supabase.from('evaluations').select('*').range(0, 9999),
       supabase.from('ecoles').select('*'),
       supabase.from('stagiaires_m2').select('*').eq('annee_scolaire', anneeScolaire),
       fetch(`${request.nextUrl.origin}/api/evenements`).then(r => r.json()).catch(() => [])
