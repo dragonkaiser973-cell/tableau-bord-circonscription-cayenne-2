@@ -117,6 +117,18 @@ function CirconscriptionArchiveContent() {
 
   // ✅ CORRECTION BUG 1 : Comptage enseignants par école
   // Correspondance multi-critères : nom d'abord, puis UAI en fallback
+  // Normalise un nom : minuscules, sans accents, sans espaces multiples
+  // Ex: "LA PERSÉVÉRANCE" et "La Perseverance" donnent tous les deux "la perseverance"
+  const normaliserNom = (nom: string): string => {
+    return (nom || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // supprime les accents
+      .replace(/[^a-z0-9\s]/g, '')     // supprime ponctuation (apostrophes, tirets…)
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
   const getStatsEcoles = () => {
     const ecolesHorsCirco = ecoles.filter(e => e.uai !== '9730456H');
     
@@ -126,14 +138,23 @@ function CirconscriptionArchiveContent() {
         // Tentative 1 : correspondance par nom exact
         let nbEns = enseignants.filter(ens => ens.ecole_nom === ecole.nom).length;
 
-        // Tentative 2 : si résultat = 0, correspondance par UAI
+        // Tentative 2 : correspondance par UAI
         if (nbEns === 0 && ecole.uai) {
           nbEns = enseignants.filter(ens => ens.ecole_uai === ecole.uai).length;
         }
 
-        // Tentative 3 : si résultat = 0, correspondance par ecole_id
+        // Tentative 3 : correspondance par ecole_id
         if (nbEns === 0 && ecole.id) {
           nbEns = enseignants.filter(ens => ens.ecole_id === ecole.id).length;
+        }
+
+        // Tentative 4 : correspondance normalisée (sans accents, sans casse)
+        // Résout les cas comme "LA PERSEVERANCE" ≠ "La Persévérance"
+        if (nbEns === 0 && ecole.nom) {
+          const nomEcoleNorm = normaliserNom(ecole.nom);
+          nbEns = enseignants.filter(ens =>
+            normaliserNom(ens.ecole_nom) === nomEcoleNorm
+          ).length;
         }
 
         // ✅ CORRECTION BUG 3 : Récupérer sigle et commune depuis l'école
