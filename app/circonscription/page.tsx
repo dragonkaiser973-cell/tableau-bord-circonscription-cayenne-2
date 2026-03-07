@@ -80,6 +80,26 @@ export default function CirconscriptionPage() {
   };
 
   // Statistiques enseignants (hors circonscription SAUF personnel de direction)
+  // Correspondance normalisée : gère "GAETAN HERMINE" ↔ "E.E.PU GAETAN HERMINE"
+  // et les différences d'accents/casse ("PERSÉVÉRANCE" ↔ "Perseverance")
+  const normaliserNom = (nom: string): string => {
+    return (nom || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const nomCorrespond = (nomEnseignant: string, nomEcole: string): boolean => {
+    const normEns = normaliserNom(nomEnseignant);
+    const normEcole = normaliserNom(nomEcole);
+    if (normEns === normEcole) return true;
+    if (normEns.includes(normEcole) && normEcole.length > 4) return true;
+    return false;
+  };
+
   const getStatsEnseignants = () => {
     const ensHorsCirco = enseignants.filter(e => {
       // Toujours inclure le personnel de direction
@@ -801,7 +821,11 @@ export default function CirconscriptionPage() {
               </thead>
               <tbody>
                 {ecoles.filter(e => e.uai !== '9730456H').map(ecole => {
-                  const nbEns = enseignants.filter(e => e.ecole_nom === ecole.nom).length;
+                  const nbEns = enseignants.filter(e => 
+                    e.ecole_nom === ecole.nom ||
+                    e.ecole_uai === ecole.uai ||
+                    nomCorrespond(e.ecole_nom, ecole.nom)
+                  ).length;
                   const ips = getIpsEcole(ecole.uai);
                   
                   // Déterminer le sigle automatiquement à partir du nom
