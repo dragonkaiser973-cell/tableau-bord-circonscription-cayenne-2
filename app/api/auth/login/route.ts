@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
-import { getUserByUsername } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
 
 const secret = new TextEncoder().encode(
   process.env.JWT_SECRET || 'circonscription-cayenne2-secret-key-2026'
@@ -11,8 +11,6 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
 
-    console.log('🔐 Tentative de connexion:', username);
-
     if (!username || !password) {
       return NextResponse.json(
         { message: 'Nom d\'utilisateur et mot de passe requis' },
@@ -20,16 +18,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Récupérer l'utilisateur
-    const user = await getUserByUsername(username);
+    // Récupérer l'utilisateur depuis Supabase
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, username, password, role')
+      .eq('username', username)
+      .single();
 
-    console.log('👤 Utilisateur trouvé:', user ? 'OUI' : 'NON');
-    if (user) {
-      console.log('🔑 Hash dans DB:', user.password);
-    }
-
-    if (!user) {
-      console.log('❌ Utilisateur non trouvé');
+    if (error || !user) {
       return NextResponse.json(
         { message: 'Identifiants invalides' },
         { status: 401 }
@@ -39,22 +35,24 @@ export async function POST(request: NextRequest) {
     // Vérifier le mot de passe
     const isPasswordValid = bcrypt.compareSync(password, user.password);
 
-    console.log('🔓 Mot de passe valide:', isPasswordValid ? 'OUI ✅' : 'NON ❌');
-    console.log('🔐 Password envoyé:', password);
-
     if (!isPasswordValid) {
-      console.log('❌ Mot de passe invalide');
       return NextResponse.json(
         { message: 'Identifiants invalides' },
         { status: 401 }
       );
     }
 
+    // Mettre à jour last_login
+    await supabase
+      .from('users')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', user.id);
+
     // Créer le token JWT
-    const token = await new SignJWT({ 
-      userId: user.id, 
+    const token = await new SignJWT({
+      userId: user.id,
       username: user.username,
-      role: user.role 
+      role: user.role
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
