@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
   supabase.from('enseignants').select('*'),
   supabase.from('ecoles').select('*'),
   supabase.from('stagiaires_m2').select('*').eq('annee_scolaire', anneeScolaire),
-  fetch(`${request.nextUrl.origin}/api/evenements`).then(r => r.json()).catch(() => [])
+  supabase.from('evenements').select('*').order('date_debut', { ascending: true })
 ]);
 
 // Charger TOUTES les évaluations avec pagination
@@ -211,7 +211,15 @@ while (hasMore) {
 const enseignants = resEnseignants.data || [];
 const ecoles = resEcoles.data || [];
 const stagiaires_m2 = resStagiaires.data || [];
-const evenements = Array.isArray(resEvenementsData) ? resEvenementsData : [];
+// Adapter le format Supabase (snake_case) → camelCase attendu dans l'archive
+const evenements = (resEvenementsData.data || []).map((e: any) => ({
+  id: e.id,
+  titre: e.titre,
+  type: e.type,
+  dateDebut: e.date_debut,
+  dateFin: e.date_fin,
+  lieu: e.lieu || ''
+}));
     
     console.log(`✅ Données chargées:`);
     console.log(`   - ${enseignants.length} enseignants`);
