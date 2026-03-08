@@ -39,7 +39,16 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json(data || []);
+    // Adapter snake_case → camelCase pour correspondre à l'interface User de la page
+    const users = (data || []).map((u: any) => ({
+      id: u.id,
+      username: u.username,
+      role: u.role,
+      createdAt: u.created_at,
+      lastLogin: u.last_login
+    }));
+
+    return NextResponse.json(users);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
