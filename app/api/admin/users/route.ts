@@ -12,14 +12,34 @@ interface User {
 }
 
 // Vérifier si l'utilisateur est admin via le token JWT
-function verifyAdmin(request: NextRequest): boolean {
+async function verifyAdmin(request: NextRequest): Promise<boolean> {
   const authHeader = request.headers.get('authorization');
   if (!authHeader) return false;
 
   const token = authHeader.replace('Bearer ', '');
   try {
-    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    return payload.role === 'admin';
+    // Décoder le JWT en gérant le padding base64 correctement
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+
+    // Ajouter le padding manquant
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+    const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf-8'));
+
+    // Vérification 1 : rôle dans le token
+    if (payload.role === 'admin') return true;
+
+    // Vérification 2 : fallback → vérifier directement dans Supabase
+    if (payload.userId || payload.username) {
+      const query = payload.userId
+        ? supabase.from('users').select('role').eq('id', payload.userId).single()
+        : supabase.from('users').select('role').eq('username', payload.username).single();
+      const { data } = await query;
+      return data?.role === 'admin';
+    }
+
+    return false;
   } catch {
     return false;
   }
@@ -27,7 +47,7 @@ function verifyAdmin(request: NextRequest): boolean {
 
 // GET - Liste tous les utilisateurs (admin seulement)
 export async function GET(request: NextRequest) {
-  if (!verifyAdmin(request)) {
+  if (!(await verifyAdmin(request))) {
     return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 });
   }
 
@@ -56,7 +76,7 @@ export async function GET(request: NextRequest) {
 
 // POST - Créer un nouvel utilisateur (admin seulement)
 export async function POST(request: NextRequest) {
-  if (!verifyAdmin(request)) {
+  if (!(await verifyAdmin(request))) {
     return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 });
   }
 
@@ -106,7 +126,7 @@ export async function POST(request: NextRequest) {
 
 // PUT - Modifier un utilisateur (admin seulement)
 export async function PUT(request: NextRequest) {
-  if (!verifyAdmin(request)) {
+  if (!(await verifyAdmin(request))) {
     return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 });
   }
 
@@ -153,7 +173,7 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Supprimer un utilisateur (admin seulement)
 export async function DELETE(request: NextRequest) {
-  if (!verifyAdmin(request)) {
+  if (!(await verifyAdmin(request))) {
     return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 });
   }
 
