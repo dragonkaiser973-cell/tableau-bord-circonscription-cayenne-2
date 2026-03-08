@@ -1,46 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const dataDir = path.join(process.cwd(), 'data');
-const evenementsFile = path.join(dataDir, 'evenements.json');
-
-// S'assurer que le dossier data existe
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Lire les événements
-function readEvenements() {
-  try {
-    if (fs.existsSync(evenementsFile)) {
-      const data = fs.readFileSync(evenementsFile, 'utf-8');
-      return JSON.parse(data);
-    }
-    return [];
-  } catch (error) {
-    console.error('Erreur lecture événements:', error);
-    return [];
-  }
-}
-
-// Écrire les événements
-function writeEvenements(evenements: any[]) {
-  try {
-    fs.writeFileSync(evenementsFile, JSON.stringify(evenements, null, 2), 'utf-8');
-    return true;
-  } catch (error) {
-    console.error('Erreur écriture événements:', error);
-    return false;
-  }
-}
+import { supabase } from '@/lib/supabase';
 
 // GET - Récupérer tous les événements
 export async function GET() {
   try {
-    const evenements = readEvenements();
+    const { data, error } = await supabase
+      .from('evenements')
+      .select('*')
+      .order('date_debut', { ascending: true });
+
+    if (error) throw error;
+
+    // Adapter le format snake_case Supabase → camelCase attendu par la page
+    const evenements = (data || []).map((e: any) => ({
+      id: e.id,
+      titre: e.titre,
+      type: e.type,
+      dateDebut: e.date_debut,
+      dateFin: e.date_fin,
+      lieu: e.lieu || ''
+    }));
+
     return NextResponse.json(evenements);
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Erreur lecture événements:', error);
     return NextResponse.json({ error: 'Erreur lors de la lecture des événements' }, { status: 500 });
   }
 }
@@ -55,23 +38,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Données manquantes' }, { status: 400 });
     }
 
-    const evenements = readEvenements();
-    const newEvent = {
-      id: Date.now().toString(),
-      titre,
-      type, // 'rendez-vous', 'formation', 'reunion'
-      dateDebut,
-      dateFin: dateFin || dateDebut,
-      lieu: lieu || '',
-      created_at: new Date().toISOString()
-    };
+    const { data, error } = await supabase
+      .from('evenements')
+      .insert({
+        titre,
+        type,
+        date_debut: dateDebut,
+        date_fin: dateFin || dateDebut,
+        lieu: lieu || '',
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-    evenements.push(newEvent);
-    writeEvenements(evenements);
+    if (error) throw error;
 
-    return NextResponse.json({ success: true, event: newEvent });
-  } catch (error) {
-    return NextResponse.json({ error: 'Erreur lors de la création de l\'événement' }, { status: 500 });
+    // Retourner au format camelCase
+    return NextResponse.json({
+      success: true,
+      event: {
+        id: data.id,
+        titre: data.titre,
+        type: data.type,
+        dateDebut: data.date_debut,
+        dateFin: data.date_fin,
+        lieu: data.lieu || ''
+      }
+    });
+  } catch (error: any) {
+    console.error('Erreur création événement:', error);
+    return NextResponse.json({ error: `Erreur lors de la création: ${error.message}` }, { status: 500 });
   }
 }
 
@@ -85,17 +81,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 });
     }
 
-    const evenements = readEvenements();
-    const filtered = evenements.filter((e: any) => e.id !== id);
-    
-    if (filtered.length === evenements.length) {
-      return NextResponse.json({ error: 'Événement non trouvé' }, { status: 404 });
-    }
+    const { error } = await supabase
+      .from('evenements')
+      .delete()
+      .eq('id', id);
 
-    writeEvenements(filtered);
+    if (error) throw error;
+
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: 'Erreur lors de la suppression' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Erreur suppression événement:', error);
+    return NextResponse.json({ error: `Erreur lors de la suppression: ${error.message}` }, { status: 500 });
   }
 }
 
@@ -109,26 +105,35 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'ID manquant' }, { status: 400 });
     }
 
-    const evenements = readEvenements();
-    const index = evenements.findIndex((e: any) => e.id === id);
-    
-    if (index === -1) {
-      return NextResponse.json({ error: 'Événement non trouvé' }, { status: 404 });
-    }
+    const { data, error } = await supabase
+      .from('evenements')
+      .update({
+        titre,
+        type,
+        date_debut: dateDebut,
+        date_fin: dateFin || dateDebut,
+        lieu: lieu || '',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
-    evenements[index] = {
-      ...evenements[index],
-      titre,
-      type,
-      dateDebut,
-      dateFin: dateFin || dateDebut,
-      lieu: lieu || '',
-      updated_at: new Date().toISOString()
-    };
+    if (error) throw error;
 
-    writeEvenements(evenements);
-    return NextResponse.json({ success: true, event: evenements[index] });
-  } catch (error) {
-    return NextResponse.json({ error: 'Erreur lors de la modification' }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      event: {
+        id: data.id,
+        titre: data.titre,
+        type: data.type,
+        dateDebut: data.date_debut,
+        dateFin: data.date_fin,
+        lieu: data.lieu || ''
+      }
+    });
+  } catch (error: any) {
+    console.error('Erreur modification événement:', error);
+    return NextResponse.json({ error: `Erreur lors de la modification: ${error.message}` }, { status: 500 });
   }
 }
