@@ -256,15 +256,17 @@ function ConsulterArchiveContent() {
               </div>
             </Link>
 
-            {calendrier && calendrier.total_evenements > 0 && (
-              <Link href={`/archives/consulter/calendrier?annee=${annee}`}>
-                <div className="p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border-2 border-yellow-200 hover:shadow-lg transition-shadow cursor-pointer">
-                  <div className="text-4xl mb-3">📅</div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Calendrier</h3>
-                  <p className="text-sm text-gray-600">{calendrier.total_evenements} événements archivés</p>
-                </div>
-              </Link>
-            )}
+            <Link href={`/archives/consulter/calendrier?annee=${annee}`}>
+              <div className="p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg border-2 border-yellow-200 hover:shadow-lg transition-shadow cursor-pointer">
+                <div className="text-4xl mb-3">📅</div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Calendrier</h3>
+                <p className="text-sm text-gray-600">
+                  {brutes.evenements?.length > 0
+                    ? `${brutes.evenements.length} événement${brutes.evenements.length > 1 ? 's' : ''} archivé${brutes.evenements.length > 1 ? 's' : ''}`
+                    : 'Vacances et événements'}
+                </p>
+              </div>
+            </Link>
           </div>
         </div>
       </div>
