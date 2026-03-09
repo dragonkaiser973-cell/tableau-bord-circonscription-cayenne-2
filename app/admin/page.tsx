@@ -29,6 +29,10 @@ export default function AdminPage() {
   const [editUser, setEditUser] = useState<any>(null);
   const [showEditPassword, setShowEditPassword] = useState(false);
 
+  // Alerte sauvegarde
+  const [sauvegardeInfo, setSauvegardeInfo] = useState<{ derniere_sauvegarde: string | null } | null>(null);
+  const [savingBackup, setSavingBackup] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -46,7 +50,16 @@ export default function AdminPage() {
   const loadData = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      
+
+      // Charger statut sauvegarde
+      const backupRes = await fetch('/api/sauvegarde', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (backupRes.ok) {
+        const backupData = await backupRes.json();
+        setSauvegardeInfo(backupData);
+      }
+
       // Charger utilisateurs
       const usersRes = await fetch('/api/admin/users', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -99,6 +112,26 @@ export default function AdminPage() {
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Erreur réseau' });
+    }
+  };
+
+  const confirmerSauvegarde = async () => {
+    setSavingBackup(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch('/api/sauvegarde', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSauvegardeInfo(data);
+        setMessage({ type: 'success', text: '✅ Sauvegarde confirmée — merci !' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Erreur lors de la confirmation' });
+    } finally {
+      setSavingBackup(false);
     }
   };
 
@@ -219,6 +252,57 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* Alerte sauvegarde mensuelle */}
+        {(() => {
+          if (!sauvegardeInfo) return null;
+          const now = new Date();
+          const moisCourant = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          const derniere = sauvegardeInfo.derniere_sauvegarde;
+          const deja_ce_mois = derniere && derniere.startsWith(moisCourant);
+          const est_premier_ou_apres = now.getDate() >= 1;
+          if (deja_ce_mois) return null;
+          if (!est_premier_ou_apres) return null;
+          return (
+            <div className="card mb-6 bg-amber-50 border-2 border-amber-400">
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">🗄️</div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-amber-800 mb-1">
+                    Rappel mensuel — Sauvegarde des données
+                  </h3>
+                  <p className="text-amber-700 text-sm mb-3">
+                    {derniere
+                      ? `Dernière sauvegarde confirmée : ${new Date(derniere).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                      : 'Aucune sauvegarde enregistrée pour le moment.'
+                    }
+                  </p>
+                  <div className="bg-amber-100 rounded-lg p-3 mb-4 text-sm text-amber-800">
+                    <p className="font-semibold mb-2">📋 Procédure de sauvegarde :</p>
+                    <ol className="list-decimal list-inside space-y-1">
+                      <li>Connectez-vous sur <strong>supabase.com</strong> → votre projet</li>
+                      <li>Allez dans <strong>Table Editor</strong></li>
+                      <li>Pour chaque table ci-dessous, cliquez <strong>Export CSV</strong> :</li>
+                    </ol>
+                    <div className="flex flex-wrap gap-2 mt-2 ml-4">
+                      {['enseignants', 'ecoles_identite', 'ecoles_structure', 'evaluations', 'evenements', 'users', 'config', 'archives'].map(t => (
+                        <span key={t} className="bg-amber-200 px-2 py-0.5 rounded text-xs font-mono">{t}</span>
+                      ))}
+                    </div>
+                    <p className="mt-2">4. Enregistrez les fichiers dans un dossier <strong>Sauvegardes / {new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</strong> sur votre ordinateur ou Google Drive.</p>
+                  </div>
+                  <button
+                    onClick={confirmerSauvegarde}
+                    disabled={savingBackup}
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {savingBackup ? '⏳ Enregistrement...' : '✅ J'ai effectué la sauvegarde ce mois-ci'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Section Utilisateurs */}
         <div className="card mb-8">

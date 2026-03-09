@@ -40,6 +40,7 @@ const ADMIN_API_ROUTES = [
   '/api/reset-statistiques',
   '/api/changer-annee',
   '/api/dedoublonner-enseignants',
+  '/api/sauvegarde',
 ];
 
 // Pages réservées aux admins
