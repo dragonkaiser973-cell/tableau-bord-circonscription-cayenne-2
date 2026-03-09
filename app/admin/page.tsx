@@ -423,6 +423,69 @@ export default function AdminPage() {
         </div>
       </div>
 
+        {/* Section Logs de connexion */}
+        <div className="card mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
+                🔍
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">Logs de connexion</h2>
+            </div>
+            <button
+              onClick={() => setShowLogs(!showLogs)}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
+            >
+              {showLogs ? '🔼 Masquer' : '🔽 Afficher les 50 dernières'}
+            </button>
+          </div>
+
+          {showLogs && (
+            <div className="overflow-x-auto">
+              {logs.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Aucun log enregistré.</p>
+              ) : (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date & heure</th>
+                      <th>Utilisateur</th>
+                      <th>Rôle</th>
+                      <th>Statut</th>
+                      <th>IP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logs.map((log, idx) => (
+                      <tr key={idx}>
+                        <td className="text-sm text-gray-600">
+                          {new Date(log.created_at).toLocaleString('fr-FR')}
+                        </td>
+                        <td className="font-semibold">{log.username}</td>
+                        <td>
+                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
+                            log.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {log.role === 'admin' ? '👑 Admin' : '👤 Utilisateur'}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
+                            log.statut === 'succes' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {log.statut === 'succes' ? '✅ Succès' : '❌ Échec'}
+                          </span>
+                        </td>
+                        <td className="text-sm text-gray-500 font-mono">{log.ip}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+        </div>
+
       {/* Modal création utilisateur */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
