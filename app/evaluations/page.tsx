@@ -865,7 +865,7 @@ export default function EvaluationsPage() {
                     .filter(Boolean)
                     .sort((a, b) => {
                       // Ordre pédagogique : CP rentrée, CP point d'étape, CP, CE1, CE2, CM1, CM2
-                      const ordre = ['CP rentrée', 'CP point d'étape', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'];
+                      const ordre = ['CP rentrée', `CP point d'étape`, 'CP', 'CE1', 'CE2', 'CM1', 'CM2'];
                       const ia = ordre.findIndex(o => a.includes(o.split(' ')[0]) && (o === a || a.startsWith(o)));
                       const ib = ordre.findIndex(o => b.includes(o.split(' ')[0]) && (o === b || b.startsWith(o)));
                       if (ia !== -1 && ib !== -1) return ia - ib;
