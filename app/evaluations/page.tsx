@@ -54,10 +54,8 @@ export default function EvaluationsPage() {
   const [graphe2Matiere, setGraphe2Matiere] = useState('');
   const [graphe2Competence, setGraphe2Competence] = useState('');
   const [graphe2Groupe, setGraphe2Groupe] = useState('tous');
+  const [graphe2Niveau, setGraphe2Niveau] = useState('');
 
-  // Filtres graphique 3 : Évolution par niveau
-  const [graphe3Matiere, setGraphe3Matiere] = useState('français');
-  const [graphe3Groupe, setGraphe3Groupe] = useState('groupe_3');
 
   useEffect(() => {
     loadData();
@@ -412,7 +410,7 @@ export default function EvaluationsPage() {
     };
   };
 
-  // Graphique 2 : Évolution par école/matière/compétence
+  // Graphique 2 : Évolution par école/matière/compétence/niveau
   const getGraphe2Data = () => {
     // Filtrer les évaluations selon les critères
     let filtered = evaluations;
@@ -422,6 +420,9 @@ export default function EvaluationsPage() {
     }
     if (graphe2Matiere) {
       filtered = filtered.filter(e => e.matiere === graphe2Matiere);
+    }
+    if (graphe2Niveau) {
+      filtered = filtered.filter(e => e.classe === graphe2Niveau);
     }
     if (graphe2Competence) {
       filtered = filtered.filter(e => e.libelle === graphe2Competence);
@@ -521,62 +522,6 @@ export default function EvaluationsPage() {
         }
       ]
     };
-  };
-
-  // Graphique 3 : Évolution par niveau (CP, CE1, CE2, CM1, CM2)
-  const getGraphe3Data = () => {
-    const numGroupe = graphe3Groupe.replace('groupe_', '');
-    const champGroupe = `tx_groupe_${numGroupe}`;
-
-    // Filtrer par matière
-    let filtered = evaluations;
-    if (graphe3Matiere) {
-      filtered = filtered.filter(e => e.matiere === graphe3Matiere);
-    }
-
-    // Extraire les niveaux disponibles (CP, CE1, CE2, CM1, CM2 uniquement)
-    const niveauxCibles = ['CP', 'CE1', 'CE2', 'CM1', 'CM2'];
-    const niveauxDispos = niveauxCibles.filter(niv =>
-      filtered.some(e => e.classe && e.classe.toUpperCase().includes(niv))
-    );
-
-    const annees = [...new Set(filtered.map(e => e.rentree))].sort() as number[];
-
-    // Couleurs par niveau
-    const couleurs: Record<string, string> = {
-      CP:  '#156082',
-      CE1: '#e97132',
-      CE2: '#196b24',
-      CM1: '#9c36b5',
-      CM2: '#c0392b'
-    };
-
-    const datasets = niveauxDispos.map(niv => {
-      const couleur = couleurs[niv] || '#666';
-      const data = annees.map(annee => {
-        const evals = filtered.filter(e =>
-          e.rentree === annee &&
-          e.classe && e.classe.toUpperCase().includes(niv) &&
-          e[champGroupe] != null
-        );
-        return evals.length > 0
-          ? (evals.reduce((sum: number, e: any) => sum + (e[champGroupe] || 0), 0) / evals.length) * 100
-          : null;
-      });
-      return {
-        label: niv,
-        data,
-        borderColor: couleur,
-        backgroundColor: couleur + '20',
-        tension: 0.3,
-        fill: false,
-        borderWidth: 3,
-        pointRadius: 5,
-        spanGaps: true
-      };
-    });
-
-    return { labels: annees, datasets, niveauxDispos };
   };
 
   // Options pour les graphiques en ligne
@@ -847,7 +792,7 @@ export default function EvaluationsPage() {
           
           {/* Filtres Graphique 2 */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">École</label>
                 <select
@@ -896,6 +841,40 @@ export default function EvaluationsPage() {
                     })
                     .map(lib => (
                       <option key={lib} value={lib}>{lib}</option>
+                    ))
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Niveau</label>
+                <select
+                  value={graphe2Niveau}
+                  onChange={(e) => {
+                    setGraphe2Niveau(e.target.value);
+                    setGraphe2Competence('');
+                  }}
+                  className="input-field w-full"
+                >
+                  <option value="">Tous les niveaux</option>
+                  {[...new Set(
+                    evaluations
+                      .filter(e => !graphe2Matiere || e.matiere === graphe2Matiere)
+                      .map(e => e.classe)
+                  )]
+                    .filter(Boolean)
+                    .sort((a, b) => {
+                      // Ordre pédagogique : CP rentrée, CP point d'étape, CP, CE1, CE2, CM1, CM2
+                      const ordre = ['CP rentrée', 'CP point d'étape', 'CP', 'CE1', 'CE2', 'CM1', 'CM2'];
+                      const ia = ordre.findIndex(o => a.includes(o.split(' ')[0]) && (o === a || a.startsWith(o)));
+                      const ib = ordre.findIndex(o => b.includes(o.split(' ')[0]) && (o === b || b.startsWith(o)));
+                      if (ia !== -1 && ib !== -1) return ia - ib;
+                      if (ia !== -1) return -1;
+                      if (ib !== -1) return 1;
+                      return a.localeCompare(b);
+                    })
+                    .map(niveau => (
+                      <option key={niveau} value={niveau}>{niveau}</option>
                     ))
                   }
                 </select>
@@ -987,97 +966,6 @@ export default function EvaluationsPage() {
         </div>
       </div>
 
-        {/* Graphique 3 : Évolution par niveau */}
-        <div className="card mb-8" id="section-graphique3">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">📊 Évolution des résultats par niveau</h2>
-
-          {/* Filtres Graphique 3 */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Matière</label>
-                <select
-                  value={graphe3Matiere}
-                  onChange={(e) => setGraphe3Matiere(e.target.value)}
-                  className="input-field w-full"
-                >
-                  <option value="français">Français</option>
-                  <option value="mathématiques">Mathématiques</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Groupe de maîtrise</label>
-                <select
-                  value={graphe3Groupe}
-                  onChange={(e) => setGraphe3Groupe(e.target.value)}
-                  className="input-field w-full"
-                >
-                  <option value="groupe_1">Groupe 1 — À besoin</option>
-                  <option value="groupe_2">Groupe 2 — Fragiles</option>
-                  <option value="groupe_3">Groupe 3 — Au-dessus du seuil 2</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {(() => {
-            const graphe3 = getGraphe3Data();
-            if (graphe3.datasets.length === 0) {
-              return (
-                <div className="text-center py-12 text-gray-400">
-                  <p className="text-lg">Aucune donnée disponible pour ces filtres</p>
-                </div>
-              );
-            }
-            return (
-              <>
-                <Line data={{ labels: graphe3.labels, datasets: graphe3.datasets }} options={lineChartOptions} />
-
-                {/* Tableau récapitulatif */}
-                <div className="mt-6 overflow-x-auto" id="section-tableau-graphique3">
-                  <h3 className="text-lg font-bold text-gray-800 mb-3">📋 Données détaillées par niveau</h3>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="px-4 py-2 text-left">Année</th>
-                        {graphe3.niveauxDispos.map(niv => (
-                          <th key={niv} className="px-4 py-2 text-center">{niv}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {graphe3.labels.map((annee, idx) => (
-                        <tr key={idx} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-2 font-semibold">{annee}</td>
-                          {graphe3.datasets.map((ds, dsIdx) => {
-                            const val = ds.data[idx];
-                            const prev = idx > 0 ? ds.data[idx - 1] : null;
-                            const evolution = val != null && prev != null ? (val as number) - (prev as number) : null;
-                            return (
-                              <td key={dsIdx} className="px-4 py-2 text-center">
-                                {val != null ? (
-                                  <div>
-                                    <span className="font-semibold">{(val as number).toFixed(1)}%</span>
-                                    {evolution != null && (
-                                      <span className={`ml-1 text-xs ${evolution > 0 ? 'text-green-600' : evolution < 0 ? 'text-red-600' : 'text-gray-500'}`}>
-                                        {evolution > 0 ? '▲' : evolution < 0 ? '▼' : '='}{Math.abs(evolution).toFixed(1)}
-                                      </span>
-                                    )}
-                                  </div>
-                                ) : <span className="text-gray-400">—</span>}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            );
-          })()}
-        </div>
-
       {/* Footer */}
       <footer className="text-center py-8 text-white/80">
         <p className="text-sm">
@@ -1103,11 +991,7 @@ export default function EvaluationsPage() {
           { id: 'section-graphique1', label: '📊 Graphique 1 : Circonscription vs Académie', selected: true },
           { id: 'section-tableau-graphique1', label: '📋 Tableau de données Graphique 1', selected: true },
           { id: 'section-graphique2', label: '📈 Graphique 2 : Évolution Détaillée', selected: true },
-          { id: 'section-tableau-graphique2', label: '📋 Tableau de données Graphique 2', selected: true },
-          { id: 'section-graphique3', label: '📊 Graphique 3 : Évolution par niveau', selected: true },
-          { id: 'section-tableau-graphique3', label: '📋 Tableau de données Graphique 3', selected: true },
-          { id: 'section-graphique3', label: '📊 Graphique 3 : Évolution par niveau', selected: true },
-          { id: 'section-tableau-graphique3', label: '📋 Tableau de données Graphique 3', selected: true }
+          { id: 'section-tableau-graphique2', label: '📋 Tableau de données Graphique 2', selected: true }
         ]}
         defaultFilename="evaluations-circonscription"
       />
