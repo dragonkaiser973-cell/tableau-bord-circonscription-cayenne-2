@@ -233,7 +233,8 @@ export default function DonneesPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    if (!token) {
+    const userRole = localStorage.getItem('userRole');
+    if (!token || userRole !== 'admin') {
       router.push('/');
     } else {
       setIsAuthenticated(true);
