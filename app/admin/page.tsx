@@ -387,7 +387,7 @@ export default function AdminPage() {
         </div>
 
         {/* Section Archives */}
-        <div className="card">
+        <div className="card mb-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center text-2xl">
               📚
