@@ -420,9 +420,6 @@ export default function AdminPage() {
               ))}
             </div>
           )}
-        </div>
-      </div>
-
         {/* Section Logs de connexion */}
         <div className="card mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -485,6 +482,7 @@ export default function AdminPage() {
             </div>
           )}
         </div>
+      </div>
 
       {/* Modal création utilisateur */}
       {showCreateModal && (
