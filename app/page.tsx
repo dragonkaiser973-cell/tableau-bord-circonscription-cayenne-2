@@ -273,6 +273,21 @@ export default function HomePage() {
               </div>
             </Link>
           )}
+
+          {/* Card Analyse Classe - accessible à tous */}
+          <Link href="/analyse-classe">
+            <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-teal-500 text-white rounded-lg flex items-center justify-center text-2xl">
+                  🔬
+                </div>
+                <h2 className="text-2xl font-bold text-teal-700">Analyse classe</h2>
+              </div>
+              <p className="text-teal-600 font-medium">
+                Analyser les évaluations nationales d&apos;une classe à partir des fichiers Excel
+              </p>
+            </div>
+          </Link>
         </div>
       </div>
 
