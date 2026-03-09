@@ -354,7 +354,7 @@ export default function HomePage() {
             </form>
 
             <p className="text-sm text-gray-500 mt-4 text-center">
-              Compte par défaut : superadmin / SuperAdmin2026!
+              Contactez l&apos;administrateur pour obtenir vos identifiants.
             </p>
           </div>
         </div>
