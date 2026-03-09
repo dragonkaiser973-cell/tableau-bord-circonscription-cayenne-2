@@ -29,6 +29,10 @@ export default function AdminPage() {
   const [editUser, setEditUser] = useState<any>(null);
   const [showEditPassword, setShowEditPassword] = useState(false);
 
+  // Logs de connexion
+  const [logs, setLogs] = useState<any[]>([]);
+  const [showLogs, setShowLogs] = useState(false);
+
   // Alerte sauvegarde
   const [sauvegardeInfo, setSauvegardeInfo] = useState<{ derniere_sauvegarde: string | null } | null>(null);
   const [savingBackup, setSavingBackup] = useState(false);
@@ -50,6 +54,15 @@ export default function AdminPage() {
   const loadData = async () => {
     try {
       const token = localStorage.getItem('authToken');
+
+      // Charger logs de connexion
+      const logsRes = await fetch('/api/logs-connexion', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (logsRes.ok) {
+        const logsData = await logsRes.json();
+        setLogs(logsData);
+      }
 
       // Charger statut sauvegarde
       const backupRes = await fetch('/api/sauvegarde', {

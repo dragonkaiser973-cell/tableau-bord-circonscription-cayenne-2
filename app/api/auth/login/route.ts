@@ -38,6 +38,18 @@ export async function POST(request: NextRequest) {
     const isPasswordValid = bcrypt.compareSync(password, user.password);
 
     if (!isPasswordValid) {
+      // Log tentative échouée
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || request.headers.get('x-real-ip')
+        || 'inconnue';
+      await supabase.from('logs_connexion').insert({
+        user_id: user.id,
+        username: user.username,
+        role: user.role,
+        ip,
+        statut: 'echec',
+        created_at: new Date().toISOString()
+      });
       return NextResponse.json(
         { message: 'Identifiants invalides' },
         { status: 401 }
@@ -49,6 +61,19 @@ export async function POST(request: NextRequest) {
       .from('users')
       .update({ last_login: new Date().toISOString() })
       .eq('id', user.id);
+
+    // Enregistrer le log de connexion
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || 'inconnue';
+    await supabase.from('logs_connexion').insert({
+      user_id: user.id,
+      username: user.username,
+      role: user.role,
+      ip,
+      statut: 'succes',
+      created_at: new Date().toISOString()
+    });
 
     // Créer le token JWT
     const token = await new SignJWT({
