@@ -288,6 +288,21 @@ export default function HomePage() {
               </p>
             </div>
           </Link>
+
+          {/* Card Aide - accessible à tous */}
+          <Link href="/aide-analyse-classe">
+            <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-cyan-50 to-cyan-100 border-2 border-cyan-200">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-cyan-500 text-white rounded-lg flex items-center justify-center text-2xl">
+                  📖
+                </div>
+                <h2 className="text-2xl font-bold text-cyan-700">Guide d&apos;utilisation</h2>
+              </div>
+              <p className="text-cyan-600 font-medium">
+                Comment utiliser l&apos;outil d&apos;analyse des évaluations nationales
+              </p>
+            </div>
+          </Link>
         </div>
       </div>
 
