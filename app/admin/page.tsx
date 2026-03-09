@@ -296,7 +296,7 @@ export default function AdminPage() {
                     disabled={savingBackup}
                     className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
                   >
-                    {savingBackup ? '⏳ Enregistrement...' : '✅ J'ai effectué la sauvegarde ce mois-ci'}
+                    {savingBackup ? '⏳ Enregistrement...' : "✅ J'ai effectué la sauvegarde ce mois-ci"}
                   </button>
                 </div>
               </div>
