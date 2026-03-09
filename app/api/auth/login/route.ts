@@ -3,9 +3,11 @@ import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { supabase } from '@/lib/supabase';
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'circonscription-cayenne2-secret-key-2026'
-);
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET manquant dans les variables d\'environnement');
+}
+
+const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function POST(request: NextRequest) {
   try {
