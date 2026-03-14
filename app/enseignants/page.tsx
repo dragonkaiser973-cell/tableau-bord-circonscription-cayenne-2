@@ -31,6 +31,7 @@ interface Enseignant {
 export default function EnseignantsPage() {
   const [enseignants, setEnseignants] = useState<Enseignant[]>([]);
   const [ecoles, setEcoles] = useState<any[]>([]);
+  const [ecolesIdentiteMap, setEcolesIdentiteMap] = useState<Map<string, { sigle: string; nom: string }>>(new Map());
   const [stagiaireM2, setStagiaireM2] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -255,10 +256,11 @@ const enseignants = enseignantNormalise.split(/\s*(?:\/|\bet\b|;)\s*/i).map((e: 
 
   const loadData = async () => {
     try {
-      const [ensRes, ecolesRes, structuresRes] = await Promise.all([
+      const [ensRes, ecolesRes, structuresRes, ecolesIdentiteRes] = await Promise.all([
   fetch('/api/enseignants'),
   fetch('/api/ecoles'),
-  fetch('/api/ecoles-structure')  // ← CHANGEMENT ICI
+  fetch('/api/ecoles-structure'),
+  fetch('/api/ecoles-identite')
 ]);
 
       const ensData = await ensRes.json();
@@ -269,6 +271,12 @@ let structuresData = [];
 if (structuresRes.ok) {
   structuresData = await structuresRes.json();
 }
+
+      // Charger les identités écoles (sigle + nom)
+      let ecolesIdentiteData: any[] = [];
+      if (ecolesIdentiteRes.ok) {
+        ecolesIdentiteData = await ecolesIdentiteRes.json();
+      }
 
       console.log('📊 Données chargées:', {
         enseignants: ensData.length,
@@ -281,6 +289,15 @@ if (structuresRes.ok) {
       
       setEnseignants(enseignantsEnrichis);
       setEcoles(ecolesData);
+
+      // Construire un map UAI → {sigle, nom} depuis ecoles_identite
+      const uaiToIdentite = new Map<string, { sigle: string; nom: string }>();
+      ecolesIdentiteData.forEach((ei: any) => {
+        if (ei.uai) {
+          uaiToIdentite.set(ei.uai, { sigle: ei.sigle || '', nom: ei.nom || '' });
+        }
+      });
+      setEcolesIdentiteMap(uaiToIdentite);
 
       // Ne pas définir d'année par défaut pour afficher tous les enseignants
       // L'utilisateur pourra filtrer manuellement si besoin
@@ -458,7 +475,17 @@ if (structuresRes.ok) {
                   ).values()]
                   .sort((a, b) => a.nom.localeCompare(b.nom))
                   .map(ecole => (
-                    <option key={ecole.uai} value={ecole.uai}>{ecole.nom} — {ecole.uai}</option>
+                    <option key={ecole.uai} value={ecole.uai}>
+                      {(() => {
+                        const identite = ecolesIdentiteMap.get(ecole.uai);
+                        if (identite && identite.nom) {
+                          return identite.sigle
+                            ? `${identite.sigle} ${identite.nom}`
+                            : identite.nom;
+                        }
+                        return ecole.uai;
+                      })()}
+                    </option>
                   ))
                 }
               </select>
