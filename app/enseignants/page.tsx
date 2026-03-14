@@ -338,7 +338,7 @@ if (structuresRes.ok) {
       
       // Filtre spécialité
       const matchSpecialite = !selectedSpecialite || 
-        (e.discipline && e.discipline.toUpperCase().includes(selectedSpecialite.toUpperCase()));
+        (e.discipline && e.discipline.toUpperCase() === selectedSpecialite.toUpperCase());
       
       const matchDecharge = !hasDecharge || 
         (hasDecharge === 'oui' && e.decharge_binome) ||
@@ -541,13 +541,18 @@ if (structuresRes.ok) {
                 className="input-field"
               >
                 <option value="">Toutes les spécialités</option>
+                <option value="CLASSE D'APPLICATION">Classe d'application</option>
                 <option value="DIRECTION">Direction</option>
-                <option value="ULIS">ULIS</option>
-                <option value="RASED">RASED</option>
                 <option value="OPTION E">Option E</option>
-                <option value="ACCUEIL PRIMO">Accueil primo-arrivants</option>
-                <option value="REFERENT">Référent numérique</option>
-                <option value="COORDO">Coordinateur</option>
+                <option value="RASED">RASED</option>
+                <option value="ULIS">ULIS</option>
+                <option value="ACCUEIL PRIMO ARRIVANTS">Accueil primo-arrivants</option>
+                <option value="CONSEILLER NUMERIQUE">Conseiller numérique</option>
+                <option value="CONSEILLERE EPS">Conseillère EPS</option>
+                <option value="CONSEILLERE GENERALISTE">Conseillère généraliste</option>
+                <option value="COORDINATION REP PLUS CATAYEE">Coordination REP+ Catayée</option>
+                <option value="INSPECTRICE DE CIRCONSCRIPTION">Inspectrice de circonscription</option>
+                <option value="PROFESSEUR DES ECOLES STAGIAIRE">Professeur des écoles stagiaire</option>
               </select>
             </div>
 
