@@ -458,7 +458,7 @@ if (structuresRes.ok) {
                   ).values()]
                   .sort((a, b) => a.nom.localeCompare(b.nom))
                   .map(ecole => (
-                    <option key={ecole.uai} value={ecole.uai}>{ecole.nom}</option>
+                    <option key={ecole.uai} value={ecole.uai}>{ecole.nom} — {ecole.uai}</option>
                   ))
                 }
               </select>
