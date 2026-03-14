@@ -291,7 +291,15 @@ async function importTRM(workbook: XLSX.WorkBook, filename: string) {
           }
           
           // Si on n'a pas de discipline sur cette ligne, utiliser currentDiscipline pour le champ discipline
-          const disciplineFinale = disciplineLigne || currentDiscipline;
+          let disciplineFinale = disciplineLigne || currentDiscipline;
+
+          // Bug fix : si la discipline héritée contient "STAGIAIRE" mais que l'enseignant
+          // est titulaire ou contractuel (grade 615x ou 78x), on efface la discipline héritée
+          // pour éviter qu'un titulaire hérite du label "PROFESSEUR DES ECOLES STAGIAIRE"
+          if (!disciplineLigne && disciplineFinale.toUpperCase().includes('STAGIAIRE') && 
+              statutAdministratif !== 'Stagiaire') {
+            disciplineFinale = 'SANS SPECIALITE';
+          }
 
           // Calculer l'ancienneté basée sur Début OCC
           let anciennete = 0;
