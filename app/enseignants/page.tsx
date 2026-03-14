@@ -314,7 +314,7 @@ if (structuresRes.ok) {
         e.nom.toLowerCase().includes(searchNom.toLowerCase()) ||
         (e.prenom && e.prenom.toLowerCase().includes(searchNom.toLowerCase()));
       
-      const matchEcole = !selectedEcole || e.ecole_nom === selectedEcole;
+      const matchEcole = !selectedEcole || e.ecole_uai === selectedEcole;
       const matchAnnee = !selectedAnnee || e.annee_scolaire === selectedAnnee;
       const matchStatut = !selectedStatut || e.statut === selectedStatut;
       const matchNiveau = !selectedNiveau || e.niveau_classe === selectedNiveau;
@@ -451,9 +451,16 @@ if (structuresRes.ok) {
                 className="input-field"
               >
                 <option value="">Toutes les écoles</option>
-                {ecoles.map(ecole => (
-                  <option key={ecole.id} value={ecole.nom}>{ecole.nom}</option>
-                ))}
+                {[...new Map(
+                    enseignants
+                      .filter(e => e.ecole_nom && e.ecole_uai)
+                      .map(e => [e.ecole_uai, { uai: e.ecole_uai, nom: e.ecole_nom }])
+                  ).values()]
+                  .sort((a, b) => a.nom.localeCompare(b.nom))
+                  .map(ecole => (
+                    <option key={ecole.uai} value={ecole.uai}>{ecole.nom}</option>
+                  ))
+                }
               </select>
             </div>
 
