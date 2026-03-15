@@ -23,7 +23,11 @@ function ResetButton({
   const handleReset = async () => {
     setResetting(true);
     try {
-      const response = await fetch(endpoint, { method: 'POST' });
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const result = await response.json();
 
       if (response.ok) {
@@ -83,7 +87,11 @@ function DangerZone({ onReset }: { onReset: () => void }) {
     setMessage(null);
 
     try {
-      const response = await fetch('/api/reset', { method: 'POST' });
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/reset', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const result = await response.json();
 
       if (response.ok) {
@@ -104,7 +112,11 @@ function DangerZone({ onReset }: { onReset: () => void }) {
     if (!confirm(`Voulez-vous vraiment réinitialiser ${name} ?`)) return;
 
     try {
-      const response = await fetch(endpoint, { method: 'POST' });
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const result = await response.json();
 
       if (response.ok) {
@@ -233,8 +245,7 @@ export default function DonneesPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    const userRole = localStorage.getItem('userRole');
-    if (!token || userRole !== 'admin') {
+    if (!token) {
       router.push('/');
     } else {
       setIsAuthenticated(true);
@@ -302,8 +313,10 @@ export default function DonneesPage() {
       setProgressText('Extraction des stagiaires SOPA...');
       setProgress(30);
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/import-stagiaires', {
         method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
       });
 
@@ -336,8 +349,10 @@ export default function DonneesPage() {
 
       const startTime = Date.now();
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/import', {
         method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
         signal: controller.signal,
       });
