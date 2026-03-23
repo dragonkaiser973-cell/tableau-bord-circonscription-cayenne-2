@@ -223,6 +223,20 @@ export default function HomePage() {
                 </p>
               </div>
             </Link>
+
+            <Link href="/questionnaires/admin">
+              <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-indigo-50 to-indigo-100 border-2 border-indigo-200">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-indigo-500 text-white rounded-lg flex items-center justify-center text-2xl">
+                    📋
+                  </div>
+                  <h2 className="text-2xl font-bold text-indigo-700">Gérer les questionnaires</h2>
+                </div>
+                <p className="text-indigo-600 font-medium">
+                  Créer, modifier et consulter les résultats des questionnaires
+                </p>
+              </div>
+            </Link>
           )}
 
           {/* Card Statistiques */}
