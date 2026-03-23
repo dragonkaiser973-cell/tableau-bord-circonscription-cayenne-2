@@ -274,6 +274,21 @@ export default function HomePage() {
             </Link>
           )}
 
+          {/* Card Questionnaires - accessible à tous */}
+          <Link href="/questionnaires">
+            <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-indigo-50 to-indigo-100 border-2 border-indigo-200">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-indigo-500 text-white rounded-lg flex items-center justify-center text-2xl">
+                  📋
+                </div>
+                <h2 className="text-2xl font-bold text-indigo-700">Questionnaires</h2>
+              </div>
+              <p className="text-indigo-600 font-medium">
+                Répondre aux sondages et questionnaires de la circonscription
+              </p>
+            </div>
+          </Link>
+
           {/* Card Analyse Classe - accessible à tous */}
           <Link href="/analyse-classe">
             <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200">
@@ -289,7 +304,7 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Card Aide - accessible à tous */}
+          {/* Card Guide d'utilisation - accessible à tous */}
           <Link href="/aide-analyse-classe">
             <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-cyan-50 to-cyan-100 border-2 border-cyan-200">
               <div className="flex items-center gap-4 mb-4">
@@ -369,7 +384,7 @@ export default function HomePage() {
             </form>
 
             <p className="text-sm text-gray-500 mt-4 text-center">
-              Contactez l&apos;administrateur pour obtenir vos identifiants.
+              Compte par défaut : superadmin / SuperAdmin2026!
             </p>
           </div>
         </div>

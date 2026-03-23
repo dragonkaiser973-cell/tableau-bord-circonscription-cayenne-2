@@ -15,6 +15,8 @@ const PUBLIC_API_ROUTES = [
   '/api/stagiaires-m2',
   '/api/archives',
   '/api/archives/data',
+  '/api/questionnaires',  // lecture publique (actifs seulement)
+  '/api/soumissions',     // soumission publique
 ];
 
 // Routes réservées aux admins
@@ -44,9 +46,6 @@ const ADMIN_API_ROUTES = [
   '/api/logs-connexion',
 ];
 
-// Pages réservées aux admins
-const ADMIN_PAGES = ['/admin'];
-
 async function verifyToken(token: string): Promise<{ userId: number; username: string; role: string } | null> {
   try {
     if (!process.env.JWT_SECRET) return null;
@@ -61,14 +60,6 @@ async function verifyToken(token: string): Promise<{ userId: number; username: s
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── Pages admin ──────────────────────────────────────────────
-  const isAdminPage = ADMIN_PAGES.some(p => pathname.startsWith(p));
-  if (isAdminPage) {
-    // Les pages admin vérifient elles-mêmes via localStorage côté client
-    // Le middleware ne peut pas lire localStorage — on laisse passer
-    return NextResponse.next();
-  }
-
   // ── Routes API seulement ──────────────────────────────────────
   if (!pathname.startsWith('/api/')) {
     return NextResponse.next();
@@ -77,7 +68,12 @@ export async function middleware(request: NextRequest) {
   // Routes publiques → laisser passer
   const isPublic = PUBLIC_API_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'));
   if (isPublic) {
-    return NextResponse.next();
+    // Exception : POST/PUT/DELETE sur /api/questionnaires nécessite admin
+    if (pathname.startsWith('/api/questionnaires') && ['POST', 'PUT', 'DELETE'].includes(request.method)) {
+      // laisser passer la vérification ci-dessous
+    } else {
+      return NextResponse.next();
+    }
   }
 
   // Toutes les autres routes API → token requis
@@ -85,31 +81,24 @@ export async function middleware(request: NextRequest) {
   const token = authHeader?.replace('Bearer ', '');
 
   if (!token) {
-    return NextResponse.json(
-      { error: 'Authentification requise' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Authentification requise' }, { status: 401 });
   }
 
   const payload = await verifyToken(token);
 
   if (!payload) {
-    return NextResponse.json(
-      { error: 'Token invalide ou expiré' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Token invalide ou expiré' }, { status: 401 });
   }
 
   // Routes admin → rôle admin requis
   const isAdminRoute = ADMIN_API_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'));
-  if (isAdminRoute && payload.role !== 'admin') {
-    return NextResponse.json(
-      { error: 'Accès réservé aux administrateurs' },
-      { status: 403 }
-    );
+  const isQuestionnairesWrite = pathname.startsWith('/api/questionnaires') && ['POST', 'PUT', 'DELETE'].includes(request.method);
+
+  if ((isAdminRoute || isQuestionnairesWrite) && payload.role !== 'admin') {
+    return NextResponse.json({ error: 'Accès réservé aux administrateurs' }, { status: 403 });
   }
 
-  // Token valide → ajouter les infos user dans les headers pour les routes
+  // Token valide → ajouter les infos user dans les headers
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-user-id', String(payload.userId));
   requestHeaders.set('x-user-role', payload.role);
@@ -119,8 +108,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/api/:path*',
-    '/admin/:path*',
-  ],
+  matcher: ['/api/:path*', '/admin/:path*'],
 };

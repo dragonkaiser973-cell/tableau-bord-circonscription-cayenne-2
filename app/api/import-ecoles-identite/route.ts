@@ -45,44 +45,112 @@ export async function POST(request: NextRequest) {
             const label = cells[0].text.trim();
             const value = cells[1].text.trim();
 
+            // Nettoyage des caractères spéciaux liés à l'encodage des fichiers ONDE
+            // Les fichiers HTM ONDE utilisent des caractères accentués qui peuvent être
+            // mal décodés. On utilise des comparaisons robustes (includes partiel).
+
             if (label.includes('UAI')) {
+              // ✅ "Code UAI" → uai
               ecoleData.uai = value;
-            } else if (label.includes('Secteur')) {
+
+            } else if (label.includes('Secteur') && !label.includes('scolaire')) {
+              // ✅ "Secteur" → PUBLIC ou PRIVÉ
               ecoleData.secteur = value;
-            } else if (label.includes('Type')) {
+
+            } else if (label.includes('cole') && !label.includes('UAI') && !label.includes('scolaire')) {
+              // ✅ CORRECTION : "École" (label = '?cole' après décodage) → type de l'école
+              // Remplace l'ancien : label.includes('Type') qui ne matchait jamais
               ecoleData.type = value;
-            } else if (label.includes('Nom') && ecoleData.uai) {
+              // Déduire le sigle depuis le type
+              if (!ecoleData.sigle) {
+                const typeUpper = value.toUpperCase();
+                if (typeUpper.includes('MATERNELLE')) {
+                  ecoleData.sigle = 'E.M.PU';
+                } else if (typeUpper.includes('LEMENTAIRE')) {
+                  ecoleData.sigle = 'E.E.PU';
+                } else if (typeUpper.includes('PRIMAIRE')) {
+                  ecoleData.sigle = 'E.P.PU';
+                } else {
+                  ecoleData.sigle = 'E.PU';
+                }
+              }
+
+            } else if (label.includes('Libell') && !ecoleData.nom) {
+              // ✅ CORRECTION : "Libellé" (label = 'Libell?' après décodage) → nom de l'école
+              // Remplace l'ancien : label.includes('Nom') qui ne matchait jamais
               ecoleData.nom = value;
+
             } else if (label.includes('SIRET')) {
+              // ✅ "N° SIRET" → siret
               ecoleData.siret = value;
-            } else if (label.includes('État') || label.includes('Etat')) {
+
+            } else if (label.includes('tat') && !label.includes('Candidat')) {
+              // ✅ "État" (label = '?tat') → état de l'établissement
               ecoleData.etat = value;
+
             } else if (label.toLowerCase().includes('ouverture')) {
+              // ✅ "Date d'ouverture" → date_ouverture
               ecoleData.date_ouverture = value;
+
             } else if (label.includes('Commune')) {
+              // ✅ "Commune" → commune
               ecoleData.commune = value;
-            } else if (label.includes('Civilité') || label.includes('Civilite')) {
-              ecoleData.civilite = value;
-            } else if (label.includes('Directeur') && !label.includes('Civilité')) {
-              ecoleData.directeur = value;
+
+            } else if (label.includes('Civilit')) {
+              // ✅ "Civilité" → civilite (Mme / M.)
+              ecoleData.civilite_directeur = value;
+
+            } else if ((label.includes('Directeur') || label.includes('Directrice')) && !label.includes('Civilit')) {
+              // ✅ CORRECTION : capture aussi "Directrice" (pas seulement "Directeur")
+              // Nettoyage des retours à la ligne et espaces multiples dans la valeur
+              const dirValue = value
+                .replace(/[\r\n\t]+/g, ' ')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+              ecoleData.directeur = dirValue;
+
             } else if (label.includes('Adresse')) {
+              // ✅ "Adresse" → adresse
               ecoleData.adresse = value;
+
             } else if (label.includes('Ville')) {
+              // ✅ "Ville" → ville (code postal + ville)
               ecoleData.ville = value;
-            } else if (label.includes('Téléphone') || label.includes('Telephone')) {
+
+            } else if (label.includes('l') && label.includes('phone')) {
+              // ✅ CORRECTION robuste : "Téléphone" (label = 'T?l?phone') → telephone
+              // Remplace : label.includes('Téléphone') || label.includes('Telephone')
+              // qui pouvait échouer selon l'encodage
               ecoleData.telephone = value;
-            } else if (label.includes('Mél') || label.includes('Email')) {
+
+            } else if (label.includes('Courriel') || label.includes('Mél') || label.includes('Email')) {
+              // ✅ CORRECTION : "Courriel" est le label réel dans les fichiers ONDE
+              // Remplace l'ancien : label.includes('Mél') || label.includes('Email')
+              // qui ne matchait jamais car le label est "Courriel"
               ecoleData.email = value;
-            } else if (label.includes('Collège') || label.includes('College')) {
+
+            } else if (label.includes('Coll') && label.includes('ge')) {
+              // ✅ "Collège" de secteur → college (via RAR ou secteur scolaire)
               ecoleData.college = value;
+
+            } else if (label.includes('Circonscription')) {
+              // ✅ Bonus : capturer la circonscription de rattachement
+              ecoleData.circonscription = value;
+
+            } else if (label.includes('ZUS')) {
+              // ✅ Bonus : capturer la zone urbaine sensible
+              ecoleData.zus = value;
             }
           }
         }
 
         if (ecoleData.uai) {
           ecoles.push(ecoleData);
-          console.log(`✅ ${ecoleData.uai} - ${ecoleData.nom || 'Sans nom'}`);
+          console.log(`✅ ${ecoleData.uai} - ${ecoleData.nom || '⚠️ Sans nom'} (${ecoleData.commune || '?'})`);
+        } else {
+          console.warn(`⚠️ Fichier ignoré (pas d'UAI): ${filename}`);
         }
+
       } catch (err) {
         console.error(`❌ Erreur parsing ${filename}:`, err);
       }
@@ -130,7 +198,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Import réussi: ${imported} écoles importées`,
-      count: imported
+      count: imported,
+      ecoles: ecoles.map(e => ({ uai: e.uai, nom: e.nom, commune: e.commune, type: e.type }))
     });
 
   } catch (error: any) {
