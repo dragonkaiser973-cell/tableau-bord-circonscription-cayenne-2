@@ -210,6 +210,7 @@ export default function HomePage() {
 
           {/* Card Administration (admin seulement) */}
           {isAuthenticated && typeof window !== 'undefined' && localStorage.getItem('userRole') === 'admin' && (
+            <>
             <Link href="/admin">
               <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200">
                 <div className="flex items-center gap-4 mb-4">
@@ -237,6 +238,7 @@ export default function HomePage() {
                 </p>
               </div>
             </Link>
+            </>
           )}
 
           {/* Card Statistiques */}
