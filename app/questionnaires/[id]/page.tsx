@@ -95,7 +95,7 @@ export default function RepondreQuestionnairePage() {
 
     setEnvoi(true);
     setErreurEnvoi('');
-    const res = await fetch('/api/soumissions', {
+    const res = await fetch('/api/questionnaires/soumissions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

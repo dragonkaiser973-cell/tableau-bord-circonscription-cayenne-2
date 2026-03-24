@@ -142,7 +142,7 @@ export default function QuestionnairesAdminPage() {
     setLoadingResultats(true);
     const [qRes, rRes] = await Promise.all([
       fetch(`/api/questionnaires?id=${id}`, { headers: { 'Authorization': `Bearer ${token()}` } }),
-      fetch(`/api/soumissions?questionnaire_id=${id}`, { headers: { 'Authorization': `Bearer ${token()}` } })
+      fetch(`/api/questionnaires/soumissions?questionnaire_id=${id}`, { headers: { 'Authorization': `Bearer ${token()}` } })
     ]);
     const questionnaire = await qRes.json();
     const data = await rRes.json();

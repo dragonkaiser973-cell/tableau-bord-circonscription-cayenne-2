@@ -16,7 +16,7 @@ const PUBLIC_API_ROUTES = [
   '/api/archives',
   '/api/archives/data',
   '/api/questionnaires',  // lecture publique (actifs seulement)
-  '/api/soumissions',     // soumission publique
+  '/api/questionnaires/soumissions',     // soumission publique
 ];
 
 // Routes réservées aux admins
