@@ -770,14 +770,49 @@ export default function QuestionnairesAdminPage() {
 
                         {/* Barres verticales — choix multiple */}
                         {res.type === 'barres' && (
-                          <div style={{ maxWidth: 480, margin: '0 auto' }}>
-                            <Bar
-                              data={{
-                                labels: Object.keys(res.data),
-                                datasets: [{ label: 'Réponses', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
-                              }}
-                              options={{ responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
-                            />
+                          <div className="flex flex-col lg:flex-row gap-6 items-start">
+                            <div style={{ maxWidth: 480, width: '100%' }}>
+                              <Bar
+                                data={{
+                                  labels: Object.keys(res.data),
+                                  datasets: [{ label: 'Réponses', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
+                                }}
+                                options={{ responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
+                              />
+                            </div>
+                            <div className="lg:w-56 flex-shrink-0">
+                              <table className="w-full text-sm border-collapse rounded-xl overflow-hidden">
+                                <thead>
+                                  <tr className="bg-gray-100">
+                                    <th className="text-left px-3 py-2 font-semibold text-gray-600">Option</th>
+                                    <th className="text-center px-3 py-2 font-semibold text-gray-600">Nb</th>
+                                    <th className="text-center px-3 py-2 font-semibold text-gray-600">%</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {Object.entries(res.data).map(([label, count]: [string, any], i) => {
+                                    const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+                                    return (
+                                      <tr key={label} className="border-b border-gray-100">
+                                        <td className="px-3 py-2">
+                                          <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: COULEURS[i % COULEURS.length] }} />
+                                            <span className="text-gray-700">{label}</span>
+                                          </div>
+                                        </td>
+                                        <td className="text-center px-3 py-2 font-semibold">{count}</td>
+                                        <td className="text-center px-3 py-2" style={{ color: COULEURS[i % COULEURS.length] }}>{pct}%</td>
+                                      </tr>
+                                    );
+                                  })}
+                                  <tr className="bg-gray-50 font-semibold">
+                                    <td className="px-3 py-2 text-gray-600">Total réponses</td>
+                                    <td className="text-center px-3 py-2">{res.total}</td>
+                                    <td className="text-center px-3 py-2">—</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
                         )}
 
@@ -805,14 +840,51 @@ export default function QuestionnairesAdminPage() {
                                 <span className="text-2xl text-gray-400 ml-2">/ {question.config?.max || question.config?.note_max || 5}</span>
                                 <p className="text-sm text-gray-400 mt-1">Moyenne sur {res.total} réponse{res.total !== 1 ? 's' : ''}</p>
                               </div>
-                              <div style={{ maxWidth: 480, margin: '0 auto' }}>
-                                <Bar
-                                  data={{
-                                    labels: sortedKeys.map((k, i) => i === dominantIdx && maxVal > 0 ? `${k} ⭐` : k),
-                                    datasets: [{ label: 'Nombre de réponses', data: sortedVals, backgroundColor: finalColors, borderRadius: 6 }]
-                                  }}
-                                  options={{ responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: any) => `${ctx.parsed.y} réponse${ctx.parsed.y !== 1 ? 's' : ''} (${res.total > 0 ? Math.round((ctx.parsed.y / res.total) * 100) : 0}%)` } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
-                                />
+                              <div className="flex flex-col lg:flex-row gap-6 items-start">
+                                <div style={{ maxWidth: 480, width: '100%' }}>
+                                  <Bar
+                                    data={{
+                                      labels: sortedKeys.map((k, i) => i === dominantIdx && maxVal > 0 ? `${k} ⭐` : k),
+                                      datasets: [{ label: 'Nombre de réponses', data: sortedVals, backgroundColor: finalColors, borderRadius: 6 }]
+                                    }}
+                                    options={{ responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: any) => `${ctx.parsed.y} réponse${ctx.parsed.y !== 1 ? 's' : ''} (${res.total > 0 ? Math.round((ctx.parsed.y / res.total) * 100) : 0}%)` } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
+                                  />
+                                </div>
+                                <div className="lg:w-56 flex-shrink-0">
+                                  <table className="w-full text-sm border-collapse rounded-xl overflow-hidden">
+                                    <thead>
+                                      <tr className="bg-gray-100">
+                                        <th className="text-left px-3 py-2 font-semibold text-gray-600">Valeur</th>
+                                        <th className="text-center px-3 py-2 font-semibold text-gray-600">Nb</th>
+                                        <th className="text-center px-3 py-2 font-semibold text-gray-600">%</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {sortedKeys.map((k, i) => {
+                                        const count = sortedVals[i];
+                                        const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+                                        const isDominant = i === dominantIdx && maxVal > 0;
+                                        return (
+                                          <tr key={k} className={`border-b border-gray-100 ${isDominant ? 'font-bold' : ''}`}>
+                                            <td className="px-3 py-2">
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: finalColors[i].replace('99','') }} />
+                                                <span>{k}{isDominant ? ' ⭐' : ''}</span>
+                                              </div>
+                                            </td>
+                                            <td className="text-center px-3 py-2">{count}</td>
+                                            <td className="text-center px-3 py-2" style={{ color: finalColors[i].replace('99','') }}>{pct}%</td>
+                                          </tr>
+                                        );
+                                      })}
+                                      <tr className="bg-gray-50 font-semibold">
+                                        <td className="px-3 py-2 text-gray-600">Total</td>
+                                        <td className="text-center px-3 py-2">{res.total}</td>
+                                        <td className="text-center px-3 py-2">100%</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
                               </div>
                             </div>
                           );
@@ -820,14 +892,43 @@ export default function QuestionnairesAdminPage() {
 
                         {/* Barres horizontales — classement */}
                         {res.type === 'barres_h' && (
-                          <div style={{ maxWidth: 480, margin: '0 auto' }}>
-                            <Bar
-                              data={{
-                                labels: Object.keys(res.data),
-                                datasets: [{ label: 'Score', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
-                              }}
-                              options={{ indexAxis: 'y' as const, responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }}
-                            />
+                          <div className="flex flex-col lg:flex-row gap-6 items-start">
+                            <div style={{ maxWidth: 480, width: '100%' }}>
+                              <Bar
+                                data={{
+                                  labels: Object.keys(res.data),
+                                  datasets: [{ label: 'Score', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
+                                }}
+                                options={{ indexAxis: 'y' as const, responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }}
+                              />
+                            </div>
+                            <div className="lg:w-56 flex-shrink-0">
+                              <table className="w-full text-sm border-collapse rounded-xl overflow-hidden">
+                                <thead>
+                                  <tr className="bg-gray-100">
+                                    <th className="text-left px-3 py-2 font-semibold text-gray-600">Item</th>
+                                    <th className="text-center px-3 py-2 font-semibold text-gray-600">Score</th>
+                                    <th className="text-center px-3 py-2 font-semibold text-gray-600">Rang</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {Object.entries(res.data).map(([label, score]: [string, any], i) => (
+                                    <tr key={label} className="border-b border-gray-100">
+                                      <td className="px-3 py-2">
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: COULEURS[i % COULEURS.length] }} />
+                                          <span className="text-gray-700">{label}</span>
+                                        </div>
+                                      </td>
+                                      <td className="text-center px-3 py-2 font-semibold" style={{ color: COULEURS[i % COULEURS.length] }}>{score}</td>
+                                      <td className="text-center px-3 py-2">
+                                        <span className="w-6 h-6 bg-primary-600 text-white rounded-full inline-flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
                         )}
 
