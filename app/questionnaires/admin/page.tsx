@@ -831,39 +831,78 @@ export default function QuestionnairesAdminPage() {
                           </div>
                         )}
 
-                        {/* Satisfaction — smileys avec barres */}
-                        {res.type === 'satisfaction' && (
-                          <div className="space-y-3">
-                            {(['1','2','3','4','5'] as const).map((val, i) => {
-                              const count = (res.data as any)[val] || 0;
-                              const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
-                              const isMax = count === res.max && count > 0;
-                              const smileys = ['😞','😕','😐','😊','😄'];
-                              const labels = ['Très insatisfait','Insatisfait','Neutre','Satisfait','Très satisfait'];
-                              const colors = ['#c0392b','#e97132','#f39c12','#196b24','#2c5f75'];
-                              return (
-                                <div key={val} className={`flex items-center gap-4 p-3 rounded-xl border-2 transition-all ${isMax ? 'border-primary-400 bg-primary-50' : 'border-gray-100 bg-white'}`}>
-                                  <span className="text-3xl flex-shrink-0">{smileys[i]}</span>
-                                  <div className="flex-1">
-                                    <div className="flex justify-between items-center mb-1">
-                                      <span className={`text-sm font-semibold ${isMax ? 'text-primary-700' : 'text-gray-600'}`}>
-                                        {labels[i]}
-                                        {isMax && <span className="ml-2 text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full">⭐ Dominant</span>}
-                                      </span>
-                                      <span className="text-sm font-bold text-gray-700">{count} <span className="font-normal text-gray-400">({pct}%)</span></span>
+                        {/* Satisfaction — smileys avec barres + tableau */}
+                        {res.type === 'satisfaction' && (() => {
+                          const smileys = ['😞','😕','😐','😊','😄'];
+                          const labels = ['Très insatisfait','Insatisfait','Neutre','Satisfait','Très satisfait'];
+                          const colors = ['#c0392b','#e97132','#f39c12','#196b24','#2c5f75'];
+                          return (
+                            <div className="flex flex-col lg:flex-row gap-6">
+                              {/* Barres smileys */}
+                              <div className="flex-1 space-y-3">
+                                {(['1','2','3','4','5'] as string[]).map((val, i) => {
+                                  const count = (res.data as any)[val] || 0;
+                                  const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+                                  const isMax = count === res.max && count > 0;
+                                  return (
+                                    <div key={val} className={`flex items-center gap-4 p-3 rounded-xl border-2 transition-all ${isMax ? 'border-primary-400 bg-primary-50' : 'border-gray-100 bg-white'}`}>
+                                      <span className="text-3xl flex-shrink-0">{smileys[i]}</span>
+                                      <div className="flex-1">
+                                        <div className="flex justify-between items-center mb-1">
+                                          <span className={`text-sm font-semibold ${isMax ? 'text-primary-700' : 'text-gray-600'}`}>
+                                            {labels[i]}
+                                            {isMax && <span className="ml-2 text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full">⭐ Dominant</span>}
+                                          </span>
+                                          <span className="text-sm font-bold text-gray-700">{count} <span className="font-normal text-gray-400">({pct}%)</span></span>
+                                        </div>
+                                        <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+                                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: colors[i] }} />
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
-                                      <div
-                                        className="h-full rounded-full transition-all duration-500"
-                                        style={{ width: `${pct}%`, background: colors[i] }}
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
+                                  );
+                                })}
+                              </div>
+
+                              {/* Tableau de données */}
+                              <div className="lg:w-56 flex-shrink-0">
+                                <table className="w-full text-sm border-collapse rounded-xl overflow-hidden">
+                                  <thead>
+                                    <tr className="bg-gray-100">
+                                      <th className="text-left px-3 py-2 font-semibold text-gray-600">Émotion</th>
+                                      <th className="text-center px-3 py-2 font-semibold text-gray-600">Nb</th>
+                                      <th className="text-center px-3 py-2 font-semibold text-gray-600">%</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {(['1','2','3','4','5'] as string[]).map((val, i) => {
+                                      const count = (res.data as any)[val] || 0;
+                                      const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+                                      const isMax = count === res.max && count > 0;
+                                      return (
+                                        <tr key={val} className={`border-b border-gray-100 ${isMax ? 'font-bold' : ''}`}>
+                                          <td className="px-3 py-2">
+                                            <div className="flex items-center gap-2">
+                                              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: colors[i] }} />
+                                              <span>{smileys[i]}</span>
+                                            </div>
+                                          </td>
+                                          <td className="text-center px-3 py-2">{count}</td>
+                                          <td className="text-center px-3 py-2" style={{ color: colors[i] }}>{pct}%</td>
+                                        </tr>
+                                      );
+                                    })}
+                                    <tr className="bg-gray-50 font-semibold">
+                                      <td className="px-3 py-2 text-gray-600">Total</td>
+                                      <td className="text-center px-3 py-2">{res.total}</td>
+                                      <td className="text-center px-3 py-2">100%</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Textes libres */}
                         {res.type === 'textes' && (
