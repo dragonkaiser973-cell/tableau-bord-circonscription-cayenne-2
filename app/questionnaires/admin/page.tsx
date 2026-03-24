@@ -275,7 +275,133 @@ export default function QuestionnairesAdminPage() {
 
   const lancerExport = () => {
     setShowExportModal(false);
-    setTimeout(() => window.print(), 300);
+
+    setTimeout(() => {
+      const q = resultats?.questionnaire;
+      if (!q) return;
+
+      // Construire le contenu HTML à imprimer
+      let html = `
+        <html><head><meta charset="UTF-8">
+        <title>${q.titre}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+          h1 { color: #2c5f75; font-size: 22px; margin-bottom: 4px; }
+          .meta { color: #888; font-size: 13px; margin-bottom: 24px; }
+          .question { margin-bottom: 28px; page-break-inside: avoid; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; }
+          .question-titre { font-weight: bold; font-size: 15px; margin-bottom: 12px; color: #1f2937; }
+          .question-num { color: #2c5f75; margin-right: 6px; }
+          .barre-ligne { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+          .barre-label { width: 160px; font-size: 13px; flex-shrink: 0; }
+          .barre-bg { flex: 1; height: 18px; background: #f3f4f6; border-radius: 9px; overflow: hidden; }
+          .barre-fill { height: 100%; border-radius: 9px; }
+          .barre-val { width: 60px; text-align: right; font-size: 12px; color: #6b7280; }
+          .texte-rep { background: #f9fafb; border-left: 3px solid #2c5f75; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; border-radius: 4px; }
+          .moyenne { text-align: center; font-size: 36px; font-weight: bold; color: #2c5f75; margin-bottom: 16px; }
+          table { width: 100%; border-collapse: collapse; font-size: 13px; }
+          th { background: #f3f4f6; padding: 8px 12px; text-align: left; font-weight: 600; }
+          td { padding: 7px 12px; border-bottom: 1px solid #e5e7eb; }
+          .badge { display: inline-block; background: #2c5f75; color: white; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; font-size: 11px; font-weight: bold; }
+          -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        </style>
+        </head><body>
+        <h1>${q.titre}</h1>
+        <div class="meta">${resultats.soumissions.length} répondant${resultats.soumissions.length !== 1 ? 's' : ''} · ${q.questions?.length || 0} questions</div>
+      `;
+
+      const COULEURS = ['#2c5f75','#e97132','#196b24','#9c36b5','#c0392b','#1a7599','#f39c12','#27ae60'];
+
+      (q.questions || []).forEach((question: any, idx: number) => {
+        if (!questionsSelectionnees.has(question.id)) return;
+        const res = calculerResultats(question);
+        if (!res) return;
+
+        html += `<div class="question"><div class="question-titre"><span class="question-num">${idx + 1}.</span>${question.libelle}</div>`;
+        html += `<div style="font-size:12px;color:#9ca3af;margin-bottom:12px">${res.total} réponse${res.total !== 1 ? 's' : ''}</div>`;
+
+        if (res.type === 'camembert' || res.type === 'barres') {
+          Object.entries(res.data).forEach(([label, count]: [string, any], i) => {
+            const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+            html += `<div class="barre-ligne">
+              <div class="barre-label">${label}</div>
+              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background:${COULEURS[i % COULEURS.length]}"></div></div>
+              <div class="barre-val">${count} (${pct}%)</div>
+            </div>`;
+          });
+        }
+
+        if (res.type === 'satisfaction') {
+          const smileys = ['😞','😕','😐','😊','😄'];
+          const labels = ['Très insatisfait','Insatisfait','Neutre','Satisfait','Très satisfait'];
+          const colors = ['#c0392b','#e97132','#f39c12','#196b24','#2c5f75'];
+          (['1','2','3','4','5'] as string[]).forEach((val, i) => {
+            const count = (res.data as any)[val] || 0;
+            const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+            html += `<div class="barre-ligne">
+              <div class="barre-label">${smileys[i]} ${labels[i]}</div>
+              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background:${colors[i]}"></div></div>
+              <div class="barre-val">${count} (${pct}%)</div>
+            </div>`;
+          });
+        }
+
+        if (res.type === 'barres_note') {
+          html += `<div class="moyenne">${res.moyenne} / ${question.config?.max || question.config?.note_max || 5}</div>`;
+          const sortedKeys = Object.keys(res.data).sort((a, b) => Number(a) - Number(b));
+          const sortedVals = sortedKeys.map(k => (res.data as any)[k]);
+          const maxVal = Math.max(...sortedVals);
+          const total = sortedKeys.length;
+          sortedKeys.forEach((k, i) => {
+            const count = sortedVals[i];
+            const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+            const ratio = total > 1 ? i / (total - 1) : 0.5;
+            const color = ratio < 0.25 ? '#156082' : ratio < 0.5 ? '#1a7599' : ratio < 0.75 ? '#e97132' : '#196b24';
+            html += `<div class="barre-ligne">
+              <div class="barre-label">${k}${count === maxVal && maxVal > 0 ? ' ⭐' : ''}</div>
+              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background:${color}"></div></div>
+              <div class="barre-val">${count} (${pct}%)</div>
+            </div>`;
+          });
+        }
+
+        if (res.type === 'barres_h') {
+          html += `<table><thead><tr><th>Item</th><th>Score</th><th>Rang</th></tr></thead><tbody>`;
+          Object.entries(res.data).forEach(([label, score]: [string, any], i) => {
+            html += `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${COULEURS[i % COULEURS.length]};margin-right:8px"></span>${label}</td><td style="color:${COULEURS[i % COULEURS.length]};font-weight:bold">${score}</td><td><span class="badge">${i + 1}</span></td></tr>`;
+          });
+          html += `</tbody></table>`;
+        }
+
+        if (res.type === 'textes') {
+          res.textes.forEach((t: string) => { html += `<div class="texte-rep">${t}</div>`; });
+        }
+
+        if (res.type === 'tableau') {
+          const lignes = question.config?.lignes || [];
+          const colonnes = question.config?.colonnes || [];
+          html += `<table><thead><tr><th></th>${colonnes.map((c: string) => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+          const counts: Record<string, Record<string, number>> = {};
+          lignes.forEach((l: string) => { counts[l] = {}; colonnes.forEach((c: string) => { counts[l][c] = 0; }); });
+          res.data.forEach((r: any) => { if (r) Object.entries(r).forEach(([l, c]: [string, any]) => { if (counts[l]?.[c] !== undefined) counts[l][c]++; }); });
+          lignes.forEach((l: string) => {
+            html += `<tr><td><strong>${l}</strong></td>${colonnes.map((c: string) => `<td style="text-align:center">${counts[l]?.[c] || 0}</td>`).join('')}</tr>`;
+          });
+          html += `</tbody></table>`;
+        }
+
+        html += `</div>`;
+      });
+
+      html += `</body></html>`;
+
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        setTimeout(() => { win.print(); }, 400);
+      }
+    }, 300);
   };
 
   const copierLien = (id: string) => {
@@ -1168,15 +1294,7 @@ export default function QuestionnairesAdminPage() {
         </div>
       )}
 
-      {/* Styles impression */}
-      <style>{`
-        @media print {
-          body > * { display: none !important; }
-          .print-zone { display: block !important; }
-          .no-print { display: none !important; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-      `}</style>
+
     </div>
   );
 }
