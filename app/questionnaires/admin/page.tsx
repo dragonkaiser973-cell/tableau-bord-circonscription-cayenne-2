@@ -3,6 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Pie, Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+
+const COULEURS = ['#2c5f75', '#e97132', '#196b24', '#9c36b5', '#c0392b', '#1a7599', '#f39c12', '#27ae60'];
 
 const TYPES_QUESTIONS = [
   { value: 'choix_unique', label: '⚪ Choix unique', icon: '⚪' },
@@ -258,20 +272,20 @@ export default function QuestionnairesAdminPage() {
 
     if (['choix_unique', 'vrai_faux', 'menu_deroulant'].includes(question.type)) {
       const counts: Record<string, number> = {};
-      valeurs.forEach((v: string) => { counts[v] = (counts[v] || 0) + 1; });
-      return { type: 'bars', data: counts, total: valeurs.length };
+      valeurs.forEach((v: string) => { if (v) counts[v] = (counts[v] || 0) + 1; });
+      return { type: 'camembert', data: counts, total: valeurs.length };
     }
     if (question.type === 'choix_multiple') {
       const counts: Record<string, number> = {};
       valeurs.forEach((v: string[]) => { (v || []).forEach(item => { counts[item] = (counts[item] || 0) + 1; }); });
-      return { type: 'bars', data: counts, total: valeurs.length };
+      return { type: 'barres', data: counts, total: valeurs.length };
     }
     if (['echelle', 'satisfaction', 'note'].includes(question.type)) {
       const nums = valeurs.filter((v: any) => v !== null && v !== '').map(Number);
       const moyenne = nums.length > 0 ? (nums.reduce((a: number, b: number) => a + b, 0) / nums.length).toFixed(1) : '-';
       const counts: Record<string, number> = {};
       nums.forEach((v: number) => { counts[String(v)] = (counts[String(v)] || 0) + 1; });
-      return { type: 'moyenne', moyenne, data: counts, total: nums.length };
+      return { type: 'barres_note', moyenne, data: counts, total: nums.length };
     }
     if (['texte_court', 'texte_long', 'date'].includes(question.type)) {
       return { type: 'textes', textes: valeurs.filter(Boolean), total: valeurs.length };
@@ -286,7 +300,11 @@ export default function QuestionnairesAdminPage() {
           scores[item] = (scores[item] || 0) + (v.length - idx);
         });
       });
-      return { type: 'classement', data: scores, total: valeurs.length };
+      // Trier par score décroissant
+      const sorted = Object.fromEntries(
+        Object.entries(scores).sort(([,a],[,b]) => b - a)
+      );
+      return { type: 'barres_h', data: sorted, total: valeurs.length };
     }
     return null;
   };
@@ -668,41 +686,28 @@ export default function QuestionnairesAdminPage() {
                         </h3>
                         <p className="text-sm text-gray-400 mb-4">{res.total} réponse{res.total !== 1 ? 's' : ''}</p>
 
-                        {res.type === 'bars' && (
-                          <div className="space-y-2">
-                            {Object.entries(res.data).map(([label, count]: [string, any]) => {
-                              const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
-                              return (
-                                <div key={label}>
-                                  <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-gray-700">{label}</span>
-                                    <span className="font-semibold text-gray-600">{count} ({pct}%)</span>
-                                  </div>
-                                  <div className="h-6 bg-gray-100 rounded-full overflow-hidden">
-                                    <div className="h-full bg-primary-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-
-                        {res.type === 'moyenne' && (
-                          <div>
-                            <div className="text-center mb-4">
-                              <span className="text-5xl font-bold text-primary-600">{res.moyenne}</span>
-                              <span className="text-2xl text-gray-400 ml-2">/ {question.config?.max || question.config?.note_max || 5}</span>
+                        {/* Camembert — choix unique, vrai/faux, menu déroulant */}
+                        {res.type === 'camembert' && (
+                          <div className="flex flex-col md:flex-row items-center gap-6">
+                            <div style={{ maxWidth: 280, width: '100%' }}>
+                              <Pie
+                                data={{
+                                  labels: Object.keys(res.data),
+                                  datasets: [{ data: Object.values(res.data), backgroundColor: COULEURS, borderWidth: 2, borderColor: '#fff' }]
+                                }}
+                                options={{ plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx: any) => `${ctx.label} : ${ctx.parsed} (${res.total > 0 ? Math.round((ctx.parsed / res.total) * 100) : 0}%)` } } } }}
+                              />
                             </div>
-                            <div className="space-y-1">
-                              {Object.entries(res.data).sort(([a], [b]) => Number(a) - Number(b)).map(([label, count]: [string, any]) => {
+                            <div className="flex-1 space-y-2 w-full">
+                              {Object.entries(res.data).map(([label, count]: [string, any], i) => {
                                 const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
                                 return (
-                                  <div key={label} className="flex items-center gap-3">
-                                    <span className="text-sm w-6 text-right text-gray-500">{label}</span>
-                                    <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
-                                      <div className="h-full bg-primary-400 rounded-full" style={{ width: `${pct}%` }} />
+                                  <div key={label} className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3 h-3 rounded-full" style={{ background: COULEURS[i % COULEURS.length] }} />
+                                      <span className="text-gray-700">{label}</span>
                                     </div>
-                                    <span className="text-sm text-gray-500 w-8">{count}</span>
+                                    <span className="font-semibold text-gray-600">{count} ({pct}%)</span>
                                   </div>
                                 );
                               })}
@@ -710,9 +715,52 @@ export default function QuestionnairesAdminPage() {
                           </div>
                         )}
 
+                        {/* Barres verticales — choix multiple */}
+                        {res.type === 'barres' && (
+                          <Bar
+                            data={{
+                              labels: Object.keys(res.data),
+                              datasets: [{ label: 'Réponses', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
+                            }}
+                            options={{ responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
+                          />
+                        )}
+
+                        {/* Barres verticales + moyenne — échelle, satisfaction, note */}
+                        {res.type === 'barres_note' && (
+                          <div>
+                            <div className="text-center mb-4">
+                              <span className="text-5xl font-bold text-primary-600">{res.moyenne}</span>
+                              <span className="text-2xl text-gray-400 ml-2">/ {question.config?.max || question.config?.note_max || 5}</span>
+                              <p className="text-sm text-gray-400 mt-1">Moyenne sur {res.total} réponse{res.total !== 1 ? 's' : ''}</p>
+                            </div>
+                            <Bar
+                              data={{
+                                labels: Object.keys(res.data).sort((a, b) => Number(a) - Number(b)),
+                                datasets: [{ label: 'Nombre de réponses', data: Object.keys(res.data).sort((a, b) => Number(a) - Number(b)).map(k => (res.data as any)[k]), backgroundColor: '#2c5f75', borderRadius: 6 }]
+                              }}
+                              options={{ responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Barres horizontales — classement */}
+                        {res.type === 'barres_h' && (
+                          <Bar
+                            data={{
+                              labels: Object.keys(res.data),
+                              datasets: [{ label: 'Score', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
+                            }}
+                            options={{ indexAxis: 'y' as const, responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }}
+                          />
+                        )}
+
+                        {/* Textes libres */}
                         {res.type === 'textes' && (
                           <div className="space-y-2">
-                            {res.textes.map((t: string, i: number) => (
+                            {res.textes.length === 0 ? (
+                              <p className="text-gray-400 italic text-sm">Aucune réponse textuelle.</p>
+                            ) : res.textes.map((t: string, i: number) => (
                               <div key={i} className="bg-gray-50 rounded-lg p-3 text-gray-700 text-sm border-l-4 border-primary-300">
                                 {t}
                               </div>
@@ -720,19 +768,43 @@ export default function QuestionnairesAdminPage() {
                           </div>
                         )}
 
-                        {res.type === 'classement' && (
-                          <div className="space-y-2">
-                            {Object.entries(res.data)
-                              .sort(([, a]: any, [, b]: any) => b - a)
-                              .map(([label, score]: [string, any], i) => (
-                                <div key={label} className="flex items-center gap-3">
-                                  <span className="w-6 h-6 bg-primary-600 text-white rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</span>
-                                  <span className="flex-1 text-gray-700">{label}</span>
-                                  <span className="text-sm text-gray-400">Score: {score}</span>
-                                </div>
-                              ))}
-                          </div>
-                        )}
+                        {/* Tableau de choix */}
+                        {res.type === 'tableau' && res.data.length > 0 && (() => {
+                          const lignes = question.config?.lignes || [];
+                          const colonnes = question.config?.colonnes || [];
+                          const counts: Record<string, Record<string, number>> = {};
+                          lignes.forEach((l: string) => { counts[l] = {}; colonnes.forEach((c: string) => { counts[l][c] = 0; }); });
+                          res.data.forEach((r: any) => { if (r) Object.entries(r).forEach(([l, c]: [string, any]) => { if (counts[l] && counts[l][c] !== undefined) counts[l][c]++; }); });
+                          return (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm border-collapse">
+                                <thead>
+                                  <tr className="bg-gray-50">
+                                    <th className="text-left p-3 border border-gray-200 font-semibold"></th>
+                                    {colonnes.map((c: string) => <th key={c} className="text-center p-3 border border-gray-200 font-semibold text-primary-700">{c}</th>)}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {lignes.map((l: string) => (
+                                    <tr key={l} className="hover:bg-gray-50">
+                                      <td className="p-3 border border-gray-200 font-medium">{l}</td>
+                                      {colonnes.map((c: string) => {
+                                        const n = counts[l]?.[c] || 0;
+                                        const pct = res.total > 0 ? Math.round((n / res.total) * 100) : 0;
+                                        return (
+                                          <td key={c} className="text-center p-3 border border-gray-200">
+                                            <div className="font-bold text-primary-600">{n}</div>
+                                            <div className="text-xs text-gray-400">{pct}%</div>
+                                          </td>
+                                        );
+                                      })}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })
