@@ -680,7 +680,7 @@ export default function QuestionnairesAdminPage() {
             ) : resultats ? (
               <div className="space-y-6">
                 {/* Stats globales */}
-                <div className="card" style={{ maxWidth: '900px', margin: '0 auto' }}>
+                <div className="card" style={{ maxWidth: '900px', margin: '0 auto 1.5rem' }}>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-gray-800">{resultats.questionnaire.titre}</h2>
                     {resultats.soumissions.length > 0 && (
@@ -727,7 +727,7 @@ export default function QuestionnairesAdminPage() {
                         key={question.id}
                         className="card"
                         data-export-id={question.id}
-                        style={{ display: showExportModal ? (questionsSelectionnees.has(question.id) ? '' : 'none') : '', maxWidth: '900px', margin: '0 auto' }}
+                        style={{ display: showExportModal ? (questionsSelectionnees.has(question.id) ? '' : 'none') : '', maxWidth: '900px', margin: '0 auto 1.5rem' }}
                       >
                         <h3 className="font-bold text-gray-800 mb-1">
                           <span className="text-primary-600 mr-2">{idx + 1}.</span>{question.libelle}
