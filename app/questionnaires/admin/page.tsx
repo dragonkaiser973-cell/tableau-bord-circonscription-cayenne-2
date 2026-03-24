@@ -305,12 +305,20 @@ export default function QuestionnairesAdminPage() {
       valeurs.forEach((v: string[]) => { (v || []).forEach(item => { counts[item] = (counts[item] || 0) + 1; }); });
       return { type: 'barres', data: counts, total: valeurs.length };
     }
-    if (['echelle', 'satisfaction', 'note'].includes(question.type)) {
+    if (['echelle', 'note'].includes(question.type)) {
       const nums = valeurs.filter((v: any) => v !== null && v !== '').map(Number);
       const moyenne = nums.length > 0 ? (nums.reduce((a: number, b: number) => a + b, 0) / nums.length).toFixed(1) : '-';
       const counts: Record<string, number> = {};
       nums.forEach((v: number) => { counts[String(v)] = (counts[String(v)] || 0) + 1; });
       return { type: 'barres_note', moyenne, data: counts, total: nums.length };
+    }
+    if (question.type === 'satisfaction') {
+      const SMILEYS_LABELS = ['😞 Très insatisfait', '😕 Insatisfait', '😐 Neutre', '😊 Satisfait', '😄 Très satisfait'];
+      const nums = valeurs.filter((v: any) => v !== null && v !== '').map(Number);
+      const counts: Record<string, number> = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+      nums.forEach((v: number) => { if (v >= 1 && v <= 5) counts[String(v)] = (counts[String(v)] || 0) + 1; });
+      const max = Math.max(...Object.values(counts));
+      return { type: 'satisfaction', data: counts, labels: SMILEYS_LABELS, total: nums.length, max };
     }
     if (['texte_court', 'texte_long', 'date'].includes(question.type)) {
       return { type: 'textes', textes: valeurs.filter(Boolean), total: valeurs.length };
@@ -803,6 +811,40 @@ export default function QuestionnairesAdminPage() {
                               }}
                               options={{ indexAxis: 'y' as const, responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }}
                             />
+                          </div>
+                        )}
+
+                        {/* Satisfaction — smileys avec barres */}
+                        {res.type === 'satisfaction' && (
+                          <div className="space-y-3">
+                            {(['1','2','3','4','5'] as const).map((val, i) => {
+                              const count = (res.data as any)[val] || 0;
+                              const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+                              const isMax = count === res.max && count > 0;
+                              const smileys = ['😞','😕','😐','😊','😄'];
+                              const labels = ['Très insatisfait','Insatisfait','Neutre','Satisfait','Très satisfait'];
+                              const colors = ['#c0392b','#e97132','#f39c12','#196b24','#2c5f75'];
+                              return (
+                                <div key={val} className={`flex items-center gap-4 p-3 rounded-xl border-2 transition-all ${isMax ? 'border-primary-400 bg-primary-50' : 'border-gray-100 bg-white'}`}>
+                                  <span className="text-3xl flex-shrink-0">{smileys[i]}</span>
+                                  <div className="flex-1">
+                                    <div className="flex justify-between items-center mb-1">
+                                      <span className={`text-sm font-semibold ${isMax ? 'text-primary-700' : 'text-gray-600'}`}>
+                                        {labels[i]}
+                                        {isMax && <span className="ml-2 text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full">⭐ Dominant</span>}
+                                      </span>
+                                      <span className="text-sm font-bold text-gray-700">{count} <span className="font-normal text-gray-400">({pct}%)</span></span>
+                                    </div>
+                                    <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+                                      <div
+                                        className="h-full rounded-full transition-all duration-500"
+                                        style={{ width: `${pct}%`, background: colors[i] }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
 
