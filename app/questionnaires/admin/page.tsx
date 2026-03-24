@@ -770,7 +770,7 @@ export default function QuestionnairesAdminPage() {
 
                         {/* Barres verticales — choix multiple */}
                         {res.type === 'barres' && (
-                          <div className="flex flex-col lg:flex-row gap-6 items-start">
+                          <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
                             <div style={{ maxWidth: 480, width: '100%' }}>
                               <Bar
                                 data={{
@@ -840,7 +840,7 @@ export default function QuestionnairesAdminPage() {
                                 <span className="text-2xl text-gray-400 ml-2">/ {question.config?.max || question.config?.note_max || 5}</span>
                                 <p className="text-sm text-gray-400 mt-1">Moyenne sur {res.total} réponse{res.total !== 1 ? 's' : ''}</p>
                               </div>
-                              <div className="flex flex-col lg:flex-row gap-6 items-start">
+                              <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
                                 <div style={{ maxWidth: 480, width: '100%' }}>
                                   <Bar
                                     data={{
@@ -892,7 +892,7 @@ export default function QuestionnairesAdminPage() {
 
                         {/* Barres horizontales — classement */}
                         {res.type === 'barres_h' && (
-                          <div className="flex flex-col lg:flex-row gap-6 items-start">
+                          <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
                             <div style={{ maxWidth: 480, width: '100%' }}>
                               <Bar
                                 data={{
