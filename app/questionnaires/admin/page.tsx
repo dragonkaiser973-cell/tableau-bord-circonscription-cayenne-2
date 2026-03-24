@@ -781,25 +781,42 @@ export default function QuestionnairesAdminPage() {
                           </div>
                         )}
 
-                        {/* Barres verticales + moyenne — échelle, satisfaction, note */}
-                        {res.type === 'barres_note' && (
-                          <div>
-                            <div className="text-center mb-4">
-                              <span className="text-5xl font-bold text-primary-600">{res.moyenne}</span>
-                              <span className="text-2xl text-gray-400 ml-2">/ {question.config?.max || question.config?.note_max || 5}</span>
-                              <p className="text-sm text-gray-400 mt-1">Moyenne sur {res.total} réponse{res.total !== 1 ? 's' : ''}</p>
+                        {/* Barres verticales + moyenne — échelle, note */}
+                        {res.type === 'barres_note' && (() => {
+                          const sortedKeys = Object.keys(res.data).sort((a, b) => Number(a) - Number(b));
+                          const sortedVals = sortedKeys.map(k => (res.data as any)[k]);
+                          const maxVal = Math.max(...sortedVals);
+                          const total = sortedKeys.length;
+                          // Dégradé froid → chaud selon la position relative de chaque valeur
+                          const bgColors = sortedKeys.map((_, i) => {
+                            const ratio = total > 1 ? i / (total - 1) : 0.5;
+                            if (ratio < 0.25) return '#156082';
+                            if (ratio < 0.5)  return '#1a7599';
+                            if (ratio < 0.75) return '#e97132';
+                            return '#196b24';
+                          });
+                          // Mettre en évidence la valeur dominante
+                          const dominantIdx = sortedVals.indexOf(maxVal);
+                          const finalColors = bgColors.map((c, i) => i === dominantIdx && maxVal > 0 ? c : c + '99');
+                          return (
+                            <div>
+                              <div className="text-center mb-4">
+                                <span className="text-5xl font-bold text-primary-600">{res.moyenne}</span>
+                                <span className="text-2xl text-gray-400 ml-2">/ {question.config?.max || question.config?.note_max || 5}</span>
+                                <p className="text-sm text-gray-400 mt-1">Moyenne sur {res.total} réponse{res.total !== 1 ? 's' : ''}</p>
+                              </div>
+                              <div style={{ maxWidth: 480, margin: '0 auto' }}>
+                                <Bar
+                                  data={{
+                                    labels: sortedKeys.map((k, i) => i === dominantIdx && maxVal > 0 ? `${k} ⭐` : k),
+                                    datasets: [{ label: 'Nombre de réponses', data: sortedVals, backgroundColor: finalColors, borderRadius: 6 }]
+                                  }}
+                                  options={{ responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx: any) => `${ctx.parsed.y} réponse${ctx.parsed.y !== 1 ? 's' : ''} (${res.total > 0 ? Math.round((ctx.parsed.y / res.total) * 100) : 0}%)` } } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
+                                />
+                              </div>
                             </div>
-                            <div style={{ maxWidth: 480, margin: '0 auto' }}>
-                              <Bar
-                                data={{
-                                  labels: Object.keys(res.data).sort((a, b) => Number(a) - Number(b)),
-                                  datasets: [{ label: 'Nombre de réponses', data: Object.keys(res.data).sort((a, b) => Number(a) - Number(b)).map(k => (res.data as any)[k]), backgroundColor: '#2c5f75', borderRadius: 6 }]
-                                }}
-                                options={{ responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
-                              />
-                            </div>
-                          </div>
-                        )}
+                          );
+                        })()}
 
                         {/* Barres horizontales — classement */}
                         {res.type === 'barres_h' && (
