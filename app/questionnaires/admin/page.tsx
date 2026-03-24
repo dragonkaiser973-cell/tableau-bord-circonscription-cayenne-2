@@ -96,6 +96,10 @@ export default function QuestionnairesAdminPage() {
   const [resultats, setResultats] = useState<any>(null);
   const [loadingResultats, setLoadingResultats] = useState(false);
 
+  // Export PDF
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [questionsSelectionnees, setQuestionsSelectionnees] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     const role = localStorage.getItem('userRole');
@@ -251,6 +255,27 @@ export default function QuestionnairesAdminPage() {
     const q = [...questions];
     q[qIdx].options = q[qIdx].options.filter((_, i) => i !== oIdx);
     setQuestions(q);
+  };
+
+  const ouvrirExport = () => {
+    // Présélectionner toutes les questions
+    const ids = new Set((resultats?.questionnaire?.questions || []).map((q: any) => q.id));
+    setQuestionsSelectionnees(ids as Set<string>);
+    setShowExportModal(true);
+  };
+
+  const toggleQuestion = (id: string) => {
+    setQuestionsSelectionnees(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const lancerExport = () => {
+    setShowExportModal(false);
+    setTimeout(() => window.print(), 300);
   };
 
   const copierLien = (id: string) => {
@@ -648,7 +673,17 @@ export default function QuestionnairesAdminPage() {
               <div className="space-y-6">
                 {/* Stats globales */}
                 <div className="card">
-                  <h2 className="text-xl font-bold text-gray-800 mb-4">{resultats.questionnaire.titre}</h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">{resultats.questionnaire.titre}</h2>
+                    {resultats.soumissions.length > 0 && (
+                      <button
+                        onClick={ouvrirExport}
+                        className="bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center gap-2"
+                      >
+                        📥 Exporter PDF
+                      </button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="bg-primary-50 rounded-xl p-4 text-center">
                       <div className="text-3xl font-bold text-primary-600">{resultats.soumissions.length}</div>
@@ -680,7 +715,12 @@ export default function QuestionnairesAdminPage() {
                     const res = calculerResultats(question);
                     if (!res) return null;
                     return (
-                      <div key={question.id} className="card">
+                      <div
+                        key={question.id}
+                        className="card"
+                        data-export-id={question.id}
+                        style={{ display: showExportModal ? (questionsSelectionnees.has(question.id) ? '' : 'none') : '' }}
+                      >
                         <h3 className="font-bold text-gray-800 mb-1">
                           <span className="text-primary-600 mr-2">{idx + 1}.</span>{question.libelle}
                         </h3>
@@ -856,6 +896,88 @@ export default function QuestionnairesAdminPage() {
       <footer className="text-center py-8 text-white/80">
         <p className="text-sm">Développé par <strong>LOUIS Olivier</strong> © 2026</p>
       </footer>
+
+      {/* Modal export PDF */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-xl font-bold text-gray-800">📥 Exporter en PDF</h3>
+              <button onClick={() => setShowExportModal(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-4">Sélectionnez les questions à inclure dans l&apos;export :</p>
+
+            {/* Tout sélectionner / désélectionner */}
+            <div className="flex gap-3 mb-4">
+              <button
+                onClick={() => setQuestionsSelectionnees(new Set((resultats?.questionnaire?.questions || []).map((q: any) => q.id)))}
+                className="text-sm text-primary-600 hover:underline font-semibold"
+              >
+                ✅ Tout sélectionner
+              </button>
+              <span className="text-gray-300">|</span>
+              <button
+                onClick={() => setQuestionsSelectionnees(new Set())}
+                className="text-sm text-gray-400 hover:underline"
+              >
+                ☐ Tout désélectionner
+              </button>
+            </div>
+
+            {/* Liste des questions */}
+            <div className="space-y-2 max-h-72 overflow-y-auto mb-6 border border-gray-100 rounded-xl p-3">
+              {(resultats?.questionnaire?.questions || []).map((q: any, idx: number) => (
+                <label key={q.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={questionsSelectionnees.has(q.id)}
+                    onChange={() => toggleQuestion(q.id)}
+                    className="mt-0.5 w-4 h-4 accent-primary-600 flex-shrink-0"
+                  />
+                  <span className="text-sm text-gray-700">
+                    <span className="font-semibold text-primary-600 mr-1">{idx + 1}.</span>
+                    {q.libelle}
+                    <span className="ml-2 text-xs text-gray-400">({TYPES_QUESTIONS.find(t => t.value === q.type)?.label || q.type})</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            {/* Infos stats */}
+            <div className="bg-gray-50 rounded-xl p-3 mb-5 text-sm text-gray-600">
+              <p>📋 <strong>{questionsSelectionnees.size}</strong> question{questionsSelectionnees.size !== 1 ? 's' : ''} sélectionnée{questionsSelectionnees.size !== 1 ? 's' : ''}</p>
+              <p>👥 <strong>{resultats?.soumissions?.length || 0}</strong> répondant{(resultats?.soumissions?.length || 0) !== 1 ? 's' : ''} inclus</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={lancerExport}
+                disabled={questionsSelectionnees.size === 0}
+                className="flex-1 bg-primary-600 text-white py-3 rounded-xl font-semibold hover:bg-primary-700 transition-colors disabled:opacity-40"
+              >
+                🖨️ Imprimer / Enregistrer PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Styles impression */}
+      <style>{`
+        @media print {
+          body > * { display: none !important; }
+          .print-zone { display: block !important; }
+          .no-print { display: none !important; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+      `}</style>
     </div>
   );
 }
