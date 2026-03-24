@@ -226,14 +226,14 @@ export default function HomePage() {
             </Link>
 
             <Link href="/questionnaires/admin">
-              <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-indigo-50 to-indigo-100 border-2 border-indigo-200">
+              <div className="card hover:shadow-2xl transition-shadow cursor-pointer ">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-indigo-500 text-white rounded-lg flex items-center justify-center text-2xl">
+                  <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center text-2xl">
                     📋
                   </div>
-                  <h2 className="text-2xl font-bold text-indigo-700">Gérer les questionnaires</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">Gérer les questionnaires</h2>
                 </div>
-                <p className="text-indigo-600 font-medium">
+                <p className="text-gray-600">
                   Créer, modifier et consulter les résultats des questionnaires
                 </p>
               </div>
@@ -292,14 +292,14 @@ export default function HomePage() {
 
           {/* Card Questionnaires - accessible à tous */}
           <Link href="/questionnaires">
-            <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-indigo-50 to-indigo-100 border-2 border-indigo-200">
+            <div className="card hover:shadow-2xl transition-shadow cursor-pointer">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-indigo-500 text-white rounded-lg flex items-center justify-center text-2xl">
+                <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center text-2xl">
                   📋
                 </div>
-                <h2 className="text-2xl font-bold text-indigo-700">Questionnaires</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Questionnaires</h2>
               </div>
-              <p className="text-indigo-600 font-medium">
+              <p className="text-gray-600">
                 Répondre aux sondages et questionnaires de la circonscription
               </p>
             </div>
@@ -307,14 +307,14 @@ export default function HomePage() {
 
           {/* Card Analyse Classe - accessible à tous */}
           <Link href="/analyse-classe">
-            <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200">
+            <div className="card hover:shadow-2xl transition-shadow cursor-pointer ">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-teal-500 text-white rounded-lg flex items-center justify-center text-2xl">
+                <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center text-2xl">
                   🔬
                 </div>
-                <h2 className="text-2xl font-bold text-teal-700">Analyse classe</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Analyse classe</h2>
               </div>
-              <p className="text-teal-600 font-medium">
+              <p className="text-gray-600">
                 Analyser les évaluations nationales d&apos;une classe à partir des fichiers Excel
               </p>
             </div>
@@ -322,14 +322,14 @@ export default function HomePage() {
 
           {/* Card Guide d'utilisation - accessible à tous */}
           <Link href="/aide-analyse-classe">
-            <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-cyan-50 to-cyan-100 border-2 border-cyan-200">
+            <div className="card hover:shadow-2xl transition-shadow cursor-pointer ">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-cyan-500 text-white rounded-lg flex items-center justify-center text-2xl">
+                <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center text-2xl">
                   📖
                 </div>
-                <h2 className="text-2xl font-bold text-cyan-700">Guide d&apos;utilisation</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Guide d&apos;utilisation</h2>
               </div>
-              <p className="text-cyan-600 font-medium">
+              <p className="text-gray-600">
                 Comment utiliser l&apos;outil d&apos;analyse des évaluations nationales
               </p>
             </div>
