@@ -89,11 +89,16 @@ export async function GET(request: NextRequest) {
     .eq('questionnaire_id', questionnaire_id)
     .order('created_at', { ascending: false });
 
-  // Récupérer toutes les réponses
-  const { data: reponses } = await supabase
-    .from('reponses')
-    .select('*, questions(libelle, type, options, config)')
-    .in('soumission_id', (soumissions || []).map(s => s.id));
+  // Récupérer toutes les réponses (sans join pour éviter les erreurs de FK)
+  const soumissionIds = (soumissions || []).map(s => s.id);
+  let reponses: any[] = [];
+  if (soumissionIds.length > 0) {
+    const { data } = await supabase
+      .from('reponses')
+      .select('*')
+      .in('soumission_id', soumissionIds);
+    reponses = data || [];
+  }
 
   return NextResponse.json({
     soumissions: soumissions || [],

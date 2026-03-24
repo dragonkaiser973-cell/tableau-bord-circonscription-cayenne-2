@@ -69,11 +69,13 @@ export async function middleware(request: NextRequest) {
   const isPublic = PUBLIC_API_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'));
   if (isPublic) {
     // Exception : POST/PUT/DELETE sur /api/questionnaires nécessite admin
-    if (pathname.startsWith('/api/questionnaires') && ['POST', 'PUT', 'DELETE'].includes(request.method)) {
-      // laisser passer la vérification ci-dessous
-    } else {
+    // MAIS /api/soumissions POST reste toujours public (répondants non connectés)
+    const isQuestionnairesWrite = pathname.startsWith('/api/questionnaires') &&
+      ['POST', 'PUT', 'DELETE'].includes(request.method);
+    if (!isQuestionnairesWrite) {
       return NextResponse.next();
     }
+    // Pour /api/questionnaires en écriture → continuer vers vérification token
   }
 
   // Toutes les autres routes API → token requis

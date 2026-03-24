@@ -240,7 +240,11 @@ export default function QuestionnairesAdminPage() {
   };
 
   const copierLien = (id: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/questionnaires/${id}`);
+    // Utiliser l'URL de production pour éviter les liens de prévisualisation Vercel
+    const origin = window.location.hostname.includes('vercel.app') && window.location.hostname.includes('-')
+      ? 'https://circonscription-cayenne2.vercel.app'
+      : window.location.origin;
+    navigator.clipboard.writeText(`${origin}/questionnaires/${id}`);
     setMessage({ type: 'success', text: 'Lien copié dans le presse-papiers !' });
   };
 
