@@ -727,7 +727,7 @@ export default function QuestionnairesAdminPage() {
                         key={question.id}
                         className="card"
                         data-export-id={question.id}
-                        style={{ display: showExportModal ? (questionsSelectionnees.has(question.id) ? '' : 'none') : '' }}
+                        style={{ display: showExportModal ? (questionsSelectionnees.has(question.id) ? '' : 'none') : '', maxWidth: '800px' }}
                       >
                         <h3 className="font-bold text-gray-800 mb-1">
                           <span className="text-primary-600 mr-2">{idx + 1}.</span>{question.libelle}
