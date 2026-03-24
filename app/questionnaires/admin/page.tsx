@@ -688,26 +688,31 @@ export default function QuestionnairesAdminPage() {
 
                         {/* Camembert — choix unique, vrai/faux, menu déroulant */}
                         {res.type === 'camembert' && (
-                          <div className="flex flex-col md:flex-row items-center gap-6">
-                            <div style={{ maxWidth: 280, width: '100%' }}>
+                          <div className="flex flex-col items-center gap-4">
+                            <div style={{ maxWidth: 380, width: '100%' }}>
                               <Pie
                                 data={{
                                   labels: Object.keys(res.data),
                                   datasets: [{ data: Object.values(res.data), backgroundColor: COULEURS, borderWidth: 2, borderColor: '#fff' }]
                                 }}
-                                options={{ plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx: any) => `${ctx.label} : ${ctx.parsed} (${res.total > 0 ? Math.round((ctx.parsed / res.total) * 100) : 0}%)` } } } }}
+                                options={{
+                                  plugins: {
+                                    legend: { position: 'bottom', labels: { padding: 16, font: { size: 13 } } },
+                                    tooltip: { callbacks: { label: (ctx: any) => `${ctx.label} : ${ctx.parsed} (${res.total > 0 ? Math.round((ctx.parsed / res.total) * 100) : 0}%)` } }
+                                  }
+                                }}
                               />
                             </div>
-                            <div className="flex-1 space-y-2 w-full">
+                            <div className="w-full max-w-sm space-y-2">
                               {Object.entries(res.data).map(([label, count]: [string, any], i) => {
                                 const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
                                 return (
-                                  <div key={label} className="flex items-center justify-between text-sm">
+                                  <div key={label} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-3 h-3 rounded-full" style={{ background: COULEURS[i % COULEURS.length] }} />
+                                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: COULEURS[i % COULEURS.length] }} />
                                       <span className="text-gray-700">{label}</span>
                                     </div>
-                                    <span className="font-semibold text-gray-600">{count} ({pct}%)</span>
+                                    <span className="font-semibold text-gray-600 ml-4">{count} ({pct}%)</span>
                                   </div>
                                 );
                               })}
@@ -717,13 +722,15 @@ export default function QuestionnairesAdminPage() {
 
                         {/* Barres verticales — choix multiple */}
                         {res.type === 'barres' && (
-                          <Bar
-                            data={{
-                              labels: Object.keys(res.data),
-                              datasets: [{ label: 'Réponses', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
-                            }}
-                            options={{ responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
-                          />
+                          <div style={{ maxWidth: 480, margin: '0 auto' }}>
+                            <Bar
+                              data={{
+                                labels: Object.keys(res.data),
+                                datasets: [{ label: 'Réponses', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
+                              }}
+                              options={{ responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
+                            />
+                          </div>
                         )}
 
                         {/* Barres verticales + moyenne — échelle, satisfaction, note */}
@@ -734,25 +741,29 @@ export default function QuestionnairesAdminPage() {
                               <span className="text-2xl text-gray-400 ml-2">/ {question.config?.max || question.config?.note_max || 5}</span>
                               <p className="text-sm text-gray-400 mt-1">Moyenne sur {res.total} réponse{res.total !== 1 ? 's' : ''}</p>
                             </div>
-                            <Bar
-                              data={{
-                                labels: Object.keys(res.data).sort((a, b) => Number(a) - Number(b)),
-                                datasets: [{ label: 'Nombre de réponses', data: Object.keys(res.data).sort((a, b) => Number(a) - Number(b)).map(k => (res.data as any)[k]), backgroundColor: '#2c5f75', borderRadius: 6 }]
-                              }}
-                              options={{ responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
-                            />
+                            <div style={{ maxWidth: 480, margin: '0 auto' }}>
+                              <Bar
+                                data={{
+                                  labels: Object.keys(res.data).sort((a, b) => Number(a) - Number(b)),
+                                  datasets: [{ label: 'Nombre de réponses', data: Object.keys(res.data).sort((a, b) => Number(a) - Number(b)).map(k => (res.data as any)[k]), backgroundColor: '#2c5f75', borderRadius: 6 }]
+                                }}
+                                options={{ responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }}
+                              />
+                            </div>
                           </div>
                         )}
 
                         {/* Barres horizontales — classement */}
                         {res.type === 'barres_h' && (
-                          <Bar
-                            data={{
-                              labels: Object.keys(res.data),
-                              datasets: [{ label: 'Score', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
-                            }}
-                            options={{ indexAxis: 'y' as const, responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }}
-                          />
+                          <div style={{ maxWidth: 480, margin: '0 auto' }}>
+                            <Bar
+                              data={{
+                                labels: Object.keys(res.data),
+                                datasets: [{ label: 'Score', data: Object.values(res.data), backgroundColor: COULEURS, borderRadius: 6 }]
+                              }}
+                              options={{ indexAxis: 'y' as const, responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }}
+                            />
+                          </div>
                         )}
 
                         {/* Textes libres */}
