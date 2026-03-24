@@ -13,10 +13,33 @@ export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà authentifié
+    // Vérifier si le token est encore valide auprès de l'API
     const token = localStorage.getItem('authToken');
-    if (token) {
-      setIsAuthenticated(true);
+    if (!token) return;
+
+    // Décoder le JWT localement pour vérifier l'expiration
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+        const payload = JSON.parse(atob(padded));
+        const now = Math.floor(Date.now() / 1000);
+
+        if (payload.exp && payload.exp < now) {
+          // Token expiré — nettoyer le localStorage
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('username');
+          return;
+        }
+        setIsAuthenticated(true);
+      }
+    } catch {
+      // Token invalide — nettoyer
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('username');
     }
   }, []);
 
