@@ -285,24 +285,26 @@ export default function QuestionnairesAdminPage() {
         <html><head><meta charset="UTF-8">
         <title>${q.titre}</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; box-sizing: border-box; }
+          @page { margin: 15mm; }
+          body { font-family: Arial, sans-serif; padding: 20px; color: #333; background: white; }
           h1 { color: #2c5f75; font-size: 22px; margin-bottom: 4px; }
           .meta { color: #888; font-size: 13px; margin-bottom: 24px; }
-          .question { margin-bottom: 28px; page-break-inside: avoid; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; }
+          .question { margin-bottom: 28px; page-break-inside: avoid; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; background: white; }
           .question-titre { font-weight: bold; font-size: 15px; margin-bottom: 12px; color: #1f2937; }
           .question-num { color: #2c5f75; margin-right: 6px; }
           .barre-ligne { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-          .barre-label { width: 160px; font-size: 13px; flex-shrink: 0; }
-          .barre-bg { flex: 1; height: 18px; background: #f3f4f6; border-radius: 9px; overflow: hidden; }
-          .barre-fill { height: 100%; border-radius: 9px; }
-          .barre-val { width: 60px; text-align: right; font-size: 12px; color: #6b7280; }
-          .texte-rep { background: #f9fafb; border-left: 3px solid #2c5f75; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; border-radius: 4px; }
+          .barre-label { width: 180px; font-size: 13px; flex-shrink: 0; }
+          .barre-bg { flex: 1; height: 20px; background: #f3f4f6 !important; border-radius: 9px; overflow: hidden; border: 1px solid #e5e7eb; }
+          .barre-fill { height: 100%; border-radius: 9px; display: block; }
+          .barre-val { width: 70px; text-align: right; font-size: 12px; color: #6b7280; white-space: nowrap; }
+          .texte-rep { border-left: 4px solid #2c5f75; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; border-radius: 4px; background: #f9fafb !important; }
           .moyenne { text-align: center; font-size: 36px; font-weight: bold; color: #2c5f75; margin-bottom: 16px; }
-          table { width: 100%; border-collapse: collapse; font-size: 13px; }
-          th { background: #f3f4f6; padding: 8px 12px; text-align: left; font-weight: 600; }
-          td { padding: 7px 12px; border-bottom: 1px solid #e5e7eb; }
-          .badge { display: inline-block; background: #2c5f75; color: white; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; font-size: 11px; font-weight: bold; }
-          -webkit-print-color-adjust: exact; print-color-adjust: exact;
+          table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+          th { background: #f3f4f6 !important; padding: 8px 12px; text-align: left; font-weight: 600; border: 1px solid #e5e7eb; }
+          td { padding: 7px 12px; border: 1px solid #e5e7eb; }
+          .badge { display: inline-flex; align-items: center; justify-content: center; background: #2c5f75 !important; color: white !important; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; font-weight: bold; }
+          .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
         </style>
         </head><body>
         <h1>${q.titre}</h1>
@@ -324,7 +326,7 @@ export default function QuestionnairesAdminPage() {
             const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
             html += `<div class="barre-ligne">
               <div class="barre-label">${label}</div>
-              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background:${COULEURS[i % COULEURS.length]}"></div></div>
+              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background-color:${COULEURS[i % COULEURS.length]};display:block;height:100%;border-radius:9px"></div></div>
               <div class="barre-val">${count} (${pct}%)</div>
             </div>`;
           });
@@ -339,7 +341,7 @@ export default function QuestionnairesAdminPage() {
             const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
             html += `<div class="barre-ligne">
               <div class="barre-label">${smileys[i]} ${labels[i]}</div>
-              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background:${colors[i]}"></div></div>
+              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background-color:${colors[i]};display:block;height:100%;border-radius:9px"></div></div>
               <div class="barre-val">${count} (${pct}%)</div>
             </div>`;
           });
@@ -358,7 +360,7 @@ export default function QuestionnairesAdminPage() {
             const color = ratio < 0.25 ? '#156082' : ratio < 0.5 ? '#1a7599' : ratio < 0.75 ? '#e97132' : '#196b24';
             html += `<div class="barre-ligne">
               <div class="barre-label">${k}${count === maxVal && maxVal > 0 ? ' ⭐' : ''}</div>
-              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background:${color}"></div></div>
+              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background-color:${color};display:block;height:100%;border-radius:9px"></div></div>
               <div class="barre-val">${count} (${pct}%)</div>
             </div>`;
           });
@@ -367,7 +369,7 @@ export default function QuestionnairesAdminPage() {
         if (res.type === 'barres_h') {
           html += `<table><thead><tr><th>Item</th><th>Score</th><th>Rang</th></tr></thead><tbody>`;
           Object.entries(res.data).forEach(([label, score]: [string, any], i) => {
-            html += `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${COULEURS[i % COULEURS.length]};margin-right:8px"></span>${label}</td><td style="color:${COULEURS[i % COULEURS.length]};font-weight:bold">${score}</td><td><span class="badge">${i + 1}</span></td></tr>`;
+            html += `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background-color:${COULEURS[i % COULEURS.length]};margin-right:8px"></span>${label}</td><td style="color:${COULEURS[i % COULEURS.length]};font-weight:bold">${score}</td><td><span class="badge">${i + 1}</span></td></tr>`;
           });
           html += `</tbody></table>`;
         }
