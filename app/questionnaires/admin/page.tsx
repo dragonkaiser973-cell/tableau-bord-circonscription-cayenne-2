@@ -1128,15 +1128,15 @@ export default function QuestionnairesAdminPage() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {(res.lignes || []).map((ligne: string) => {
-                                  const moy = parseFloat(res.moyennes[ligne]) || 0;
+                                {((res as any).lignes || []).map((ligne: string) => {
+                                  const moy = parseFloat((res as any).moyennes?.[ligne]) || 0;
                                   const full = Math.floor(moy);
                                   const half = moy - full >= 0.5;
                                   return (
                                     <tr key={ligne} className="border-b border-gray-100 hover:bg-gray-50">
                                       <td className="px-4 py-3 font-medium text-gray-700">{ligne}</td>
                                       <td className="text-center px-4 py-3">
-                                        <span className="text-lg font-bold text-primary-600">{res.moyennes[ligne]}</span>
+                                        <span className="text-lg font-bold text-primary-600">{(res as any).moyennes?.[ligne] ?? '-'}</span>
                                         <span className="text-gray-400 text-xs"> / 5</span>
                                       </td>
                                       <td className="text-center px-4 py-3 text-xl">
