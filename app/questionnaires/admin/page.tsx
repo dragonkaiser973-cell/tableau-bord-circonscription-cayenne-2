@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Pie, Bar } from 'react-chartjs-2';
+import PDFExportModal from '@/components/PDFExportModal';
+import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -99,6 +101,7 @@ export default function QuestionnairesAdminPage() {
   // Export PDF
   const [showExportModal, setShowExportModal] = useState(false);
   const [questionsSelectionnees, setQuestionsSelectionnees] = useState<Set<string>>(new Set());
+  const [pdfElements, setPdfElements] = useState<any[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -258,152 +261,18 @@ export default function QuestionnairesAdminPage() {
   };
 
   const ouvrirExport = () => {
-    // Présélectionner toutes les questions
-    const ids = new Set((resultats?.questionnaire?.questions || []).map((q: any) => q.id));
-    setQuestionsSelectionnees(ids as Set<string>);
+    const questions = resultats?.questionnaire?.questions || [];
+    // Construire la liste des éléments PDF à partir des questions
+    const elements = questions.map((q: any, idx: number) => ({
+      id: `question-result-${q.id}`,
+      label: `${idx + 1}. ${q.libelle}`,
+      selected: true
+    }));
+    // Ajouter stats globales et liste répondants
+    elements.unshift({ id: 'section-stats-globales', label: '📊 Statistiques générales', selected: true });
+    elements.push({ id: 'section-liste-repondants', label: '👥 Liste des répondants', selected: true });
+    setPdfElements(elements);
     setShowExportModal(true);
-  };
-
-  const toggleQuestion = (id: string) => {
-    setQuestionsSelectionnees(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const lancerExport = () => {
-    setShowExportModal(false);
-
-    setTimeout(() => {
-      const q = resultats?.questionnaire;
-      if (!q) return;
-
-      // Construire le contenu HTML à imprimer
-      let html = `
-        <html><head><meta charset="UTF-8">
-        <title>${q.titre}</title>
-        <style>
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; box-sizing: border-box; }
-          @page { margin: 15mm; }
-          body { font-family: Arial, sans-serif; padding: 20px; color: #333; background: white; }
-          h1 { color: #2c5f75; font-size: 22px; margin-bottom: 4px; }
-          .meta { color: #888; font-size: 13px; margin-bottom: 24px; }
-          .question { margin-bottom: 28px; page-break-inside: avoid; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; background: white; }
-          .question-titre { font-weight: bold; font-size: 15px; margin-bottom: 12px; color: #1f2937; }
-          .question-num { color: #2c5f75; margin-right: 6px; }
-          .barre-ligne { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-          .barre-label { width: 180px; font-size: 13px; flex-shrink: 0; }
-          .barre-bg { flex: 1; height: 20px; background: #f3f4f6 !important; border-radius: 9px; overflow: hidden; border: 1px solid #e5e7eb; }
-          .barre-fill { height: 100%; border-radius: 9px; display: block; }
-          .barre-val { width: 70px; text-align: right; font-size: 12px; color: #6b7280; white-space: nowrap; }
-          .texte-rep { border-left: 4px solid #2c5f75; padding: 8px 12px; margin-bottom: 6px; font-size: 13px; border-radius: 4px; background: #f9fafb !important; }
-          .moyenne { text-align: center; font-size: 36px; font-weight: bold; color: #2c5f75; margin-bottom: 16px; }
-          table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-          th { background: #f3f4f6 !important; padding: 8px 12px; text-align: left; font-weight: 600; border: 1px solid #e5e7eb; }
-          td { padding: 7px 12px; border: 1px solid #e5e7eb; }
-          .badge { display: inline-flex; align-items: center; justify-content: center; background: #2c5f75 !important; color: white !important; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; font-weight: bold; }
-          .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-        </style>
-        </head><body>
-        <h1>${q.titre}</h1>
-        <div class="meta">${resultats.soumissions.length} répondant${resultats.soumissions.length !== 1 ? 's' : ''} · ${q.questions?.length || 0} questions</div>
-      `;
-
-      const COULEURS = ['#2c5f75','#e97132','#196b24','#9c36b5','#c0392b','#1a7599','#f39c12','#27ae60'];
-
-      (q.questions || []).forEach((question: any, idx: number) => {
-        if (!questionsSelectionnees.has(question.id)) return;
-        const res = calculerResultats(question);
-        if (!res) return;
-
-        html += `<div class="question"><div class="question-titre"><span class="question-num">${idx + 1}.</span>${question.libelle}</div>`;
-        html += `<div style="font-size:12px;color:#9ca3af;margin-bottom:12px">${res.total} réponse${res.total !== 1 ? 's' : ''}</div>`;
-
-        if (res.type === 'camembert' || res.type === 'barres') {
-          Object.entries(res.data).forEach(([label, count]: [string, any], i) => {
-            const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
-            html += `<div class="barre-ligne">
-              <div class="barre-label">${label}</div>
-              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background-color:${COULEURS[i % COULEURS.length]};display:block;height:100%;border-radius:9px"></div></div>
-              <div class="barre-val">${count} (${pct}%)</div>
-            </div>`;
-          });
-        }
-
-        if (res.type === 'satisfaction') {
-          const smileys = ['😞','😕','😐','😊','😄'];
-          const labels = ['Très insatisfait','Insatisfait','Neutre','Satisfait','Très satisfait'];
-          const colors = ['#c0392b','#e97132','#f39c12','#196b24','#2c5f75'];
-          (['1','2','3','4','5'] as string[]).forEach((val, i) => {
-            const count = (res.data as any)[val] || 0;
-            const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
-            html += `<div class="barre-ligne">
-              <div class="barre-label">${smileys[i]} ${labels[i]}</div>
-              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background-color:${colors[i]};display:block;height:100%;border-radius:9px"></div></div>
-              <div class="barre-val">${count} (${pct}%)</div>
-            </div>`;
-          });
-        }
-
-        if (res.type === 'barres_note') {
-          html += `<div class="moyenne">${res.moyenne} / ${question.config?.max || question.config?.note_max || 5}</div>`;
-          const sortedKeys = Object.keys(res.data).sort((a, b) => Number(a) - Number(b));
-          const sortedVals = sortedKeys.map(k => (res.data as any)[k]);
-          const maxVal = Math.max(...sortedVals);
-          const total = sortedKeys.length;
-          sortedKeys.forEach((k, i) => {
-            const count = sortedVals[i];
-            const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
-            const ratio = total > 1 ? i / (total - 1) : 0.5;
-            const color = ratio < 0.25 ? '#156082' : ratio < 0.5 ? '#1a7599' : ratio < 0.75 ? '#e97132' : '#196b24';
-            html += `<div class="barre-ligne">
-              <div class="barre-label">${k}${count === maxVal && maxVal > 0 ? ' ⭐' : ''}</div>
-              <div class="barre-bg"><div class="barre-fill" style="width:${pct}%;background-color:${color};display:block;height:100%;border-radius:9px"></div></div>
-              <div class="barre-val">${count} (${pct}%)</div>
-            </div>`;
-          });
-        }
-
-        if (res.type === 'barres_h') {
-          html += `<table><thead><tr><th>Item</th><th>Score</th><th>Rang</th></tr></thead><tbody>`;
-          Object.entries(res.data).forEach(([label, score]: [string, any], i) => {
-            html += `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background-color:${COULEURS[i % COULEURS.length]};margin-right:8px"></span>${label}</td><td style="color:${COULEURS[i % COULEURS.length]};font-weight:bold">${score}</td><td><span class="badge">${i + 1}</span></td></tr>`;
-          });
-          html += `</tbody></table>`;
-        }
-
-        if (res.type === 'textes') {
-          res.textes.forEach((t: string) => { html += `<div class="texte-rep">${t}</div>`; });
-        }
-
-        if (res.type === 'tableau') {
-          const lignes = question.config?.lignes || [];
-          const colonnes = question.config?.colonnes || [];
-          html += `<table><thead><tr><th></th>${colonnes.map((c: string) => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
-          const counts: Record<string, Record<string, number>> = {};
-          lignes.forEach((l: string) => { counts[l] = {}; colonnes.forEach((c: string) => { counts[l][c] = 0; }); });
-          res.data.forEach((r: any) => { if (r) Object.entries(r).forEach(([l, c]: [string, any]) => { if (counts[l]?.[c] !== undefined) counts[l][c]++; }); });
-          lignes.forEach((l: string) => {
-            html += `<tr><td><strong>${l}</strong></td>${colonnes.map((c: string) => `<td style="text-align:center">${counts[l]?.[c] || 0}</td>`).join('')}</tr>`;
-          });
-          html += `</tbody></table>`;
-        }
-
-        html += `</div>`;
-      });
-
-      html += `</body></html>`;
-
-      const win = window.open('', '_blank');
-      if (win) {
-        win.document.write(html);
-        win.document.close();
-        win.focus();
-        setTimeout(() => { win.print(); }, 400);
-      }
-    }, 300);
   };
 
   const copierLien = (id: string) => {
@@ -808,7 +677,7 @@ export default function QuestionnairesAdminPage() {
             ) : resultats ? (
               <div className="space-y-6">
                 {/* Stats globales */}
-                <div className="card" style={{ maxWidth: '900px', margin: '0 auto 1.5rem' }}>
+                <div id="section-stats-globales" className="card" style={{ maxWidth: '900px', margin: '0 auto 1.5rem' }}>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-gray-800">{resultats.questionnaire.titre}</h2>
                     {resultats.soumissions.length > 0 && (
@@ -853,9 +722,9 @@ export default function QuestionnairesAdminPage() {
                     return (
                       <div
                         key={question.id}
+                        id={`question-result-${question.id}`}
                         className="card"
-                        data-export-id={question.id}
-                        style={{ display: showExportModal ? (questionsSelectionnees.has(question.id) ? '' : 'none') : '', maxWidth: '900px', margin: '0 auto 1.5rem' }}
+                        style={{ maxWidth: '900px', margin: '0 auto 1.5rem' }}
                       >
                         <h3 className="font-bold text-gray-800 mb-1">
                           <span className="text-primary-600 mr-2">{idx + 1}.</span>{question.libelle}
@@ -1190,7 +1059,7 @@ export default function QuestionnairesAdminPage() {
 
                 {/* Liste des répondants */}
                 {resultats.soumissions.length > 0 && (
-                  <div className="card mb-8" style={{ maxWidth: '900px', margin: '0 auto 2rem' }}>
+                  <div id="section-liste-repondants" className="card mb-8" style={{ maxWidth: '900px', margin: '0 auto 2rem' }}>
                     <h3 className="text-lg font-bold text-gray-800 mb-4">👥 Liste des répondants</h3>
                     <div className="overflow-x-auto">
                       <table className="data-table">
@@ -1224,79 +1093,21 @@ export default function QuestionnairesAdminPage() {
         <p className="text-sm">Développé par <strong>LOUIS Olivier</strong> © 2026</p>
       </footer>
 
-      {/* Modal export PDF */}
-      {showExportModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-xl font-bold text-gray-800">📥 Exporter en PDF</h3>
-              <button onClick={() => setShowExportModal(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
-            </div>
-
-            <p className="text-sm text-gray-500 mb-4">Sélectionnez les questions à inclure dans l&apos;export :</p>
-
-            {/* Tout sélectionner / désélectionner */}
-            <div className="flex gap-3 mb-4">
-              <button
-                onClick={() => setQuestionsSelectionnees(new Set((resultats?.questionnaire?.questions || []).map((q: any) => q.id)))}
-                className="text-sm text-primary-600 hover:underline font-semibold"
-              >
-                ✅ Tout sélectionner
-              </button>
-              <span className="text-gray-300">|</span>
-              <button
-                onClick={() => setQuestionsSelectionnees(new Set())}
-                className="text-sm text-gray-400 hover:underline"
-              >
-                ☐ Tout désélectionner
-              </button>
-            </div>
-
-            {/* Liste des questions */}
-            <div className="space-y-2 max-h-72 overflow-y-auto mb-6 border border-gray-100 rounded-xl p-3">
-              {(resultats?.questionnaire?.questions || []).map((q: any, idx: number) => (
-                <label key={q.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={questionsSelectionnees.has(q.id)}
-                    onChange={() => toggleQuestion(q.id)}
-                    className="mt-0.5 w-4 h-4 accent-primary-600 flex-shrink-0"
-                  />
-                  <span className="text-sm text-gray-700">
-                    <span className="font-semibold text-primary-600 mr-1">{idx + 1}.</span>
-                    {q.libelle}
-                    <span className="ml-2 text-xs text-gray-400">({TYPES_QUESTIONS.find(t => t.value === q.type)?.label || q.type})</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-
-            {/* Infos stats */}
-            <div className="bg-gray-50 rounded-xl p-3 mb-5 text-sm text-gray-600">
-              <p>📋 <strong>{questionsSelectionnees.size}</strong> question{questionsSelectionnees.size !== 1 ? 's' : ''} sélectionnée{questionsSelectionnees.size !== 1 ? 's' : ''}</p>
-              <p>👥 <strong>{resultats?.soumissions?.length || 0}</strong> répondant{(resultats?.soumissions?.length || 0) !== 1 ? 's' : ''} inclus</p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowExportModal(false)}
-                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={lancerExport}
-                disabled={questionsSelectionnees.size === 0}
-                className="flex-1 bg-primary-600 text-white py-3 rounded-xl font-semibold hover:bg-primary-700 transition-colors disabled:opacity-40"
-              >
-                🖨️ Imprimer / Enregistrer PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-
+      <PDFExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={async (elements, options) => {
+          setShowExportModal(false);
+          const q = resultats?.questionnaire;
+          await exportMultipleElementsToPDF(
+            elements,
+            `questionnaire-${q?.titre?.replace(/\s+/g, '-').toLowerCase() || 'resultats'}-${new Date().toISOString().split('T')[0]}`,
+            options
+          );
+        }}
+        availableElements={pdfElements}
+        defaultFilename={`questionnaire-resultats`}
+      />
     </div>
   );
 }
