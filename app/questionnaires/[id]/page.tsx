@@ -278,6 +278,58 @@ export default function RepondreQuestionnairePage() {
                 </div>
               )}
 
+              {/* Curseur 0 à 4 */}
+              {q.type === 'curseur' && (
+                <div className="py-2">
+                  <div className="flex justify-between text-sm text-gray-400 mb-2 px-1">
+                    {[0,1,2,3,4].map(v => <span key={v} className="font-semibold">{v}</span>)}
+                  </div>
+                  <input
+                    type="range" min={0} max={4} step={1}
+                    value={reponses[q.id] !== '' && reponses[q.id] !== null ? reponses[q.id] : 2}
+                    onChange={e => majReponse(q.id, Number(e.target.value))}
+                    className="w-full h-3 rounded-full appearance-none cursor-pointer"
+                    style={{ accentColor: '#2c5f75' }}
+                  />
+                  <div className="text-center mt-3">
+                    <span className="text-3xl font-bold text-primary-600">
+                      {reponses[q.id] !== '' && reponses[q.id] !== null ? reponses[q.id] : 2}
+                    </span>
+                    <span className="text-gray-400 ml-1">/ 4</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Matrice étoiles */}
+              {q.type === 'etoiles' && (
+                <div className="space-y-3">
+                  {(q.config?.lignes || []).map((ligne: string) => {
+                    const val = (reponses[q.id] || {})[ligne] || 0;
+                    return (
+                      <div key={ligne} className="flex items-center justify-between gap-4 p-3 bg-gray-50 rounded-xl">
+                        <span className="text-gray-700 font-medium flex-1">{ligne}</span>
+                        <div className="flex gap-1">
+                          {[1,2,3,4,5].map(star => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => {
+                                const current = { ...(reponses[q.id] || {}) };
+                                current[ligne] = star === val ? 0 : star;
+                                majReponse(q.id, current);
+                              }}
+                              className="text-3xl transition-transform hover:scale-110 focus:outline-none"
+                            >
+                              {star <= val ? '⭐' : '☆'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Date — format français JJ/MM/AAAA */}
               {q.type === 'date' && (() => {
                 const val = reponses[q.id] || '';

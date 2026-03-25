@@ -33,6 +33,8 @@ const TYPES_QUESTIONS = [
   { value: 'classement', label: '🏆 Classement', icon: '🏆' },
   { value: 'note', label: '🔢 Note sur 10/20', icon: '🔢' },
   { value: 'date', label: '📅 Date', icon: '📅' },
+  { value: 'curseur', label: '🎚️ Curseur (0 à 4)', icon: '🎚️' },
+  { value: 'etoiles', label: '⭐ Matrice étoiles', icon: '⭐' },
 ];
 
 const STATUT_CONFIG: Record<string, { label: string; color: string }> = {
@@ -324,6 +326,35 @@ export default function QuestionnairesAdminPage() {
     if (question.type === 'tableau') {
       return { type: 'tableau', data: valeurs, total: valeurs.length };
     }
+    if (question.type === 'curseur') {
+      const nums = valeurs.filter((v: any) => v !== null && v !== '').map(Number);
+      const moyenne = nums.length > 0 ? (nums.reduce((a: number, b: number) => a + b, 0) / nums.length).toFixed(2) : '-';
+      const counts: Record<string, number> = { '0': 0, '1': 0, '2': 0, '3': 0, '4': 0 };
+      nums.forEach((v: number) => { const k = String(Math.round(v)); if (counts[k] !== undefined) counts[k]++; });
+      const max = Math.max(...Object.values(counts));
+      return { type: 'curseur', data: counts, moyenne, total: nums.length, max };
+    }
+    if (question.type === 'etoiles') {
+      // valeur = { "Ligne 1": 3, "Ligne 2": 4, ... }
+      const lignes = question.config?.lignes || [];
+      const scores: Record<string, { total: number; count: number }> = {};
+      lignes.forEach((l: string) => { scores[l] = { total: 0, count: 0 }; });
+      valeurs.forEach((v: any) => {
+        if (v && typeof v === 'object') {
+          Object.entries(v).forEach(([ligne, note]: [string, any]) => {
+            if (scores[ligne] !== undefined && note) {
+              scores[ligne].total += Number(note);
+              scores[ligne].count++;
+            }
+          });
+        }
+      });
+      const moyennes: Record<string, string> = {};
+      lignes.forEach((l: string) => {
+        moyennes[l] = scores[l].count > 0 ? (scores[l].total / scores[l].count).toFixed(1) : '-';
+      });
+      return { type: 'etoiles', moyennes, lignes, total: valeurs.length };
+    }
     if (question.type === 'classement') {
       const scores: Record<string, number> = {};
       valeurs.forEach((v: string[]) => {
@@ -571,6 +602,32 @@ export default function QuestionnairesAdminPage() {
                           <button onClick={() => ajouterOption(idx)} className="text-primary-600 hover:text-primary-700 text-sm font-semibold">
                             ➕ Ajouter une option
                           </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Matrice étoiles — lignes à noter */}
+                    {q.type === 'etoiles' && (
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Éléments à noter</label>
+                        <div className="space-y-2">
+                          {(q.config?.lignes || ['Item 1', 'Item 2']).map((ligne: string, lIdx: number) => (
+                            <div key={lIdx} className="flex gap-2">
+                              <input type="text" value={ligne}
+                                onChange={e => {
+                                  const lignes = [...(q.config?.lignes || [])];
+                                  lignes[lIdx] = e.target.value;
+                                  majQuestion(idx, 'config', { ...q.config, lignes });
+                                }}
+                                className="input-field flex-1" placeholder={`Élément ${lIdx + 1}`} />
+                              <button onClick={() => {
+                                const lignes = (q.config?.lignes || []).filter((_: any, i: number) => i !== lIdx);
+                                majQuestion(idx, 'config', { ...q.config, lignes });
+                              }} className="text-red-400 hover:text-red-600 px-2">✕</button>
+                            </div>
+                          ))}
+                          <button onClick={() => majQuestion(idx, 'config', { ...q.config, lignes: [...(q.config?.lignes || []), ''] })}
+                            className="text-primary-600 text-sm font-semibold">➕ Ajouter un élément</button>
                         </div>
                       </div>
                     )}
@@ -1002,6 +1059,99 @@ export default function QuestionnairesAdminPage() {
                             </div>
                           );
                         })()}
+
+                        {/* Curseur — distribution + moyenne */}
+                        {res.type === 'curseur' && (
+                          <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
+                            <div style={{ maxWidth: 480, width: '100%' }}>
+                              {[0,1,2,3,4].map(val => {
+                                const count = (res.data as any)[String(val)] || 0;
+                                const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+                                const isMax = count === res.max && count > 0;
+                                const colors = ['#c0392b','#e97132','#f39c12','#196b24','#2c5f75'];
+                                return (
+                                  <div key={val} className={`flex items-center gap-3 p-2 rounded-lg mb-1 ${isMax ? 'bg-primary-50' : ''}`}>
+                                    <span className="w-5 text-sm font-bold text-gray-600 flex-shrink-0">{val}</span>
+                                    <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: colors[val] }} />
+                                    </div>
+                                    <span className="text-sm font-semibold w-20 text-right">{count} ({pct}%){isMax ? ' ⭐' : ''}</span>
+                                  </div>
+                                );
+                              })}
+                              <div className="text-center mt-3 text-sm text-gray-500">
+                                Moyenne : <span className="text-2xl font-bold text-primary-600">{res.moyenne}</span> / 4
+                              </div>
+                            </div>
+                            <div className="lg:w-48 flex-shrink-0">
+                              <table className="w-full text-sm border-collapse rounded-xl overflow-hidden">
+                                <thead><tr className="bg-gray-100">
+                                  <th className="px-3 py-2 text-left font-semibold text-gray-600">Valeur</th>
+                                  <th className="text-center px-3 py-2 font-semibold text-gray-600">Nb</th>
+                                  <th className="text-center px-3 py-2 font-semibold text-gray-600">%</th>
+                                </tr></thead>
+                                <tbody>
+                                  {[0,1,2,3,4].map((val, i) => {
+                                    const count = (res.data as any)[String(val)] || 0;
+                                    const pct = res.total > 0 ? Math.round((count / res.total) * 100) : 0;
+                                    const colors = ['#c0392b','#e97132','#f39c12','#196b24','#2c5f75'];
+                                    return (
+                                      <tr key={val} className="border-b border-gray-100">
+                                        <td className="px-3 py-2 flex items-center gap-2">
+                                          <div className="w-3 h-3 rounded-full" style={{ background: colors[i] }} />{val}
+                                        </td>
+                                        <td className="text-center px-3 py-2 font-semibold">{count}</td>
+                                        <td className="text-center px-3 py-2" style={{ color: colors[i] }}>{pct}%</td>
+                                      </tr>
+                                    );
+                                  })}
+                                  <tr className="bg-gray-50 font-semibold">
+                                    <td className="px-3 py-2 text-gray-600">Total</td>
+                                    <td className="text-center px-3 py-2">{res.total}</td>
+                                    <td className="text-center px-3 py-2">100%</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Matrice étoiles — moyenne par ligne */}
+                        {res.type === 'etoiles' && (
+                          <div style={{ maxWidth: 500, margin: '0 auto' }}>
+                            <table className="w-full text-sm border-collapse rounded-xl overflow-hidden">
+                              <thead>
+                                <tr className="bg-gray-100">
+                                  <th className="text-left px-4 py-2 font-semibold text-gray-600">Élément</th>
+                                  <th className="text-center px-4 py-2 font-semibold text-gray-600">Moyenne</th>
+                                  <th className="text-center px-4 py-2 font-semibold text-gray-600">Étoiles</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(res.lignes || []).map((ligne: string) => {
+                                  const moy = parseFloat(res.moyennes[ligne]) || 0;
+                                  const full = Math.floor(moy);
+                                  const half = moy - full >= 0.5;
+                                  return (
+                                    <tr key={ligne} className="border-b border-gray-100 hover:bg-gray-50">
+                                      <td className="px-4 py-3 font-medium text-gray-700">{ligne}</td>
+                                      <td className="text-center px-4 py-3">
+                                        <span className="text-lg font-bold text-primary-600">{res.moyennes[ligne]}</span>
+                                        <span className="text-gray-400 text-xs"> / 5</span>
+                                      </td>
+                                      <td className="text-center px-4 py-3 text-xl">
+                                        {[1,2,3,4,5].map(s => (
+                                          <span key={s}>{s <= full ? '⭐' : (s === full + 1 && half) ? '✨' : '☆'}</span>
+                                        ))}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                            <p className="text-xs text-gray-400 text-center mt-2">Sur {res.total} répondant{res.total !== 1 ? 's' : ''}</p>
+                          </div>
+                        )}
 
                         {/* Textes libres */}
                         {res.type === 'textes' && (
