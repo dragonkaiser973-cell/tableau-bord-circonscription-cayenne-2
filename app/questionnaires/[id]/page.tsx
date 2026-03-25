@@ -278,10 +278,50 @@ export default function RepondreQuestionnairePage() {
                 </div>
               )}
 
-              {/* Date */}
-              {q.type === 'date' && (
-                <input type="date" value={reponses[q.id] || ''} onChange={e => majReponse(q.id, e.target.value)} className="input-field w-full" />
-              )}
+              {/* Date — format français JJ/MM/AAAA */}
+              {q.type === 'date' && (() => {
+                const val = reponses[q.id] || '';
+                const parts = val ? val.split('/') : ['', '', ''];
+                const jour = parts[0] || '';
+                const mois = parts[1] || '';
+                const annee = parts[2] || '';
+                const setDate = (j: string, m: string, a: string) => {
+                  majReponse(q.id, `${j}/${m}/${a}`);
+                };
+                return (
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-center">
+                      <label className="text-xs text-gray-400 mb-1">Jour</label>
+                      <input
+                        type="number" min={1} max={31} value={jour}
+                        onChange={e => setDate(e.target.value, mois, annee)}
+                        className="input-field w-20 text-center"
+                        placeholder="JJ"
+                      />
+                    </div>
+                    <span className="text-gray-400 text-xl mt-4">/</span>
+                    <div className="flex flex-col items-center">
+                      <label className="text-xs text-gray-400 mb-1">Mois</label>
+                      <input
+                        type="number" min={1} max={12} value={mois}
+                        onChange={e => setDate(jour, e.target.value, annee)}
+                        className="input-field w-20 text-center"
+                        placeholder="MM"
+                      />
+                    </div>
+                    <span className="text-gray-400 text-xl mt-4">/</span>
+                    <div className="flex flex-col items-center">
+                      <label className="text-xs text-gray-400 mb-1">Année</label>
+                      <input
+                        type="number" min={2000} max={2100} value={annee}
+                        onChange={e => setDate(jour, mois, e.target.value)}
+                        className="input-field w-28 text-center"
+                        placeholder="AAAA"
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Tableau */}
               {q.type === 'tableau' && (
