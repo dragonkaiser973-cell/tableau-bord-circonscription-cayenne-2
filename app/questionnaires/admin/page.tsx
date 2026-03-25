@@ -101,7 +101,6 @@ export default function QuestionnairesAdminPage() {
   // Export PDF
   const [showExportModal, setShowExportModal] = useState(false);
   const [questionsSelectionnees, setQuestionsSelectionnees] = useState<Set<string>>(new Set());
-  const [pdfElements, setPdfElements] = useState<any[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -261,18 +260,20 @@ export default function QuestionnairesAdminPage() {
   };
 
   const ouvrirExport = () => {
+    setShowExportModal(true);
+  };
+
+  // Calculer les éléments PDF dynamiquement à chaque rendu
+  const getPdfElements = () => {
     const questions = resultats?.questionnaire?.questions || [];
-    // Construire la liste des éléments PDF à partir des questions
     const elements = questions.map((q: any, idx: number) => ({
       id: `question-result-${q.id}`,
       label: `${idx + 1}. ${q.libelle}`,
       selected: true
     }));
-    // Ajouter stats globales et liste répondants
     elements.unshift({ id: 'section-stats-globales', label: '📊 Statistiques générales', selected: true });
     elements.push({ id: 'section-liste-repondants', label: '👥 Liste des répondants', selected: true });
-    setPdfElements(elements);
-    setShowExportModal(true);
+    return elements;
   };
 
   const copierLien = (id: string) => {
@@ -1094,6 +1095,7 @@ export default function QuestionnairesAdminPage() {
       </footer>
 
       <PDFExportModal
+        key={showExportModal ? 'open' : 'closed'}
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         onExport={async (elements, options) => {
@@ -1105,7 +1107,7 @@ export default function QuestionnairesAdminPage() {
             options
           );
         }}
-        availableElements={pdfElements}
+        availableElements={getPdfElements()}
         defaultFilename={`questionnaire-resultats`}
       />
     </div>
