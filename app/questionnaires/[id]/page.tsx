@@ -279,26 +279,64 @@ export default function RepondreQuestionnairePage() {
               )}
 
               {/* Curseur 0 à 4 */}
-              {q.type === 'curseur' && (
-                <div className="py-2">
-                  <div className="flex justify-between text-sm text-gray-400 mb-2 px-1">
-                    {[0,1,2,3,4].map(v => <span key={v} className="font-semibold">{v}</span>)}
+              {q.type === 'curseur' && (() => {
+                const val = reponses[q.id] !== '' && reponses[q.id] !== null ? Number(reponses[q.id]) : 2;
+                const pct = (val / 4) * 100;
+                return (
+                  <div className="py-4 px-2">
+                    {/* Valeur affichée */}
+                    <div className="text-center mb-4">
+                      <span className="text-4xl font-bold text-primary-600">{val}</span>
+                      <span className="text-gray-400 ml-1 text-lg">/ 4</span>
+                    </div>
+
+                    {/* Curseur avec ligne graduée */}
+                    <div className="relative pt-2 pb-6">
+                      {/* Ligne de fond */}
+                      <div className="relative h-2 bg-gray-200 rounded-full mx-3">
+                        {/* Portion active colorée */}
+                        <div
+                          className="absolute left-0 top-0 h-2 rounded-full transition-all duration-200"
+                          style={{ width: `${pct}%`, background: '#2c5f75' }}
+                        />
+                        {/* Marques de graduation */}
+                        {[0,1,2,3,4].map(v => (
+                          <div
+                            key={v}
+                            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white cursor-pointer transition-all"
+                            style={{
+                              left: `${(v / 4) * 100}%`,
+                              background: v <= val ? '#2c5f75' : '#d1d5db',
+                              boxShadow: v === val ? '0 0 0 3px rgba(44,95,117,0.3)' : 'none',
+                              transform: v === val ? 'translateX(-50%) scale(1.4)' : 'translateX(-50%)'
+                            }}
+                            onClick={() => majReponse(q.id, v)}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Input range invisible par-dessus pour le drag */}
+                      <input
+                        type="range" min={0} max={4} step={1} value={val}
+                        onChange={e => majReponse(q.id, Number(e.target.value))}
+                        className="absolute inset-0 w-full opacity-0 cursor-pointer"
+                        style={{ height: '20px', top: '0' }}
+                      />
+
+                      {/* Labels de graduation */}
+                      <div className="flex justify-between mt-3 px-0">
+                        {[0,1,2,3,4].map(v => (
+                          <div key={v} className="flex flex-col items-center" style={{ width: '20px' }}>
+                            <span className={`text-sm font-bold transition-colors ${v === val ? 'text-primary-600' : 'text-gray-400'}`}>
+                              {v}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <input
-                    type="range" min={0} max={4} step={1}
-                    value={reponses[q.id] !== '' && reponses[q.id] !== null ? reponses[q.id] : 2}
-                    onChange={e => majReponse(q.id, Number(e.target.value))}
-                    className="w-full h-3 rounded-full appearance-none cursor-pointer"
-                    style={{ accentColor: '#2c5f75' }}
-                  />
-                  <div className="text-center mt-3">
-                    <span className="text-3xl font-bold text-primary-600">
-                      {reponses[q.id] !== '' && reponses[q.id] !== null ? reponses[q.id] : 2}
-                    </span>
-                    <span className="text-gray-400 ml-1">/ 4</span>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Matrice étoiles */}
               {q.type === 'etoiles' && (
