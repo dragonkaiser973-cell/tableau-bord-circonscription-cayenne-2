@@ -48,6 +48,7 @@ export default function EvaluationsPage() {
   const [graphe1Groupe, setGraphe1Groupe] = useState('groupe_3');
   const [graphe1Matiere, setGraphe1Matiere] = useState('');
   const [graphe1Competence, setGraphe1Competence] = useState('');
+  const [graphe1Niveau, setGraphe1Niveau] = useState('');
   
   // Filtres graphique 2 : Évolution par école
   const [graphe2Ecole, setGraphe2Ecole] = useState('');
@@ -370,7 +371,10 @@ export default function EvaluationsPage() {
 
     // Filtrer les évaluations selon les critères
     let filtered = evaluations;
-    
+
+    if (graphe1Niveau) {
+      filtered = filtered.filter(e => e.classe === graphe1Niveau);
+    }
     if (graphe1Matiere) {
       filtered = filtered.filter(e => e.matiere === graphe1Matiere);
     }
@@ -716,44 +720,85 @@ export default function EvaluationsPage() {
           
           {/* Filtres Graphique 1 */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+              {/* 1. Niveau */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Niveau</label>
+                <select
+                  value={graphe1Niveau}
+                  onChange={(e) => {
+                    setGraphe1Niveau(e.target.value);
+                    setGraphe1Matiere('');
+                    setGraphe1Competence('');
+                  }}
+                  className="input-field w-full"
+                >
+                  <option value="">Tous les niveaux</option>
+                  {[...new Set(evaluations.map(e => e.classe))]
+                    .filter(Boolean)
+                    .sort((a, b) => {
+                      const ordre = ['CP rentrée', `CP point d'étape`, 'CP', 'CE1', 'CE2', 'CM1', 'CM2'];
+                      const ia = ordre.findIndex(o => a === o || a.startsWith(o + ' '));
+                      const ib = ordre.findIndex(o => b === o || b.startsWith(o + ' '));
+                      if (ia !== -1 && ib !== -1) return ia - ib;
+                      if (ia !== -1) return -1;
+                      if (ib !== -1) return 1;
+                      return a.localeCompare(b);
+                    })
+                    .map(niveau => (
+                      <option key={niveau} value={niveau}>{niveau}</option>
+                    ))
+                  }
+                </select>
+              </div>
+
+              {/* 2. Matière — filtrée selon le niveau */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Matière</label>
                 <select
                   value={graphe1Matiere}
                   onChange={(e) => {
                     setGraphe1Matiere(e.target.value);
-                    setGraphe1Competence(''); // Reset compétence
+                    setGraphe1Competence('');
                   }}
                   className="input-field w-full"
                 >
                   <option value="">Toutes les matières</option>
-                  <option value="français">Français</option>
-                  <option value="mathématiques">Mathématiques</option>
+                  {[...new Set(
+                    evaluations
+                      .filter(e => !graphe1Niveau || e.classe === graphe1Niveau)
+                      .map(e => e.matiere)
+                  )].filter(Boolean).sort().map(mat => (
+                    <option key={mat} value={mat}>{mat}</option>
+                  ))}
                 </select>
               </div>
 
+              {/* 3. Compétence — filtrée selon niveau ET matière */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Compétence</label>
                 <select
                   value={graphe1Competence}
                   onChange={(e) => setGraphe1Competence(e.target.value)}
                   className="input-field w-full"
-                  disabled={!graphe1Matiere}
+                  disabled={!graphe1Matiere && !graphe1Niveau}
                 >
                   <option value="">Toutes les compétences</option>
-                  {graphe1Matiere && libelles
-                    .filter(lib => {
-                      const evalsMatiere = evaluations.filter(e => e.matiere === graphe1Matiere);
-                      return evalsMatiere.some(e => e.libelle === lib);
-                    })
-                    .map(lib => (
-                      <option key={lib} value={lib}>{lib}</option>
-                    ))
-                  }
+                  {[...new Set(
+                    evaluations
+                      .filter(e =>
+                        (!graphe1Niveau || e.classe === graphe1Niveau) &&
+                        (!graphe1Matiere || e.matiere === graphe1Matiere)
+                      )
+                      .map(e => e.libelle)
+                  )].filter(Boolean).sort().map(lib => (
+                    <option key={lib} value={lib}>{lib}</option>
+                  ))}
                 </select>
               </div>
 
+              {/* 4. Groupe de maîtrise */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Groupe de maîtrise</label>
                 <select
