@@ -82,3 +82,5 @@ env/
 # Backup files
 *.backup
 *_backup.*
+
+.vercel
