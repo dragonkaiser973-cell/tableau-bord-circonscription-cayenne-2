@@ -106,9 +106,9 @@ export default function HomePage() {
               <Image
                 src="/logo-circonscription.png"
                 alt="Logo Circonscription Cayenne 2 Roura"
-                width={120}
-                height={120}
-                className="drop-shadow-lg"
+                width={132}
+                height={132}
+                className="drop-shadow-lg rounded-2xl"
                 priority
               />
             </div>
