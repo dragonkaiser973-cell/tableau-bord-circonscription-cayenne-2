@@ -249,14 +249,14 @@ export default function HomePage() {
             </Link>
 
             <Link href="/questionnaires/admin">
-              <div className="card hover:shadow-2xl transition-shadow cursor-pointer ">
+              <div className="card hover:shadow-2xl transition-shadow cursor-pointer bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-200">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center text-2xl">
+                  <div className="w-12 h-12 bg-purple-500 text-white rounded-lg flex items-center justify-center text-2xl">
                     📋
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-800">Gérer les questionnaires</h2>
+                  <h2 className="text-2xl font-bold text-purple-700">Gérer les questionnaires</h2>
                 </div>
-                <p className="text-gray-600">
+                <p className="text-purple-600 font-medium">
                   Créer, modifier et consulter les résultats des questionnaires
                 </p>
               </div>
