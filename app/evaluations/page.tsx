@@ -358,16 +358,12 @@ export default function EvaluationsPage() {
   const libelles = getLibelles();
 
   // Graphique 1 : Évolution Circonscription vs Académie
+  // Méthode alignée sur le graphique 2 : moyenne de tx_groupe_X (par école)
+  // pour la circonscription, et moyenne de tx_aca_groupe_X pour l'académie
   const getGraphe1Data = () => {
-    // Construire les noms de champs corrects
-    const numGroupe = graphe1Groupe.replace('groupe_', ''); // "groupe_3" → "3"
-    const champCir = `tx_cir_groupe_${numGroupe}`;  // "tx_cir_groupe_3"
-    const champAca = `tx_aca_groupe_${numGroupe}`;  // "tx_aca_groupe_3"
-
-    console.log('🔍 Graphe1 - Champs utilisés:', champCir, champAca);
-    console.log('🔍 Graphe1 - Exemple évaluation:', evaluations[0]);
-    console.log('🔍 Graphe1 - Valeur cir:', evaluations[0]?.[champCir]);
-    console.log('🔍 Graphe1 - Valeur aca:', evaluations[0]?.[champAca]);
+    const numGroupe = graphe1Groupe.replace('groupe_', '');
+    const champCir = `tx_groupe_${numGroupe}`;      // même champ que graphique 2
+    const champAca = `tx_aca_groupe_${numGroupe}`;  // taux académie précalculé
 
     // Filtrer les évaluations selon les critères
     let filtered = evaluations;
@@ -384,23 +380,19 @@ export default function EvaluationsPage() {
 
     // Grouper par année et calculer moyennes
     const annees = [...new Set(filtered.map(e => e.rentree))].sort();
-    
+
     const dataCir = annees.map(annee => {
       const evals = filtered.filter(e => e.rentree === annee && e[champCir] != null);
-      const moyenne = evals.length > 0
+      return evals.length > 0
         ? (evals.reduce((sum, e) => sum + (e[champCir] || 0), 0) / evals.length) * 100
         : 0;
-      console.log(`📊 ${annee} - Circonscription:`, moyenne.toFixed(1), '%', `(${evals.length} évaluations)`);
-      return moyenne;
     });
 
     const dataAca = annees.map(annee => {
       const evals = filtered.filter(e => e.rentree === annee && e[champAca] != null);
-      const moyenne = evals.length > 0
+      return evals.length > 0
         ? (evals.reduce((sum, e) => sum + (e[champAca] || 0), 0) / evals.length) * 100
         : 0;
-      console.log(`📊 ${annee} - Académie:`, moyenne.toFixed(1), '%', `(${evals.length} évaluations)`);
-      return moyenne;
     });
 
     // Couleurs selon le groupe
