@@ -422,9 +422,7 @@ export default function HomePage() {
               </button>
             </form>
 
-            <p className="text-sm text-gray-500 mt-4 text-center">
-              Compte par défaut : superadmin / SuperAdmin2026!
-            </p>
+
           </div>
         </div>
       )}
