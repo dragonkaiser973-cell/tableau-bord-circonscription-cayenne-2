@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -101,8 +102,15 @@ export default function HomePage() {
           </div>
 
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-xl mb-6">
-              <span className="text-4xl">📊</span>
+            <div className="flex items-center justify-center mb-6">
+              <Image
+                src="/logo-circonscription.png"
+                alt="Logo Circonscription Cayenne 2 Roura"
+                width={120}
+                height={120}
+                className="drop-shadow-lg"
+                priority
+              />
             </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-4">
               Tableau de bord
