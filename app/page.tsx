@@ -553,20 +553,20 @@ function TabPreview({ index, tabs }: { index: number; tabs: { title: string; des
     return wrapper(
       <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
         <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-4">Effectifs par niveau</p>
-        <div className="flex items-end gap-3 h-40 px-2">
+        <div className="flex gap-3 h-40 px-2">
           {[
-            { label: 'CP', h: 65, c: 'bg-sky-400' },
-            { label: 'CE1', h: 78, c: 'bg-emerald-400' },
-            { label: 'CE2', h: 55, c: 'bg-amber-400' },
-            { label: 'CM1', h: 82, c: 'bg-violet-400' },
-            { label: 'CM2', h: 70, c: 'bg-rose-400' },
+            { label: 'CP', h: 104, c: 'bg-sky-400' },
+            { label: 'CE1', h: 125, c: 'bg-emerald-400' },
+            { label: 'CE2', h: 88, c: 'bg-amber-400' },
+            { label: 'CM1', h: 131, c: 'bg-violet-400' },
+            { label: 'CM2', h: 112, c: 'bg-rose-400' },
           ].map((bar) => (
-            <div key={bar.label} className="flex-1 flex flex-col items-center gap-1">
+            <div key={bar.label} className="flex-1 flex flex-col items-center justify-end">
               <div
-                style={{ height: `${bar.h}%` }}
+                style={{ height: `${bar.h}px` }}
                 className={`w-full ${bar.c} rounded-t-xl`}
               />
-              <span className="text-[10px] text-zen-text-muted font-medium">{bar.label}</span>
+              <span className="text-[10px] text-zen-text-muted font-medium mt-1">{bar.label}</span>
             </div>
           ))}
         </div>
