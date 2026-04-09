@@ -288,7 +288,7 @@ export default function HomePage() {
                       : 'text-zen-text-muted hover:text-zen-text-secondary border-transparent'
                   }`}
                 >
-                  <div className="font-semibold text-[13px] tracking-tight">{tab.label}</div>
+                  <div className="font-semibold text-[15px] tracking-tight">{tab.label}</div>
                 </button>
               ))}
             </div>
