@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useMotionValueEvent, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const spring = { type: 'spring' as const, stiffness: 70, damping: 20, mass: 1 };
 const springFast = { type: 'spring' as const, stiffness: 200, damping: 22, mass: 0.8 };
@@ -16,33 +16,24 @@ export default function HomePage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [dockScrolled, setDockScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const underlineRef = useRef<HTMLDivElement>(null);
-  const heroRef = useRef<HTMLDivElement>(null);
 
-  // Scroll-driven hero shrink — pixel-based for precise control
-  const { scrollY } = useScroll();
+  // State-driven animation — triggered by button click
+  const [heroShrunk, setHeroShrunk] = useState(false);
+  const [showBoxLeft, setShowBoxLeft] = useState(false);
+  const [showBoxRight, setShowBoxRight] = useState(false);
 
-  // Hero shrinks from 100vh to 30vh over 600px of scroll
-  const heroScale = useTransform(scrollY, [0, 600], [1, 0.95]);
-  const heroBorderRadius = useTransform(scrollY, [0, 600], [0, 40]);
-  const heroHeightPx = useTransform(scrollY, [0, 600], ['100vh', '30vh']);
-  const heroContentOpacity = useTransform(scrollY, [0, 300], [1, 0]);
-  const heroContentY = useTransform(scrollY, [0, 300], [0, -40]);
-
-  // Boxes fade in well AFTER the hero has fully shrunk (600px), with wide stagger
-  const boxLeftOpacity = useTransform(scrollY, [800, 1200], [0, 1]);
-  const boxLeftY = useTransform(scrollY, [800, 1200], [80, 0]);
-  const boxRightOpacity = useTransform(scrollY, [1050, 1450], [0, 1]);
-  const boxRightY = useTransform(scrollY, [1050, 1450], [80, 0]);
-
-  // Parallax on the background image
-  const bgY = useTransform(scrollY, [0, 800], [0, -100]);
-
-  useMotionValueEvent(scrollY, 'change', (v) => setDockScrolled(v > 60));
+  const handleEnter = () => {
+    if (heroShrunk) return;
+    setHeroShrunk(true);
+    // Box gauche après la fin du shrink (~800ms) + pause
+    setTimeout(() => setShowBoxLeft(true), 1000);
+    // Box droite 400ms après la gauche
+    setTimeout(() => setShowBoxRight(true), 1400);
+  };
 
   // Auth
   useEffect(() => {
@@ -152,7 +143,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="bg-[#e8e8e8] relative">
+    <div className="bg-[#e8e8e8] h-screen overflow-hidden relative">
 
       {/* ═══ DOCK NAVIGATION — fixed, always on top ═══ */}
       <motion.div
@@ -161,7 +152,7 @@ export default function HomePage() {
         transition={spring}
         className="fixed top-0 left-0 right-0 z-[60] px-4 sm:px-8 py-4"
       >
-        <div className={`nav-dock ${dockScrolled ? 'scrolled' : ''} rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between`}>
+        <div className={`nav-dock ${heroShrunk ? 'scrolled' : ''} rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between`}>
           <div className="flex items-center gap-2.5">
             <Image src="/logo-circonscription.png" alt="Logo" width={28} height={28} className="rounded-lg" />
             <span className="font-medium text-zen-text text-sm hidden sm:inline tracking-tight">Circonscription</span>
@@ -180,31 +171,35 @@ export default function HomePage() {
         </div>
       </motion.div>
 
-      {/* ═══ HERO — sticky, shrinks from 100vh to 30vh bandeau ═══ */}
+      {/* ═══ HERO — animates from 100vh to 30vh on button click ═══ */}
       <motion.section
-        ref={heroRef}
-        style={{
-          height: heroHeightPx,
-          scale: heroScale,
-          borderRadius: heroBorderRadius,
+        animate={{
+          height: heroShrunk ? '30vh' : '100vh',
+          borderRadius: heroShrunk ? 40 : 0,
+          scale: heroShrunk ? 0.95 : 1,
         }}
-        className="sticky top-0 z-10 w-full overflow-hidden origin-top"
+        transition={{ type: 'spring', stiffness: 50, damping: 20, mass: 1 }}
+        className="relative w-full overflow-hidden origin-top z-10"
       >
-        {/* Background image — HD landscape with parallax */}
-        <motion.div className="absolute inset-0" style={{ y: bgY }}>
+        {/* Background image */}
+        <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&q=80&auto=format"
             alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
           />
-        </motion.div>
+        </div>
 
-        {/* Overlay for text readability */}
+        {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/30" />
         <div className="absolute inset-0 bg-white/10" />
 
-        {/* Hero content — fades out as you scroll */}
+        {/* Hero content — fades out when shrunk */}
         <motion.div
-          style={{ opacity: heroContentOpacity, y: heroContentY }}
+          animate={{
+            opacity: heroShrunk ? 0 : 1,
+            y: heroShrunk ? -40 : 0,
+          }}
+          transition={{ type: 'spring', stiffness: 60, damping: 20 }}
           className="relative z-10 flex flex-col items-center justify-center h-[100vh] px-6 sm:px-12 text-center pt-20"
         >
           <motion.div
@@ -243,42 +238,28 @@ export default function HomePage() {
             transition={{ ...spring, delay: 0.55 }}
             className="flex items-center gap-4"
           >
-            <button onClick={() => setShowLoginModal(true)} className="bg-white text-zen-text font-medium rounded-full px-8 py-3.5 text-[15px] backdrop-blur-md border border-white/30 transition-all duration-300 hover:shadow-lg hover:shadow-white/20 hover:-translate-y-0.5">
+            <button onClick={handleEnter} className="bg-white text-zen-text font-medium rounded-full px-8 py-3.5 text-[15px] backdrop-blur-md border border-white/30 transition-all duration-300 hover:shadow-lg hover:shadow-white/20 hover:-translate-y-0.5">
               Accéder au tableau de bord
             </button>
             <Link href="/ecoles" className="backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full px-6 py-3.5 text-[15px] font-medium transition-all duration-300 hover:bg-white/20 hover:-translate-y-0.5">
               Explorer
             </Link>
           </motion.div>
-
-          {/* Scroll indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
-            className="absolute bottom-12 left-1/2 -translate-x-1/2"
-          >
-            <motion.div
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-1.5"
-            >
-              <motion.div className="w-1 h-2 bg-white/60 rounded-full" />
-            </motion.div>
-          </motion.div>
         </motion.div>
       </motion.section>
 
-      {/* ═══ SCROLL SPACE — invisible, behind the hero, just provides scroll room ═══ */}
-      <div className="h-[250vh] relative -z-10" aria-hidden="true" />
-
-      {/* ═══ DEUX BOXES — fixed below the hero bandeau, fade in with scroll ═══ */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 px-3 sm:px-5 pb-6" style={{ top: '32vh' }}>
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4 h-full">
+      {/* ═══ DEUX BOXES — appear below hero after shrink, staggered ═══ */}
+      <div className="px-3 sm:px-5 pt-6 pb-6 flex-1">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4" style={{ height: 'calc(100vh - 30vh - 60px)' }}>
 
           {/* BOX GAUCHE — appears first */}
           <motion.div
-            style={{ opacity: boxLeftOpacity, y: boxLeftY }}
+            initial={false}
+            animate={{
+              opacity: showBoxLeft ? 1 : 0,
+              y: showBoxLeft ? 0 : 60,
+            }}
+            transition={{ type: 'spring', stiffness: 50, damping: 18, mass: 1 }}
             className="glass-card p-6 sm:p-8 flex flex-col"
           >
             {/* Onglets */}
@@ -325,7 +306,12 @@ export default function HomePage() {
 
           {/* BOX DROITE — Preview, appears second */}
           <motion.div
-            style={{ opacity: boxRightOpacity, y: boxRightY }}
+            initial={false}
+            animate={{
+              opacity: showBoxRight ? 1 : 0,
+              y: showBoxRight ? 0 : 60,
+            }}
+            transition={{ type: 'spring', stiffness: 50, damping: 18, mass: 1 }}
             className="glass-card p-0 overflow-hidden"
           >
             <AnimatePresence mode="wait">
@@ -343,13 +329,21 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-        {/* Footer minimal */}
-        <div className="absolute bottom-2 left-0 right-0 text-center">
+      </div>
+
+      {/* Footer minimal — visible after boxes appear */}
+      {showBoxRight && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-center py-3"
+        >
           <p className="text-zen-text-muted text-xs">
             Designé par <span className="text-zen-text-secondary font-medium">LOUIS Olivier</span> · 2026
           </p>
-        </div>
-      </div>
+        </motion.div>
+      )}
 
       {/* ═══ MODAL CONNEXION ═══ */}
       <AnimatePresence>
