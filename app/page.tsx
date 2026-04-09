@@ -23,16 +23,18 @@ export default function HomePage() {
   const underlineRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
 
-  // Hero card shrink effect — driven by scrollYProgress within the hero container
+  // Hero "shrink & sticky" — the wrapper is 150vh tall, giving 50vh of scroll room
+  // while the hero stays sticky. scrollYProgress goes 0→1 over that extra 50vh.
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ['start start', 'end start'],
   });
 
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
-  const heroBorderRadius = useTransform(scrollYProgress, [0, 1], [0, 48]);
-  const heroContentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-  const heroContentY = useTransform(scrollYProgress, [0, 0.6], [0, -40]);
+  // Fast shrink: effect completes within the first 20% of scroll progress
+  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.92]);
+  const heroBorderRadius = useTransform(scrollYProgress, [0, 0.2], [0, 48]);
+  const heroContentOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const heroContentY = useTransform(scrollYProgress, [0, 0.15], [0, -40]);
 
   // Parallax on the background image
   const { scrollY } = useScroll();
@@ -148,7 +150,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-[200vh] bg-zen-bg relative">
+    <div className="bg-zen-bg relative">
 
       {/* ═══ DOCK NAVIGATION — fixed, always on top ═══ */}
       <motion.div
@@ -176,9 +178,10 @@ export default function HomePage() {
         </div>
       </motion.div>
 
-      {/* ═══ HERO — immersive card that shrinks & rounds on scroll ═══ */}
-      <div ref={heroRef} className="relative z-10">
-        <div className="h-screen sticky top-0">
+      {/* ═══ HERO WRAPPER — 150vh gives scroll room for the shrink animation ═══ */}
+      <div ref={heroRef} className="relative z-0 h-[150vh]">
+        {/* Sticky inner — stays fixed while user scrolls through the 150vh wrapper */}
+        <div className="sticky top-0 h-screen flex items-center justify-center">
           <motion.section
             style={{
               scale: heroScale,
@@ -267,8 +270,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ═══ DEUX BOXES — content rises over the hero ═══ */}
-      <section className="relative z-20 -mt-16 px-3 sm:px-5 pb-6">
+      {/* ═══ DEUX BOXES — slides over the shrunk hero ═══ */}
+      <section className="relative z-10 bg-zen-bg px-3 sm:px-5 pb-6 pt-8 rounded-t-[32px]">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4" style={{ minHeight: '70vh' }}>
 
           {/* BOX GAUCHE — Onglets + Texte + Bouton */}
