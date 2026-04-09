@@ -529,14 +529,16 @@ function TabPreview({ index, tabs }: { index: number; tabs: { title: string; des
         <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-4">Effectifs par niveau</p>
         <div className="flex items-end gap-3 h-40 px-2">
           {[
-            { label: 'CP', h: 65, c: 'bg-sky-400' },
-            { label: 'CE1', h: 78, c: 'bg-emerald-400' },
-            { label: 'CE2', h: 55, c: 'bg-amber-400' },
-            { label: 'CM1', h: 82, c: 'bg-violet-400' },
-            { label: 'CM2', h: 70, c: 'bg-rose-400' },
+            { label: 'CP', h: 65, v: 312, c: 'bg-sky-400' },
+            { label: 'CE1', h: 78, v: 375, c: 'bg-emerald-400' },
+            { label: 'CE2', h: 55, v: 264, c: 'bg-amber-400' },
+            { label: 'CM1', h: 82, v: 394, c: 'bg-violet-400' },
+            { label: 'CM2', h: 70, v: 336, c: 'bg-rose-400' },
           ].map((bar, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+            <div key={bar.label} className="flex-1 flex flex-col items-center gap-1">
+              <span className="text-[10px] font-semibold text-zen-text-secondary">{bar.v}</span>
               <motion.div
+                key={`bar-${bar.label}-${index}`}
                 initial={{ height: 0 }}
                 animate={{ height: `${bar.h}%` }}
                 transition={{ type: 'spring', stiffness: 60, damping: 15, delay: i * 0.08 }}
