@@ -156,23 +156,39 @@ export default function HomePage() {
         transition={spring}
         className="fixed top-0 left-0 right-0 z-[60] px-4 sm:px-8 py-4"
       >
-        <div className={`nav-dock ${heroShrunk ? 'scrolled' : ''} rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between`}>
-          <div className="flex items-center gap-2.5">
-            <Image src="/logo-circonscription.png" alt="Logo" width={28} height={28} className="rounded-lg" />
-            <span className="font-medium text-zen-text text-sm hidden sm:inline tracking-tight">Circonscription</span>
-          </div>
+        <motion.div
+          animate={{
+            paddingLeft: heroShrunk ? 0 : undefined,
+            paddingRight: heroShrunk ? 0 : undefined,
+          }}
+          className={`nav-dock ${heroShrunk ? 'scrolled' : ''} rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between`}
+        >
+          {/* Logo + label — disappear on shrink */}
+          <motion.div
+            animate={{ opacity: heroShrunk ? 0 : 1, width: heroShrunk ? 0 : 'auto' }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="flex items-center gap-2.5 overflow-hidden"
+          >
+            <Image src="/logo-circonscription.png" alt="Logo" width={28} height={28} className="rounded-lg shrink-0" />
+            <span className="font-medium text-zen-text text-sm hidden sm:inline tracking-tight whitespace-nowrap">Circonscription</span>
+          </motion.div>
           <div className="flex items-center bg-zen-accent rounded-full px-1.5 py-1.5 gap-0.5">
             <DockIcon href="#" icon={<IconHome />} label="Accueil" active />
             <DockIcon href="/ecoles" icon={<IconSchool />} label="Écoles" />
             <DockIcon href="/evaluations" icon={<IconChart />} label="Évaluations" />
             <DockIcon href="/enseignants" icon={<IconUser />} label="Enseignants" />
             {isAuthenticated && <DockIcon href="/calendrier" icon={<IconCalendar />} label="Calendrier" />}
+            <DockIcon href="#" icon={<IconLock />} label="Connexion" onClick={() => setShowLoginModal(true)} />
           </div>
-          <button onClick={() => setShowLoginModal(true)} className="btn-secondary-zen text-sm hidden sm:inline-block !border-white/20">
-            {isAuthenticated ? 'Espace réservé' : 'Connexion'}
-          </button>
-          <button onClick={() => setShowLoginModal(true)} className="sm:hidden text-zen-text-secondary"><IconLock /></button>
-        </div>
+          {/* Empty space to balance — disappears on shrink */}
+          <motion.div
+            animate={{ opacity: heroShrunk ? 0 : 1, width: heroShrunk ? 0 : 'auto' }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="w-[28px]" />
+          </motion.div>
+        </motion.div>
       </motion.div>
 
       {/* ═══ HERO — animates from 100vh to 30vh on button click ═══ */}
@@ -248,6 +264,21 @@ export default function HomePage() {
               Explorer
             </Link>
           </motion.div>
+        </motion.div>
+
+        {/* Title that appears in the shrunk hero bandeau */}
+        <motion.div
+          initial={false}
+          animate={{
+            opacity: heroShrunk ? 1 : 0,
+          }}
+          transition={{ duration: 0.8, ease: 'easeOut', delay: heroShrunk ? 0.5 : 0 }}
+          className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
+        >
+          <h2 className="text-[clamp(1.2rem,3vw,2.2rem)] font-bold leading-[1.05] tracking-tightest text-white text-center">
+            Circonscription Cayenne 2 — Roura<br />
+            <span className="font-light text-white/70">Tableau de bord</span>
+          </h2>
         </motion.div>
       </motion.section>
 
@@ -558,7 +589,14 @@ function TabPreview({ index }: { index: number }) {
 
 /* ═══ DOCK ICONS ═══ */
 
-function DockIcon({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active?: boolean }) {
+function DockIcon({ href, icon, label, active, onClick }: { href: string; icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void }) {
+  if (onClick) {
+    return (
+      <button onClick={onClick} className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${active ? 'bg-white/15' : 'opacity-50 hover:opacity-90'}`} title={label} aria-label={label}>
+        <span className="w-4 h-4 text-white">{icon}</span>
+      </button>
+    );
+  }
   const Tag = href.startsWith('/') ? Link : 'a';
   return (
     <Tag href={href} className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${active ? 'bg-white/15' : 'opacity-50 hover:opacity-90'}`} title={label} aria-label={label}>
