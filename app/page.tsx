@@ -271,7 +271,7 @@ export default function HomePage() {
                     }`}
                   >
                     <div className="px-4 py-2 relative">
-                      <span className="relative z-10 font-semibold text-[15px] tracking-tight">{tab.label}</span>
+                      <span className="relative z-10 font-semibold text-[17px] tracking-tight">{tab.label}</span>
                       {hoverTab === i && (
                         <motion.div
                           layoutId="tab-hover-bg"
