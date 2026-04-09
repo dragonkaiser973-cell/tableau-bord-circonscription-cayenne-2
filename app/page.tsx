@@ -206,7 +206,7 @@ export default function HomePage() {
         {/* Background image */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1440581572325-0bea30075d9d?w=1920&q=80&auto=format"
+            src="/IMG_4258.jpeg"
             alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
           />
         </div>
