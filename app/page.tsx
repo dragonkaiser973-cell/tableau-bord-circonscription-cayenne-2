@@ -177,7 +177,6 @@ export default function HomePage() {
         animate={{
           height: heroShrunk ? '30vh' : '100vh',
           borderRadius: heroShrunk ? 40 : 0,
-          scale: heroShrunk ? 0.95 : 1,
         }}
         transition={{ type: 'spring', stiffness: 50, damping: 20, mass: 1 }}
         className="relative w-full overflow-hidden origin-top z-10"
