@@ -154,27 +154,31 @@ h1, h2, h3 {
     transform: translateY(-1px);
   }
 
-  /* Bento card */
+  /* Bento card — arrondis 32px, glassmorphism hover */
   .bento-card {
     border: 1px solid #E5E7EB;
-    border-radius: 24px;
-    background: #FFFFFF;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     padding: 28px;
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
                 border-color 0.35s ease,
-                box-shadow 0.35s ease;
+                box-shadow 0.35s ease,
+                background 0.35s ease;
     will-change: transform;
     cursor: pointer;
   }
 
   .bento-card:hover {
-    transform: scale(1.025) translateY(-2px);
+    transform: scale(1.025) translateY(-3px);
     border-color: #C9CDD4;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.04);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
   }
 
   .bento-card:hover .card-icon {
-    transform: scale(1.1) rotate(3deg);
+    transform: scale(1.15) rotate(3deg);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
