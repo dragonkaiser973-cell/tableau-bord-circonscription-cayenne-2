@@ -175,7 +175,7 @@ export default function HomePage() {
       {/* ═══ HERO — animates from 100vh to 30vh on button click ═══ */}
       <motion.section
         animate={{
-          height: heroShrunk ? '30vh' : '100vh',
+          height: heroShrunk ? '30%' : '100%',
           borderRadius: heroShrunk ? '0 0 24px 24px' : 0,
         }}
         transition={{ type: 'spring', stiffness: 50, damping: 20, mass: 1 }}
