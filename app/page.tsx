@@ -27,14 +27,17 @@ export default function HomePage() {
   const { scrollY } = useScroll();
 
   // Hero shrinks from 100vh to 30vh over 600px of scroll
-  // Scale: subtle reduction (1 → 0.95) for the "card detach" feel
-  // BorderRadius: 0 → 40px to round the card
-  // Height: 100vh → 30vh (the main visual shrink)
   const heroScale = useTransform(scrollY, [0, 600], [1, 0.95]);
   const heroBorderRadius = useTransform(scrollY, [0, 600], [0, 40]);
   const heroHeightPx = useTransform(scrollY, [0, 600], ['100vh', '30vh']);
   const heroContentOpacity = useTransform(scrollY, [0, 300], [1, 0]);
   const heroContentY = useTransform(scrollY, [0, 300], [0, -40]);
+
+  // Boxes fade in AFTER the hero has shrunk, with stagger (left first, right second)
+  const boxLeftOpacity = useTransform(scrollY, [500, 800], [0, 1]);
+  const boxLeftY = useTransform(scrollY, [500, 800], [60, 0]);
+  const boxRightOpacity = useTransform(scrollY, [600, 900], [0, 1]);
+  const boxRightY = useTransform(scrollY, [600, 900], [60, 0]);
 
   // Parallax on the background image
   const bgY = useTransform(scrollY, [0, 800], [0, -100]);
@@ -266,19 +269,16 @@ export default function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* ═══ SPACER — pushes boxes below the hero's initial 100vh ═══ */}
-      <div className="h-[100vh]" />
+      {/* ═══ SCROLL SPACE — enough room for hero shrink + box fade-in ═══ */}
+      <div className="h-[200vh]" />
 
-      {/* ═══ DEUX BOXES — float below the shrunk hero bandeau ═══ */}
-      <section className="relative z-10 px-3 sm:px-5 pb-6 pt-8">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4" style={{ minHeight: '70vh' }}>
+      {/* ═══ DEUX BOXES — fixed below the hero bandeau, fade in with scroll ═══ */}
+      <div className="fixed bottom-0 left-0 right-0 z-10 px-3 sm:px-5 pb-6" style={{ top: '32vh' }}>
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4 h-full">
 
-          {/* BOX GAUCHE — Onglets + Texte + Bouton */}
+          {/* BOX GAUCHE — appears first */}
           <motion.div
-            initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
-            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={spring}
+            style={{ opacity: boxLeftOpacity, y: boxLeftY }}
             className="glass-card p-6 sm:p-8 flex flex-col"
           >
             {/* Onglets */}
@@ -323,12 +323,9 @@ export default function HomePage() {
             </div>
           </motion.div>
 
-          {/* BOX DROITE — Preview */}
+          {/* BOX DROITE — Preview, appears second */}
           <motion.div
-            initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
-            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            viewport={{ once: true, margin: '-50px' }}
-            transition={{ ...spring, delay: 0.1 }}
+            style={{ opacity: boxRightOpacity, y: boxRightY }}
             className="glass-card p-0 overflow-hidden"
           >
             <AnimatePresence mode="wait">
@@ -347,12 +344,12 @@ export default function HomePage() {
         </div>
 
         {/* Footer minimal */}
-        <div className="text-center mt-8">
+        <div className="absolute bottom-2 left-0 right-0 text-center">
           <p className="text-zen-text-muted text-xs">
             Designé par <span className="text-zen-text-secondary font-medium">LOUIS Olivier</span> · 2026
           </p>
         </div>
-      </section>
+      </div>
 
       {/* ═══ MODAL CONNEXION ═══ */}
       <AnimatePresence>
