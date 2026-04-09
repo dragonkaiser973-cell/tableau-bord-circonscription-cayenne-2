@@ -23,22 +23,21 @@ export default function HomePage() {
   const underlineRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
 
-  // Hero "shrink & sticky" — the wrapper is 150vh tall, giving 50vh of scroll room
-  // while the hero stays sticky. scrollYProgress goes 0→1 over that extra 50vh.
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  });
+  // Scroll-driven hero shrink — pixel-based for precise control
+  const { scrollY } = useScroll();
 
-  // Shrink: scale + borderRadius only — NO height animation (GPU-only transforms)
-  const heroScale = useTransform(scrollYProgress, [0, 0.4], [1, 0.85]);
-  const heroBorderRadius = useTransform(scrollYProgress, [0, 0.4], [0, 60]);
-  const heroContentOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  const heroContentY = useTransform(scrollYProgress, [0, 0.2], [0, -40]);
+  // Hero shrinks from 100vh to 30vh over 600px of scroll
+  // Scale: subtle reduction (1 → 0.95) for the "card detach" feel
+  // BorderRadius: 0 → 40px to round the card
+  // Height: 100vh → 30vh (the main visual shrink)
+  const heroScale = useTransform(scrollY, [0, 600], [1, 0.95]);
+  const heroBorderRadius = useTransform(scrollY, [0, 600], [0, 40]);
+  const heroHeightPx = useTransform(scrollY, [0, 600], ['100vh', '30vh']);
+  const heroContentOpacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const heroContentY = useTransform(scrollY, [0, 300], [0, -40]);
 
   // Parallax on the background image
-  const { scrollY } = useScroll();
-  const bgY = useTransform(scrollY, [0, 800], [0, -150]);
+  const bgY = useTransform(scrollY, [0, 800], [0, -100]);
 
   useMotionValueEvent(scrollY, 'change', (v) => setDockScrolled(v > 60));
 
@@ -178,102 +177,100 @@ export default function HomePage() {
         </div>
       </motion.div>
 
-      {/* ═══ HERO WRAPPER — 150vh gives scroll room for the shrink animation ═══ */}
-      <div ref={heroRef} className="relative z-0 h-[150vh]">
-        {/* Sticky inner — stays fixed while user scrolls through the 150vh wrapper */}
-        <div className="sticky top-0 h-screen overflow-hidden">
-          <motion.section
-            style={{
-              scale: heroScale,
-              borderRadius: heroBorderRadius,
-              originY: 0,
-              height: '100%',
-            }}
-            className="relative w-full overflow-hidden"
+      {/* ═══ HERO — sticky, shrinks from 100vh to 30vh bandeau ═══ */}
+      <motion.section
+        ref={heroRef}
+        style={{
+          height: heroHeightPx,
+          scale: heroScale,
+          borderRadius: heroBorderRadius,
+        }}
+        className="sticky top-0 z-0 w-full overflow-hidden origin-top"
+      >
+        {/* Background image — HD landscape with parallax */}
+        <motion.div className="absolute inset-0" style={{ y: bgY }}>
+          <img
+            src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&q=80&auto=format"
+            alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
+          />
+        </motion.div>
+
+        {/* Overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/30" />
+        <div className="absolute inset-0 bg-white/10" />
+
+        {/* Hero content — fades out as you scroll */}
+        <motion.div
+          style={{ opacity: heroContentOpacity, y: heroContentY }}
+          className="relative z-10 flex flex-col items-center justify-center h-[100vh] px-6 sm:px-12 text-center pt-20"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.1 }}
+            className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 text-sm text-white/90 mb-8"
           >
-            {/* Background image — HD landscape, fixed height to avoid jitter */}
-            <motion.div className="absolute inset-0 h-[100vh]" style={{ y: bgY }}>
-              <img
-                src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&q=80&auto=format"
-                alt="" className="w-full h-full object-cover" aria-hidden="true"
-              />
-            </motion.div>
+            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+            Académie de Guyane · Cayenne 2 Roura
+          </motion.div>
 
-            {/* Overlay for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/30" />
-            <div className="absolute inset-0 bg-white/10" />
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.25 }}
+            className="text-[clamp(3rem,7vw,6rem)] font-bold leading-[1.02] tracking-tightest text-white mb-6 max-w-4xl"
+          >
+            L&apos;École au cœur<br />de la Guyane.
+          </motion.h1>
 
-            {/* Hero content — fades out as you scroll */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.4 }}
+            className="text-white/70 text-lg sm:text-xl font-light max-w-xl mb-10 leading-relaxed"
+          >
+            Tableau de bord de la circonscription.
+            <br className="hidden sm:block" />
+            Pilotage, données et suivi des écoles.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...spring, delay: 0.55 }}
+            className="flex items-center gap-4"
+          >
+            <button onClick={() => setShowLoginModal(true)} className="bg-white text-zen-text font-medium rounded-full px-8 py-3.5 text-[15px] backdrop-blur-md border border-white/30 transition-all duration-300 hover:shadow-lg hover:shadow-white/20 hover:-translate-y-0.5">
+              Accéder au tableau de bord
+            </button>
+            <Link href="/ecoles" className="backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full px-6 py-3.5 text-[15px] font-medium transition-all duration-300 hover:bg-white/20 hover:-translate-y-0.5">
+              Explorer
+            </Link>
+          </motion.div>
+
+          {/* Scroll indicator */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 0.8 }}
+            className="absolute bottom-12 left-1/2 -translate-x-1/2"
+          >
             <motion.div
-              style={{ opacity: heroContentOpacity, y: heroContentY }}
-              className="relative z-10 flex flex-col items-center justify-center h-full px-6 sm:px-12 text-center pt-20"
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-1.5"
             >
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.1 }}
-                className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 text-sm text-white/90 mb-8"
-              >
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                Académie de Guyane · Cayenne 2 Roura
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.25 }}
-                className="text-[clamp(3rem,7vw,6rem)] font-bold leading-[1.02] tracking-tightest text-white mb-6 max-w-4xl"
-              >
-                L&apos;École au cœur<br />de la Guyane.
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.4 }}
-                className="text-white/70 text-lg sm:text-xl font-light max-w-xl mb-10 leading-relaxed"
-              >
-                Tableau de bord de la circonscription.
-                <br className="hidden sm:block" />
-                Pilotage, données et suivi des écoles.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.55 }}
-                className="flex items-center gap-4"
-              >
-                <button onClick={() => setShowLoginModal(true)} className="bg-white text-zen-text font-medium rounded-full px-8 py-3.5 text-[15px] backdrop-blur-md border border-white/30 transition-all duration-300 hover:shadow-lg hover:shadow-white/20 hover:-translate-y-0.5">
-                  Accéder au tableau de bord
-                </button>
-                <Link href="/ecoles" className="backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full px-6 py-3.5 text-[15px] font-medium transition-all duration-300 hover:bg-white/20 hover:-translate-y-0.5">
-                  Explorer
-                </Link>
-              </motion.div>
-
-              {/* Scroll indicator */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2, duration: 0.8 }}
-                className="absolute bottom-12 left-1/2 -translate-x-1/2"
-              >
-                <motion.div
-                  animate={{ y: [0, 8, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                  className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-1.5"
-                >
-                  <motion.div className="w-1 h-2 bg-white/60 rounded-full" />
-                </motion.div>
-              </motion.div>
+              <motion.div className="w-1 h-2 bg-white/60 rounded-full" />
             </motion.div>
-          </motion.section>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.section>
 
-      {/* ═══ DEUX BOXES — slides over the shrunk hero ═══ */}
-      <section className="relative z-10 bg-white px-3 sm:px-5 pb-6 pt-8 rounded-t-[32px]">
+      {/* ═══ SPACER — pushes boxes below the hero's initial 100vh ═══ */}
+      <div className="h-[100vh]" />
+
+      {/* ═══ DEUX BOXES — float below the shrunk hero bandeau ═══ */}
+      <section className="relative z-10 px-3 sm:px-5 pb-6 pt-8">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4" style={{ minHeight: '70vh' }}>
 
           {/* BOX GAUCHE — Onglets + Texte + Bouton */}
