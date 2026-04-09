@@ -31,8 +31,8 @@ export default function HomePage() {
     setHeroShrunk(true);
     // Box gauche après la fin du shrink (~800ms) + pause
     setTimeout(() => setShowBoxLeft(true), 1000);
-    // Box droite 400ms après la gauche
-    setTimeout(() => setShowBoxRight(true), 1400);
+    // Box droite après la fin de l'animation gauche (~800ms spring)
+    setTimeout(() => setShowBoxRight(true), 1800);
   };
 
   // Auth
@@ -144,7 +144,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-white h-screen overflow-hidden relative p-3 sm:p-4">
-      <div className="bg-[#e8e8e8] rounded-[24px] h-full overflow-hidden relative">
+      <div className="bg-[#e8e8e8] rounded-[24px] h-full overflow-hidden relative flex flex-col">
 
       {/* ═══ DOCK NAVIGATION — fixed, always on top ═══ */}
       <motion.div
@@ -249,7 +249,7 @@ export default function HomePage() {
       </motion.section>
 
       {/* ═══ DEUX BOXES — appear below hero after shrink, staggered ═══ */}
-      <div className="pt-4 pb-4 flex-1">
+      <div className="flex-1 pt-4 pb-0 h-0 min-h-0">
         <div className="grid lg:grid-cols-2 gap-4 h-full">
 
           {/* BOX GAUCHE — appears first */}
