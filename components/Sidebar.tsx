@@ -47,26 +47,36 @@ export default function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const role = localStorage.getItem('userRole') || '';
-    if (token) {
-      try {
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-          const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
-          const payload = JSON.parse(atob(padded));
-          const now = Math.floor(Date.now() / 1000);
-          if (payload.exp && payload.exp > now) {
-            setIsAuthenticated(true);
-            setUserRole(role);
+    const checkAuth = () => {
+      const token = localStorage.getItem('authToken');
+      const role = localStorage.getItem('userRole') || '';
+      if (token) {
+        try {
+          const parts = token.split('.');
+          if (parts.length === 3) {
+            const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+            const payload = JSON.parse(atob(padded));
+            const now = Math.floor(Date.now() / 1000);
+            if (payload.exp && payload.exp > now) {
+              setIsAuthenticated(true);
+              setUserRole(role);
+              return;
+            }
           }
+        } catch {
+          // Invalid token
         }
-      } catch {
-        // Invalid token
       }
-    }
-  }, []);
+      setIsAuthenticated(false);
+      setUserRole('');
+    };
+
+    checkAuth();
+    window.addEventListener('storage', checkAuth);
+    // Re-check auth on each navigation
+    return () => window.removeEventListener('storage', checkAuth);
+  }, [pathname]);
 
   useEffect(() => {
     setIsMobileOpen(false);
