@@ -33,11 +33,11 @@ export default function HomePage() {
   const heroContentOpacity = useTransform(scrollY, [0, 300], [1, 0]);
   const heroContentY = useTransform(scrollY, [0, 300], [0, -40]);
 
-  // Boxes fade in AFTER the hero has shrunk, with stagger (left first, right second)
-  const boxLeftOpacity = useTransform(scrollY, [500, 800], [0, 1]);
-  const boxLeftY = useTransform(scrollY, [500, 800], [60, 0]);
-  const boxRightOpacity = useTransform(scrollY, [600, 900], [0, 1]);
-  const boxRightY = useTransform(scrollY, [600, 900], [60, 0]);
+  // Boxes fade in well AFTER the hero has fully shrunk (600px), with wide stagger
+  const boxLeftOpacity = useTransform(scrollY, [800, 1200], [0, 1]);
+  const boxLeftY = useTransform(scrollY, [800, 1200], [80, 0]);
+  const boxRightOpacity = useTransform(scrollY, [1050, 1450], [0, 1]);
+  const boxRightY = useTransform(scrollY, [1050, 1450], [80, 0]);
 
   // Parallax on the background image
   const bgY = useTransform(scrollY, [0, 800], [0, -100]);
@@ -188,7 +188,7 @@ export default function HomePage() {
           scale: heroScale,
           borderRadius: heroBorderRadius,
         }}
-        className="sticky top-0 z-0 w-full overflow-hidden origin-top"
+        className="sticky top-0 z-10 w-full overflow-hidden origin-top"
       >
         {/* Background image — HD landscape with parallax */}
         <motion.div className="absolute inset-0" style={{ y: bgY }}>
@@ -269,11 +269,11 @@ export default function HomePage() {
         </motion.div>
       </motion.section>
 
-      {/* ═══ SCROLL SPACE — enough room for hero shrink + box fade-in ═══ */}
-      <div className="h-[200vh]" />
+      {/* ═══ SCROLL SPACE — invisible, behind the hero, just provides scroll room ═══ */}
+      <div className="h-[250vh] relative -z-10" aria-hidden="true" />
 
       {/* ═══ DEUX BOXES — fixed below the hero bandeau, fade in with scroll ═══ */}
-      <div className="fixed bottom-0 left-0 right-0 z-10 px-3 sm:px-5 pb-6" style={{ top: '32vh' }}>
+      <div className="fixed bottom-0 left-0 right-0 z-20 px-3 sm:px-5 pb-6" style={{ top: '32vh' }}>
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4 h-full">
 
           {/* BOX GAUCHE — appears first */}
