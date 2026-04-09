@@ -178,7 +178,7 @@ export default function HomePage() {
           height: heroShrunk ? '30%' : '100%',
           borderRadius: heroShrunk ? '0 0 24px 24px' : 0,
         }}
-        transition={{ type: 'spring', stiffness: 50, damping: 20, mass: 1 }}
+        transition={{ type: 'spring', stiffness: 50, damping: 30, mass: 1 }}
         className="relative w-full overflow-hidden origin-top z-10 shrink-0"
       >
         {/* Background image */}
@@ -199,7 +199,7 @@ export default function HomePage() {
             opacity: heroShrunk ? 0 : 1,
             y: heroShrunk ? -40 : 0,
           }}
-          transition={{ type: 'spring', stiffness: 60, damping: 20 }}
+          transition={{ type: 'spring', stiffness: 60, damping: 30 }}
           className="relative z-10 flex flex-col items-center justify-center h-[100vh] px-6 sm:px-12 text-center pt-20"
         >
           <motion.div
@@ -259,7 +259,7 @@ export default function HomePage() {
               opacity: showBoxLeft ? 1 : 0,
               y: showBoxLeft ? 0 : 60,
             }}
-            transition={{ type: 'spring', stiffness: 50, damping: 18, mass: 1 }}
+            transition={{ type: 'spring', stiffness: 50, damping: 30, mass: 1 }}
             className="glass-card p-6 sm:p-8 flex flex-col"
           >
             {/* Onglets */}
