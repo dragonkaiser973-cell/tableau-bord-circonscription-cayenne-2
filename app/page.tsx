@@ -232,7 +232,7 @@ export default function HomePage() {
           >
             <Image src="/logo-circonscription.png" alt="Logo" width={140} height={140} className="rounded-3xl shrink-0" />
             <h1 className="text-[clamp(2.5rem,6vw,5rem)] font-bold leading-[1.02] tracking-tightest text-white text-left">
-              Circonscription<br />Cayenne 2 — Roura
+              Circonscription<br />Cayenne 2 – Roura
             </h1>
           </motion.div>
 
@@ -274,7 +274,7 @@ export default function HomePage() {
           <div className="flex items-center gap-6">
             <Image src="/logo-circonscription.png" alt="Logo" width={120} height={120} className="rounded-3xl shrink-0" />
             <h2 className="text-[clamp(1.6rem,4vw,3rem)] font-bold leading-[1.05] tracking-tightest text-white text-left">
-              Circonscription Cayenne 2 — Roura<br />
+              Circonscription Cayenne 2 – Roura<br />
               <span className="font-light text-white/70">Tableau de bord</span>
             </h2>
           </div>
