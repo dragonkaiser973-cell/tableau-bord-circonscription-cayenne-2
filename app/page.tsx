@@ -143,7 +143,8 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="bg-[#e8e8e8] h-screen overflow-hidden relative">
+    <div className="bg-white h-screen overflow-hidden relative p-3 sm:p-4">
+      <div className="bg-[#e8e8e8] rounded-[24px] h-full overflow-hidden relative">
 
       {/* ═══ DOCK NAVIGATION — fixed, always on top ═══ */}
       <motion.div
@@ -423,6 +424,7 @@ export default function HomePage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
