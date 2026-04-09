@@ -144,15 +144,6 @@ export default function HomePage() {
               : 'nav-dock'
           }`}
         >
-          {/* Logo + label — disappear on shrink */}
-          <motion.div
-            animate={{ opacity: heroShrunk ? 0 : 1, width: heroShrunk ? 0 : 'auto', marginRight: heroShrunk ? 0 : 'auto' }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="flex items-center gap-2.5 overflow-hidden"
-          >
-            <Image src="/logo-circonscription.png" alt="Logo" width={28} height={28} className="rounded-lg shrink-0" />
-            <span className="font-medium text-zen-text text-sm hidden sm:inline tracking-tight whitespace-nowrap">Circonscription</span>
-          </motion.div>
           <div className="flex items-center bg-zen-accent rounded-full px-1.5 py-1.5 gap-0.5">
             <DockIcon href="#" icon={<IconHome />} label="Accueil" active />
             <DockIcon href="/ecoles" icon={<IconSchool />} label="Écoles" />
@@ -161,17 +152,6 @@ export default function HomePage() {
             {isAuthenticated && <DockIcon href="/calendrier" icon={<IconCalendar />} label="Calendrier" />}
             <DockIcon href="#" icon={<IconLock />} label="Connexion" onClick={() => setShowLoginModal(true)} />
           </div>
-          {/* Spacer to balance logo — same width as logo+label */}
-          <motion.div
-            animate={{ opacity: heroShrunk ? 0 : 1, width: heroShrunk ? 0 : 'auto', marginLeft: heroShrunk ? 0 : 'auto' }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="overflow-hidden"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-[28px] h-[28px]" />
-              <span className="text-sm hidden sm:inline invisible">Circonscription</span>
-            </div>
-          </motion.div>
         </div>
       </motion.div>
 
@@ -466,7 +446,7 @@ function TabPreview({ index, tabs }: { index: number; tabs: { title: string; des
 
   if (index === 0) {
     return wrapper(
-      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
         <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Écoles de la circonscription</p>
         <div className="space-y-2">
           {[
@@ -490,7 +470,7 @@ function TabPreview({ index, tabs }: { index: number; tabs: { title: string; des
 
   if (index === 2) {
     return wrapper(
-      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
         <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-4">Éval. nationales CP — Français</p>
         <div className="space-y-3">
           {[
@@ -521,7 +501,7 @@ function TabPreview({ index, tabs }: { index: number; tabs: { title: string; des
 
   if (index === 3) {
     return wrapper(
-      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
         <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Annuaire enseignants</p>
         <div className="space-y-2.5">
           {[
@@ -545,7 +525,7 @@ function TabPreview({ index, tabs }: { index: number; tabs: { title: string; des
 
   if (index === 4) {
     return wrapper(
-      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
         <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-4">Effectifs par niveau</p>
         <div className="flex items-end gap-3 h-40 px-2">
           {[
@@ -573,7 +553,7 @@ function TabPreview({ index, tabs }: { index: number; tabs: { title: string; des
   // Generic preview for all other tabs
   const tab = tabs[index];
   return wrapper(
-    <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-6 w-full max-w-sm border border-white/30 text-center">
+    <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-6 w-full max-w-md border border-white/30 text-center">
       <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-white/50 flex items-center justify-center">
         <svg className="w-7 h-7 text-zen-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="7" height="7" rx="1.5" />
