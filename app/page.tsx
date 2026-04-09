@@ -249,8 +249,8 @@ export default function HomePage() {
       </motion.section>
 
       {/* ═══ DEUX BOXES — appear below hero after shrink, staggered ═══ */}
-      <div className="px-3 sm:px-5 pt-6 pb-6 flex-1">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4" style={{ height: 'calc(100vh - 30vh - 60px)' }}>
+      <div className="pt-4 pb-4 flex-1">
+        <div className="grid lg:grid-cols-2 gap-4 h-full">
 
           {/* BOX GAUCHE — appears first */}
           <motion.div
@@ -304,14 +304,13 @@ export default function HomePage() {
             </div>
           </motion.div>
 
-          {/* BOX DROITE — Preview, appears second */}
+          {/* BOX DROITE — Preview, appears second (fade only, no movement) */}
           <motion.div
             initial={false}
             animate={{
               opacity: showBoxRight ? 1 : 0,
-              y: showBoxRight ? 0 : 60,
             }}
-            transition={{ type: 'spring', stiffness: 50, damping: 18, mass: 1 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
             className="glass-card p-0 overflow-hidden"
           >
             <AnimatePresence mode="wait">
