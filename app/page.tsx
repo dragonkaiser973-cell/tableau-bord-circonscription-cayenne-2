@@ -156,15 +156,12 @@ export default function HomePage() {
         transition={spring}
         className="fixed top-0 left-0 right-0 z-[60] px-4 sm:px-8 py-4"
       >
-        <motion.div
-          animate={{
-            background: heroShrunk ? 'transparent' : undefined,
-            borderColor: heroShrunk ? 'transparent' : undefined,
-            boxShadow: heroShrunk ? 'none' : undefined,
-            backdropFilter: heroShrunk ? 'none' : undefined,
-          }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-          className={`nav-dock ${heroShrunk ? 'scrolled' : ''} rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-center`}
+        <div
+          className={`rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-center transition-all duration-500 ${
+            heroShrunk
+              ? 'bg-transparent border-transparent shadow-none'
+              : 'nav-dock'
+          }`}
         >
           {/* Logo + label — disappear on shrink */}
           <motion.div
@@ -194,7 +191,7 @@ export default function HomePage() {
               <span className="text-sm hidden sm:inline invisible">Circonscription</span>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       </motion.div>
 
       {/* ═══ HERO — animates from 100vh to 30vh on button click ═══ */}
