@@ -560,13 +560,10 @@ function TabPreview({ index, tabs }: { index: number; tabs: { title: string; des
             { label: 'CE2', h: 55, c: 'bg-amber-400' },
             { label: 'CM1', h: 82, c: 'bg-violet-400' },
             { label: 'CM2', h: 70, c: 'bg-rose-400' },
-          ].map((bar, i) => (
+          ].map((bar) => (
             <div key={bar.label} className="flex-1 flex flex-col items-center gap-1">
-              <motion.div
-                key={`bar-${bar.label}-${index}`}
-                initial={{ height: 0 }}
-                animate={{ height: `${bar.h}%` }}
-                transition={{ type: 'spring', stiffness: 60, damping: 15, delay: i * 0.08 }}
+              <div
+                style={{ height: `${bar.h}%` }}
                 className={`w-full ${bar.c} rounded-t-xl`}
               />
               <span className="text-[10px] text-zen-text-muted font-medium">{bar.label}</span>
