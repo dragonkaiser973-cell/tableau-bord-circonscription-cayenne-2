@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,8 +18,6 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
-  const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
-  const underlineRef = useRef<HTMLDivElement>(null);
 
   // State-driven animation — triggered by button click
   const [heroShrunk, setHeroShrunk] = useState(false);
@@ -100,50 +98,33 @@ export default function HomePage() {
     setUserRole('');
   };
 
-  // Tab underline
-  const updateUnderline = useCallback((index: number) => {
-    const tab = tabsRef.current[index];
-    const ul = underlineRef.current;
-    if (tab && ul) {
-      ul.style.width = `${tab.offsetWidth}px`;
-      ul.style.transform = `translateX(${tab.offsetLeft}px)`;
-    }
-  }, []);
 
-  useEffect(() => {
-    updateUnderline(activeTab);
-    const h = () => updateUnderline(activeTab);
-    window.addEventListener('resize', h);
-    return () => window.removeEventListener('resize', h);
-  }, [activeTab, updateUnderline]);
-
-  // Tabs — each maps to a page/route
-  const tabs = [
-    {
-      label: 'Écoles', sub: 'Consultation',
-      title: 'Écoles',
-      desc: 'Consultez les informations et les statistiques de chaque école de la circonscription Cayenne 2 Roura.',
-      btn: 'Voir les écoles', href: '/ecoles',
-    },
-    {
-      label: 'Évaluations', sub: 'Résultats',
-      title: 'Évaluations',
-      desc: 'Pilotez la réussite avec des données précises. Résultats des évaluations nationales CP, CE1 et analyses.',
-      btn: 'Voir les résultats', href: '/evaluations',
-    },
-    {
-      label: 'Enseignants', sub: 'Annuaire',
-      title: 'Enseignants',
-      desc: 'Recherche et parcours des enseignants de la circonscription. Annuaire complet et informations.',
-      btn: 'Consulter', href: '/enseignants',
-    },
-    {
-      label: 'Statistiques', sub: 'Analyses',
-      title: 'Statistiques',
-      desc: 'Tableaux de bord et analyses statistiques détaillées de la circonscription.',
-      btn: 'Explorer', href: '/statistiques',
-    },
+  // Tabs — public pages (visible par tous)
+  const publicTabs = [
+    { label: 'Écoles', title: 'Écoles', desc: 'Consultez les informations et les statistiques de chaque école de la circonscription Cayenne 2 Roura.', btn: 'Voir les écoles', href: '/ecoles' },
+    { label: 'Circonscription', title: 'Circonscription', desc: 'Présentation de la circonscription Cayenne 2 Roura, son organisation et ses missions.', btn: 'Découvrir', href: '/circonscription' },
+    { label: 'Évaluations', title: 'Évaluations', desc: 'Pilotez la réussite avec des données précises. Résultats des évaluations nationales CP, CE1 et analyses.', btn: 'Voir les résultats', href: '/evaluations' },
+    { label: 'Enseignants', title: 'Enseignants', desc: 'Recherche et parcours des enseignants de la circonscription. Annuaire complet et informations.', btn: 'Consulter', href: '/enseignants' },
+    { label: 'Statistiques', title: 'Statistiques', desc: 'Tableaux de bord et analyses statistiques détaillées de la circonscription.', btn: 'Explorer', href: '/statistiques' },
+    { label: 'Questionnaires', title: 'Questionnaires', desc: 'Répondez aux questionnaires de la circonscription et consultez les résultats.', btn: 'Accéder', href: '/questionnaires' },
+    { label: 'Analyse classe', title: 'Analyse classe', desc: 'Outil d\'analyse des résultats par classe pour un suivi pédagogique détaillé.', btn: 'Analyser', href: '/analyse-classe' },
+    { label: 'Guide', title: 'Guide d\'utilisation', desc: 'Guide complet pour prendre en main le tableau de bord et ses fonctionnalités.', btn: 'Lire le guide', href: '/aide-analyse-classe' },
   ];
+
+  // Tabs supplémentaires — visibles uniquement pour les utilisateurs connectés
+  const authTabs = [
+    { label: 'Données', title: 'Données', desc: 'Gestion et import des données de la circonscription.', btn: 'Gérer', href: '/donnees' },
+    { label: 'Calendrier', title: 'Calendrier', desc: 'Calendrier des événements et réunions de la circonscription.', btn: 'Consulter', href: '/calendrier' },
+    { label: 'Archives', title: 'Archives', desc: 'Accédez aux archives des années précédentes.', btn: 'Consulter', href: '/archives' },
+    { label: 'Pilotage', title: 'Pilotage', desc: 'Tableaux de bord de pilotage pour le suivi de la circonscription.', btn: 'Piloter', href: '/pilotage' },
+    { label: 'Carte', title: 'Carte', desc: 'Carte interactive des écoles de la circonscription.', btn: 'Voir la carte', href: '/carte' },
+    ...(userRole === 'admin' ? [
+      { label: 'Administration', title: 'Administration', desc: 'Gestion des utilisateurs et paramètres du tableau de bord.', btn: 'Administrer', href: '/admin' },
+      { label: 'Gérer questionnaires', title: 'Gérer les questionnaires', desc: 'Création, modification et suivi des questionnaires de la circonscription.', btn: 'Gérer', href: '/questionnaires/admin' },
+    ] : []),
+  ];
+
+  const tabs = isAuthenticated ? [...publicTabs, ...authTabs] : publicTabs;
 
   return (
     <div className="bg-white h-screen overflow-hidden relative p-3 sm:p-4">
@@ -296,21 +277,20 @@ export default function HomePage() {
             className="glass-card p-6 sm:p-8 flex flex-col"
           >
             {/* Onglets */}
-            <div className="relative flex gap-5 sm:gap-8 border-b border-white/15 mb-0 overflow-x-auto">
+            <div className="flex flex-wrap gap-2 mb-4">
               {tabs.map((tab, i) => (
                 <button
                   key={i}
-                  ref={el => { tabsRef.current[i] = el; }}
                   onClick={() => setActiveTab(i)}
-                  className={`pb-3 text-left flex-shrink-0 transition-colors duration-300 ${
-                    activeTab === i ? 'text-zen-text' : 'text-zen-text-muted hover:text-zen-text-secondary'
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-300 ${
+                    activeTab === i
+                      ? 'bg-zen-accent text-white shadow-sm'
+                      : 'bg-white/30 text-zen-text-muted hover:bg-white/50 hover:text-zen-text-secondary'
                   }`}
                 >
-                  <div className="font-semibold text-[13px] tracking-tight">{tab.label}</div>
-                  <div className="text-[10px] text-zen-text-muted mt-0.5">{tab.sub}</div>
+                  {tab.label}
                 </button>
               ))}
-              <div ref={underlineRef} className="tab-underline" />
             </div>
 
             {/* Contenu onglet — fade in after box is fully visible */}
@@ -360,7 +340,7 @@ export default function HomePage() {
                 transition={spring}
                 className="h-full"
               >
-                <TabPreview index={activeTab} />
+                <TabPreview index={activeTab} tabs={tabs} />
               </motion.div>
             </AnimatePresence>
           </motion.div>
@@ -469,7 +449,7 @@ export default function HomePage() {
    TAB PREVIEW — Glass mockup in the right box
    ═══════════════════════════════════════════════════════════════ */
 
-function TabPreview({ index }: { index: number }) {
+function TabPreview({ index, tabs }: { index: number; tabs: { title: string; desc: string }[] }) {
   const bgPhoto = (
     <>
       <img src="/IMG_6622.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
@@ -477,98 +457,94 @@ function TabPreview({ index }: { index: number }) {
     </>
   );
 
-  if (index === 0) {
-    // Écoles — dashboard preview
-    return (
-      <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden">
-        {bgPhoto}
-        <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
-          <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Écoles de la circonscription</p>
-          <div className="space-y-2">
-            {[
-              { name: 'Cayenne Nord A', eleves: 287, cls: 12 },
-              { name: 'Roura Centre', eleves: 194, cls: 8 },
-              { name: 'Rémire B', eleves: 342, cls: 14 },
-              { name: 'Matoury A', eleves: 256, cls: 10 },
-            ].map((e, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-white/15 last:border-0">
-                <div>
-                  <p className="text-[13px] font-semibold text-zen-text tracking-tight">{e.name}</p>
-                  <p className="text-[10px] text-zen-text-muted">{e.cls} classes</p>
-                </div>
-                <span className="text-[11px] font-medium text-zen-text-secondary bg-white/40 px-2 py-0.5 rounded-full">{e.eleves} élèves</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  if (index === 1) {
-    // Évaluations — barres de progression
-    return (
-      <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden">
-        {bgPhoto}
-        <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
-          <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-4">Éval. nationales CP — Français</p>
-          <div className="space-y-3">
-            {[
-              { e: 'Cayenne Nord A', p: 78, c: 'bg-emerald-400' },
-              { e: 'Roura Centre', p: 65, c: 'bg-blue-400' },
-              { e: 'Rémire B', p: 82, c: 'bg-emerald-500' },
-              { e: 'Matoury A', p: 71, c: 'bg-amber-400' },
-            ].map((r, i) => (
-              <div key={i}>
-                <div className="flex justify-between text-[11px] mb-1">
-                  <span className="text-zen-text font-medium">{r.e}</span>
-                  <span className="text-zen-text-muted">{r.p}%</span>
-                </div>
-                <div className="h-1.5 bg-white/30 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${r.p}%` }}
-                    transition={{ type: 'spring', stiffness: 60, damping: 15, delay: i * 0.1 }}
-                    className={`h-full ${r.c} rounded-full`}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  if (index === 2) {
-    // Enseignants — chat/profils
-    return (
-      <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden">
-        {bgPhoto}
-        <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
-          <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Annuaire enseignants</p>
-          <div className="space-y-2.5">
-            {[
-              { n: 'Mme Dupont', m: 'CE1 — Cayenne Nord A', avatar: '👩‍🏫' },
-              { n: 'M. Jean-Louis', m: 'CM2 — Roura Centre', avatar: '👨‍🏫' },
-              { n: 'Mme Belfort', m: 'CP — Rémire B', avatar: '👩‍🏫' },
-              { n: 'M. Cléry', m: 'CE2 — Matoury A', avatar: '👨‍🏫' },
-            ].map((p, i) => (
-              <div key={i} className="flex items-center gap-3 py-2 border-b border-white/15 last:border-0">
-                <span className="text-xl">{p.avatar}</span>
-                <div>
-                  <p className="text-[13px] font-semibold text-zen-text tracking-tight">{p.n}</p>
-                  <p className="text-[10px] text-zen-text-muted">{p.m}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  // Statistiques — graph bars
-  return (
+  const wrapper = (children: React.ReactNode) => (
     <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden">
-        {bgPhoto}
+      {bgPhoto}
+      {children}
+    </div>
+  );
+
+  if (index === 0) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Écoles de la circonscription</p>
+        <div className="space-y-2">
+          {[
+            { name: 'Cayenne Nord A', eleves: 287, cls: 12 },
+            { name: 'Roura Centre', eleves: 194, cls: 8 },
+            { name: 'Rémire B', eleves: 342, cls: 14 },
+            { name: 'Matoury A', eleves: 256, cls: 10 },
+          ].map((e, i) => (
+            <div key={i} className="flex items-center justify-between py-2 border-b border-white/15 last:border-0">
+              <div>
+                <p className="text-[13px] font-semibold text-zen-text tracking-tight">{e.name}</p>
+                <p className="text-[10px] text-zen-text-muted">{e.cls} classes</p>
+              </div>
+              <span className="text-[11px] font-medium text-zen-text-secondary bg-white/40 px-2 py-0.5 rounded-full">{e.eleves} élèves</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (index === 2) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-4">Éval. nationales CP — Français</p>
+        <div className="space-y-3">
+          {[
+            { e: 'Cayenne Nord A', p: 78, c: 'bg-emerald-400' },
+            { e: 'Roura Centre', p: 65, c: 'bg-blue-400' },
+            { e: 'Rémire B', p: 82, c: 'bg-emerald-500' },
+            { e: 'Matoury A', p: 71, c: 'bg-amber-400' },
+          ].map((r, i) => (
+            <div key={i}>
+              <div className="flex justify-between text-[11px] mb-1">
+                <span className="text-zen-text font-medium">{r.e}</span>
+                <span className="text-zen-text-muted">{r.p}%</span>
+              </div>
+              <div className="h-1.5 bg-white/30 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${r.p}%` }}
+                  transition={{ type: 'spring', stiffness: 60, damping: 15, delay: i * 0.1 }}
+                  className={`h-full ${r.c} rounded-full`}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (index === 3) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Annuaire enseignants</p>
+        <div className="space-y-2.5">
+          {[
+            { n: 'Mme Dupont', m: 'CE1 — Cayenne Nord A', avatar: '👩‍🏫' },
+            { n: 'M. Jean-Louis', m: 'CM2 — Roura Centre', avatar: '👨‍🏫' },
+            { n: 'Mme Belfort', m: 'CP — Rémire B', avatar: '👩‍🏫' },
+            { n: 'M. Cléry', m: 'CE2 — Matoury A', avatar: '👨‍🏫' },
+          ].map((p, i) => (
+            <div key={i} className="flex items-center gap-3 py-2 border-b border-white/15 last:border-0">
+              <span className="text-xl">{p.avatar}</span>
+              <div>
+                <p className="text-[13px] font-semibold text-zen-text tracking-tight">{p.n}</p>
+                <p className="text-[10px] text-zen-text-muted">{p.m}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (index === 4) {
+    return wrapper(
       <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
         <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-4">Effectifs par niveau</p>
         <div className="flex items-end gap-3 h-40 px-2">
@@ -591,6 +567,23 @@ function TabPreview({ index }: { index: number }) {
           ))}
         </div>
       </div>
+    );
+  }
+
+  // Generic preview for all other tabs
+  const tab = tabs[index];
+  return wrapper(
+    <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-6 w-full max-w-sm border border-white/30 text-center">
+      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-white/50 flex items-center justify-center">
+        <svg className="w-7 h-7 text-zen-text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+      </div>
+      <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-2">{tab?.title}</p>
+      <p className="text-[12px] text-zen-text-secondary leading-relaxed">{tab?.desc}</p>
     </div>
   );
 }
