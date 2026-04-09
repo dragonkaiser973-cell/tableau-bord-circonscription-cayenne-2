@@ -25,13 +25,16 @@ export default function HomePage() {
   const [heroShrunk, setHeroShrunk] = useState(false);
   const [showBoxLeft, setShowBoxLeft] = useState(false);
   const [showBoxRight, setShowBoxRight] = useState(false);
+  const [showBoxLeftContent, setShowBoxLeftContent] = useState(false);
 
   const handleEnter = () => {
     if (heroShrunk) return;
     setHeroShrunk(true);
     // Box gauche après la fin du shrink (~800ms) + pause
     setTimeout(() => setShowBoxLeft(true), 1000);
-    // Box droite après la fin de l'animation gauche (~800ms spring)
+    // Contenu de la box gauche après que la box soit apparue (~800ms spring)
+    setTimeout(() => setShowBoxLeftContent(true), 1800);
+    // Box droite après la fin de l'animation gauche
     setTimeout(() => setShowBoxRight(true), 1800);
   };
 
@@ -280,8 +283,13 @@ export default function HomePage() {
               <div ref={underlineRef} className="tab-underline" />
             </div>
 
-            {/* Contenu onglet */}
-            <div className="flex-1 flex flex-col justify-end pt-8">
+            {/* Contenu onglet — fade in after box is fully visible */}
+            <motion.div
+              initial={false}
+              animate={{ opacity: showBoxLeftContent ? 1 : 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className="flex-1 flex flex-col justify-end pt-8"
+            >
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -301,7 +309,7 @@ export default function HomePage() {
                   </Link>
                 </motion.div>
               </AnimatePresence>
-            </div>
+            </motion.div>
           </motion.div>
 
           {/* BOX DROITE — Preview, appears second (fade only, no movement) */}
