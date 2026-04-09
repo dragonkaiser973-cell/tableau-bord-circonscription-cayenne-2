@@ -179,7 +179,7 @@ export default function HomePage() {
           borderRadius: heroShrunk ? '0 0 24px 24px' : 0,
         }}
         transition={{ type: 'spring', stiffness: 50, damping: 20, mass: 1 }}
-        className="relative w-full overflow-hidden origin-top z-10"
+        className="relative w-full overflow-hidden origin-top z-10 shrink-0"
       >
         {/* Background image */}
         <div className="absolute inset-0">
@@ -249,7 +249,7 @@ export default function HomePage() {
       </motion.section>
 
       {/* ═══ DEUX BOXES — appear below hero after shrink, staggered ═══ */}
-      <div className="flex-1 pt-4 pb-0 h-0 min-h-0">
+      {heroShrunk && <div className="flex-1 pt-4 pb-0 min-h-0 overflow-hidden">
         <div className="grid lg:grid-cols-2 gap-4 h-full">
 
           {/* BOX GAUCHE — appears first */}
@@ -328,7 +328,7 @@ export default function HomePage() {
           </motion.div>
         </div>
 
-      </div>
+      </div>}
 
       {/* Footer minimal — visible after boxes appear */}
       {showBoxRight && (
