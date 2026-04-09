@@ -158,14 +158,17 @@ export default function HomePage() {
       >
         <motion.div
           animate={{
-            paddingLeft: heroShrunk ? 0 : undefined,
-            paddingRight: heroShrunk ? 0 : undefined,
+            background: heroShrunk ? 'transparent' : undefined,
+            borderColor: heroShrunk ? 'transparent' : undefined,
+            boxShadow: heroShrunk ? 'none' : undefined,
+            backdropFilter: heroShrunk ? 'none' : undefined,
           }}
-          className={`nav-dock ${heroShrunk ? 'scrolled' : ''} rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between`}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className={`nav-dock ${heroShrunk ? 'scrolled' : ''} rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-center`}
         >
           {/* Logo + label — disappear on shrink */}
           <motion.div
-            animate={{ opacity: heroShrunk ? 0 : 1, width: heroShrunk ? 0 : 'auto' }}
+            animate={{ opacity: heroShrunk ? 0 : 1, width: heroShrunk ? 0 : 'auto', marginRight: heroShrunk ? 0 : 'auto' }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="flex items-center gap-2.5 overflow-hidden"
           >
@@ -180,13 +183,16 @@ export default function HomePage() {
             {isAuthenticated && <DockIcon href="/calendrier" icon={<IconCalendar />} label="Calendrier" />}
             <DockIcon href="#" icon={<IconLock />} label="Connexion" onClick={() => setShowLoginModal(true)} />
           </div>
-          {/* Empty space to balance — disappears on shrink */}
+          {/* Spacer to balance logo — same width as logo+label */}
           <motion.div
-            animate={{ opacity: heroShrunk ? 0 : 1, width: heroShrunk ? 0 : 'auto' }}
+            animate={{ opacity: heroShrunk ? 0 : 1, width: heroShrunk ? 0 : 'auto', marginLeft: heroShrunk ? 0 : 'auto' }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="w-[28px]" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-[28px] h-[28px]" />
+              <span className="text-sm hidden sm:inline invisible">Circonscription</span>
+            </div>
           </motion.div>
         </motion.div>
       </motion.div>
