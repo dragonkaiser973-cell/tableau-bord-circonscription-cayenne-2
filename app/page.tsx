@@ -476,7 +476,7 @@ export default function HomePage() {
 function TabPreview({ index }: { index: number }) {
   const bgPhoto = (
     <>
-      <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=960&q=80&auto=format" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
+      <img src="/IMG_6622.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
       <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px]" />
     </>
   );
