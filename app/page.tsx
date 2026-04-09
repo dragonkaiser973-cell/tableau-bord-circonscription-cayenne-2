@@ -278,10 +278,13 @@ export default function HomePage() {
           transition={{ duration: 0.8, ease: 'easeOut', delay: heroShrunk ? 0.5 : 0 }}
           className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
         >
-          <h2 className="text-[clamp(1.2rem,3vw,2.2rem)] font-bold leading-[1.05] tracking-tightest text-white text-center">
-            Circonscription Cayenne 2 — Roura<br />
-            <span className="font-light text-white/70">Tableau de bord</span>
-          </h2>
+          <div className="flex items-center gap-5">
+            <Image src="/logo-circonscription.png" alt="Logo" width={64} height={64} className="rounded-2xl shrink-0" />
+            <h2 className="text-[clamp(1.2rem,3vw,2.2rem)] font-bold leading-[1.05] tracking-tightest text-white text-left">
+              Circonscription Cayenne 2 — Roura<br />
+              <span className="font-light text-white/70">Tableau de bord</span>
+            </h2>
+          </div>
         </motion.div>
       </motion.section>
 
