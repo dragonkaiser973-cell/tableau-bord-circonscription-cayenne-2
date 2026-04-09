@@ -460,7 +460,7 @@ export default function HomePage() {
 function TabPreview({ index, tabs }: { index: number; tabs: { title: string; desc: string }[] }) {
   const bgPhoto = (
     <>
-      <img src="/IMG_6622.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
+      <img src="/zeedoo-rio-branco-4569465.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
       <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px]" />
     </>
   );
