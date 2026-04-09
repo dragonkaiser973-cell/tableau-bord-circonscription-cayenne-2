@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useScroll, useTransform, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 
-const spring = { type: 'spring' as const, stiffness: 80, damping: 15, mass: 1 };
+const spring = { type: 'spring' as const, stiffness: 70, damping: 20, mass: 1 };
 const springFast = { type: 'spring' as const, stiffness: 200, damping: 22, mass: 0.8 };
 
 export default function HomePage() {
@@ -21,16 +21,22 @@ export default function HomePage() {
 
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const underlineRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
 
+  // Hero card shrink effect — driven by scrollYProgress within the hero container
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  });
+
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
+  const heroBorderRadius = useTransform(scrollYProgress, [0, 1], [0, 48]);
+  const heroContentOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  const heroContentY = useTransform(scrollYProgress, [0, 0.6], [0, -40]);
+
+  // Parallax on the background image
   const { scrollY } = useScroll();
-
-  // Hero: shrinks from full screen to compact band
-  const heroHeight = useTransform(scrollY, [0, 500], ['92vh', '20vh']);
-  const heroContentOpacity = useTransform(scrollY, [0, 250], [1, 0]);
-  const heroContentScale = useTransform(scrollY, [0, 300], [1, 0.95]);
-  const heroTitleY = useTransform(scrollY, [0, 300], [0, -30]);
-  const mockupOpacity = useTransform(scrollY, [0, 200], [1, 0]);
-  const bgY = useTransform(scrollY, [0, 800], [0, 200]);
+  const bgY = useTransform(scrollY, [0, 800], [0, -150]);
 
   useMotionValueEvent(scrollY, 'change', (v) => setDockScrolled(v > 60));
 
@@ -142,237 +148,209 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-zen-bg relative">
+    <div className="min-h-[200vh] bg-zen-bg relative">
 
-      {/* ═══ FOND PAYSAGE FIXE + PARALLAXE ═══ */}
-      <motion.div className="fixed inset-0 z-0" style={{ y: bgY }}>
-        <img
-          src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&q=80&auto=format"
-          alt="" className="w-full h-[120vh] object-cover" aria-hidden="true"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-sky-100/70 via-emerald-50/50 to-zen-bg" />
+      {/* ═══ DOCK NAVIGATION — fixed, always on top ═══ */}
+      <motion.div
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={spring}
+        className="fixed top-0 left-0 right-0 z-[60] px-4 sm:px-8 py-4"
+      >
+        <div className={`nav-dock ${dockScrolled ? 'scrolled' : ''} rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between`}>
+          <div className="flex items-center gap-2.5">
+            <Image src="/logo-circonscription.png" alt="Logo" width={28} height={28} className="rounded-lg" />
+            <span className="font-medium text-zen-text text-sm hidden sm:inline tracking-tight">Circonscription</span>
+          </div>
+          <div className="flex items-center bg-zen-accent rounded-full px-1.5 py-1.5 gap-0.5">
+            <DockIcon href="#" icon={<IconHome />} label="Accueil" active />
+            <DockIcon href="/ecoles" icon={<IconSchool />} label="Écoles" />
+            <DockIcon href="/evaluations" icon={<IconChart />} label="Évaluations" />
+            <DockIcon href="/enseignants" icon={<IconUser />} label="Enseignants" />
+            {isAuthenticated && <DockIcon href="/calendrier" icon={<IconCalendar />} label="Calendrier" />}
+          </div>
+          <button onClick={() => setShowLoginModal(true)} className="btn-secondary-zen text-sm hidden sm:inline-block !border-white/20">
+            {isAuthenticated ? 'Espace réservé' : 'Connexion'}
+          </button>
+          <button onClick={() => setShowLoginModal(true)} className="sm:hidden text-zen-text-secondary"><IconLock /></button>
+        </div>
       </motion.div>
 
-      {/* ═══ CONTENU ═══ */}
-      <div className="relative z-10">
-
-        {/* Barre contexte */}
-        <div className="px-4 sm:px-8 py-3 flex justify-between items-center text-[11px] tracking-[0.12em] uppercase text-zen-text-muted font-medium">
-          <span>Rectorat de Guyane — Circonscription</span>
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline">IEN</span>
-            {isAuthenticated ? (
-              <button onClick={handleLogout} className="hover:text-zen-text transition-colors">Déconnexion</button>
-            ) : (
-              <button onClick={() => setShowLoginModal(true)} className="hover:text-zen-text transition-colors">Connexion</button>
-            )}
-          </div>
-        </div>
-
-        {/* ═══ HERO — shrinks on scroll ═══ */}
-        <div className="px-3 sm:px-5">
+      {/* ═══ HERO — immersive card that shrinks & rounds on scroll ═══ */}
+      <div ref={heroRef} className="relative z-10">
+        <div className="h-screen sticky top-0">
           <motion.section
-            style={{ height: heroHeight }}
-            className="relative overflow-hidden rounded-[32px]"
+            style={{
+              scale: heroScale,
+              borderRadius: heroBorderRadius,
+            }}
+            className="relative w-full h-full overflow-hidden origin-center"
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-sky-200/60 via-emerald-100/40 to-green-200/50 backdrop-blur-sm" />
-
-            {/* Dock */}
-            <motion.div
-              initial={{ opacity: 0, y: -16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={spring}
-              className="sticky top-0 z-50 px-4 sm:px-8 py-4"
-            >
-              <div className={`nav-dock ${dockScrolled ? 'scrolled' : ''} rounded-[16px] max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between`}>
-                <div className="flex items-center gap-2.5">
-                  <Image src="/logo-circonscription.png" alt="Logo" width={28} height={28} className="rounded-lg" />
-                  <span className="font-medium text-zen-text text-sm hidden sm:inline tracking-tight">Circonscription</span>
-                </div>
-                <div className="flex items-center bg-zen-accent rounded-full px-1.5 py-1.5 gap-0.5">
-                  <DockIcon href="#" icon={<IconHome />} label="Accueil" active />
-                  <DockIcon href="/ecoles" icon={<IconSchool />} label="Écoles" />
-                  <DockIcon href="/evaluations" icon={<IconChart />} label="Évaluations" />
-                  <DockIcon href="/enseignants" icon={<IconUser />} label="Enseignants" />
-                  {isAuthenticated && <DockIcon href="/calendrier" icon={<IconCalendar />} label="Calendrier" />}
-                </div>
-                <button onClick={() => setShowLoginModal(true)} className="btn-secondary-zen text-sm hidden sm:inline-block !border-white/20">
-                  {isAuthenticated ? 'Espace réservé' : 'Connexion'}
-                </button>
-                <button onClick={() => setShowLoginModal(true)} className="sm:hidden text-zen-text-secondary"><IconLock /></button>
-              </div>
+            {/* Background image — HD landscape with parallax */}
+            <motion.div className="absolute inset-0" style={{ y: bgY }}>
+              <img
+                src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&q=80&auto=format"
+                alt="" className="w-full h-[120%] object-cover" aria-hidden="true"
+              />
             </motion.div>
 
-            {/* Hero content — fades on scroll */}
+            {/* Overlay for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/30" />
+            <div className="absolute inset-0 bg-white/10" />
+
+            {/* Hero content — fades out as you scroll */}
             <motion.div
-              style={{ opacity: heroContentOpacity, scale: heroContentScale, y: heroTitleY }}
-              className="relative px-6 sm:px-12 pt-4 sm:pt-12 pb-44 sm:pb-56 text-center"
+              style={{ opacity: heroContentOpacity, y: heroContentY }}
+              className="relative z-10 flex flex-col items-center justify-center h-full px-6 sm:px-12 text-center pt-20"
             >
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...spring, delay: 0.1 }}
-                className="inline-flex items-center gap-2 bg-white/50 backdrop-blur-xl border border-white/30 rounded-full px-4 py-2 text-sm text-zen-text-secondary mb-8"
+                className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 text-sm text-white/90 mb-8"
               >
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                Académie de Guyane · Cayenne 2
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                Académie de Guyane · Cayenne 2 Roura
               </motion.div>
 
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ ...spring, delay: 0.25 }}
-                className="text-[clamp(2.6rem,6vw,5rem)] font-bold leading-[1.05] tracking-tightest text-zen-text mb-8 max-w-3xl mx-auto"
+                className="text-[clamp(3rem,7vw,6rem)] font-bold leading-[1.02] tracking-tightest text-white mb-6 max-w-4xl"
               >
                 L&apos;École au cœur<br />de la Guyane.
               </motion.h1>
 
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...spring, delay: 0.4 }}
+                className="text-white/70 text-lg sm:text-xl font-light max-w-xl mb-10 leading-relaxed"
+              >
+                Tableau de bord de la circonscription.
+                <br className="hidden sm:block" />
+                Pilotage, données et suivi des écoles.
+              </motion.p>
+
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.5 }}
+                transition={{ ...spring, delay: 0.55 }}
+                className="flex items-center gap-4"
               >
-                <button onClick={() => setShowLoginModal(true)} className="btn-primary-zen">
-                  Nous contacter
+                <button onClick={() => setShowLoginModal(true)} className="bg-white text-zen-text font-medium rounded-full px-8 py-3.5 text-[15px] backdrop-blur-md border border-white/30 transition-all duration-300 hover:shadow-lg hover:shadow-white/20 hover:-translate-y-0.5">
+                  Accéder au tableau de bord
                 </button>
+                <Link href="/ecoles" className="backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full px-6 py-3.5 text-[15px] font-medium transition-all duration-300 hover:bg-white/20 hover:-translate-y-0.5">
+                  Explorer
+                </Link>
               </motion.div>
 
-              {/* Mockup */}
+              {/* Scroll indicator */}
               <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...spring, delay: 0.65 }}
-                style={{ opacity: mockupOpacity }}
-                className="absolute left-1/2 -translate-x-1/2 bottom-[-90px] w-[88%] max-w-3xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.8 }}
+                className="absolute bottom-12 left-1/2 -translate-x-1/2"
               >
-                <div className="bg-white/50 backdrop-blur-2xl rounded-[28px] shadow-mockup p-5 sm:p-6 border border-white/25">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-400/70" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/70" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-green-400/70" />
-                    </div>
-                    <span className="text-[10px] text-zen-text-muted font-medium tracking-wide">Suivi de circonscription</span>
-                    <div className="flex items-center gap-1.5 text-[10px] text-zen-text-muted">
-                      <span className="bg-white/40 backdrop-blur-sm px-2 py-0.5 rounded-full">23 écoles</span>
-                      <span className="bg-white/40 backdrop-blur-sm px-2 py-0.5 rounded-full">450 enseignants</span>
-                    </div>
-                  </div>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-white/20 text-left text-zen-text-muted text-[10px]">
-                        <th className="pb-2 font-medium">École</th>
-                        <th className="pb-2 font-medium">Enseignants</th>
-                        <th className="pb-2 font-medium">Élèves</th>
-                        <th className="pb-2 font-medium">Statut</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-zen-text text-xs">
-                      {[
-                        { e: 'Cayenne Nord A', n: 12, el: 287, s: 'À jour', c: 'green' },
-                        { e: 'Roura Centre', n: 8, el: 194, s: 'En cours', c: 'blue' },
-                        { e: 'Rémire-Montjoly B', n: 15, el: 342, s: 'À jour', c: 'green' },
-                      ].map((r, i) => (
-                        <tr key={i} className={i < 2 ? 'border-b border-white/10' : ''}>
-                          <td className="py-2 font-medium">{r.e}</td>
-                          <td className="py-2">{r.n}</td>
-                          <td className="py-2">{r.el}</td>
-                          <td className="py-2"><span className={`bg-${r.c}-100/80 text-${r.c}-700 text-[10px] px-2 py-0.5 rounded-full`}>{r.s}</span></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <motion.div
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-1.5"
+                >
+                  <motion.div className="w-1 h-2 bg-white/60 rounded-full" />
+                </motion.div>
               </motion.div>
             </motion.div>
           </motion.section>
         </div>
+      </div>
 
-        {/* ═══ DEUX BOXES — Tabs gauche + Preview droite ═══ */}
-        <section className="px-3 sm:px-5 pt-8 pb-6">
-          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4" style={{ minHeight: 'calc(100vh - 28vh - 80px)' }}>
+      {/* ═══ DEUX BOXES — content rises over the hero ═══ */}
+      <section className="relative z-20 -mt-16 px-3 sm:px-5 pb-6">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4" style={{ minHeight: '70vh' }}>
 
-            {/* BOX GAUCHE — Onglets + Texte + Bouton */}
-            <motion.div
-              initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
-              whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              viewport={{ once: true }}
-              transition={spring}
-              className="glass-card p-6 sm:p-8 flex flex-col"
-            >
-              {/* Onglets */}
-              <div className="relative flex gap-5 sm:gap-8 border-b border-white/15 mb-0 overflow-x-auto">
-                {tabs.map((tab, i) => (
-                  <button
-                    key={i}
-                    ref={el => { tabsRef.current[i] = el; }}
-                    onClick={() => setActiveTab(i)}
-                    className={`pb-3 text-left flex-shrink-0 transition-colors duration-300 ${
-                      activeTab === i ? 'text-zen-text' : 'text-zen-text-muted hover:text-zen-text-secondary'
-                    }`}
-                  >
-                    <div className="font-semibold text-[13px] tracking-tight">{tab.label}</div>
-                    <div className="text-[10px] text-zen-text-muted mt-0.5">{tab.sub}</div>
-                  </button>
-                ))}
-                <div ref={underlineRef} className="tab-underline" />
-              </div>
+          {/* BOX GAUCHE — Onglets + Texte + Bouton */}
+          <motion.div
+            initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={spring}
+            className="glass-card p-6 sm:p-8 flex flex-col"
+          >
+            {/* Onglets */}
+            <div className="relative flex gap-5 sm:gap-8 border-b border-white/15 mb-0 overflow-x-auto">
+              {tabs.map((tab, i) => (
+                <button
+                  key={i}
+                  ref={el => { tabsRef.current[i] = el; }}
+                  onClick={() => setActiveTab(i)}
+                  className={`pb-3 text-left flex-shrink-0 transition-colors duration-300 ${
+                    activeTab === i ? 'text-zen-text' : 'text-zen-text-muted hover:text-zen-text-secondary'
+                  }`}
+                >
+                  <div className="font-semibold text-[13px] tracking-tight">{tab.label}</div>
+                  <div className="text-[10px] text-zen-text-muted mt-0.5">{tab.sub}</div>
+                </button>
+              ))}
+              <div ref={underlineRef} className="tab-underline" />
+            </div>
 
-              {/* Contenu onglet */}
-              <div className="flex-1 flex flex-col justify-end pt-8">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={spring}
-                  >
-                    <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-tightest text-zen-text mb-3 leading-tight">
-                      {tabs[activeTab].title}
-                    </h2>
-                    <p className="text-zen-text-secondary text-[15px] leading-relaxed mb-6 max-w-md">
-                      {tabs[activeTab].desc}
-                    </p>
-                    <Link href={tabs[activeTab].href} className="btn-primary-zen inline-block">
-                      {tabs[activeTab].btn}
-                    </Link>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </motion.div>
-
-            {/* BOX DROITE — Preview */}
-            <motion.div
-              initial={{ opacity: 0, y: 30, filter: 'blur(8px)' }}
-              whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              viewport={{ once: true }}
-              transition={{ ...spring, delay: 0.1 }}
-              className="glass-card p-0 overflow-hidden"
-            >
+            {/* Contenu onglet */}
+            <div className="flex-1 flex flex-col justify-end pt-8">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
                   transition={spring}
-                  className="h-full"
                 >
-                  <TabPreview index={activeTab} />
+                  <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-tightest text-zen-text mb-3 leading-tight">
+                    {tabs[activeTab].title}
+                  </h2>
+                  <p className="text-zen-text-secondary text-[15px] leading-relaxed mb-6 max-w-md">
+                    {tabs[activeTab].desc}
+                  </p>
+                  <Link href={tabs[activeTab].href} className="btn-primary-zen inline-block">
+                    {tabs[activeTab].btn}
+                  </Link>
                 </motion.div>
               </AnimatePresence>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
 
-          {/* Footer minimal */}
-          <div className="text-center mt-8">
-            <p className="text-zen-text-muted text-xs">
-              Designé par <span className="text-zen-text-secondary font-medium">LOUIS Olivier</span> · 2026
-            </p>
-          </div>
-        </section>
-      </div>
+          {/* BOX DROITE — Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ ...spring, delay: 0.1 }}
+            className="glass-card p-0 overflow-hidden"
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={spring}
+                className="h-full"
+              >
+                <TabPreview index={activeTab} />
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
+        </div>
+
+        {/* Footer minimal */}
+        <div className="text-center mt-8">
+          <p className="text-zen-text-muted text-xs">
+            Designé par <span className="text-zen-text-secondary font-medium">LOUIS Olivier</span> · 2026
+          </p>
+        </div>
+      </section>
 
       {/* ═══ MODAL CONNEXION ═══ */}
       <AnimatePresence>
@@ -593,5 +571,5 @@ function IconSchool() { return <svg viewBox="0 0 24 24" fill="none" stroke="curr
 function IconChart() { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>; }
 function IconUser() { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>; }
 function IconCalendar() { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>; }
-function IconMail() { return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>; }
+
 function IconLock() { return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>; }
