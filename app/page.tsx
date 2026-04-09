@@ -162,7 +162,7 @@ export default function HomePage() {
           height: heroShrunk ? '30%' : '100%',
           borderRadius: heroShrunk ? '0 0 24px 24px' : 0,
         }}
-        transition={{ type: 'spring', stiffness: 50, damping: 30, mass: 1 }}
+        transition={{ type: 'spring', stiffness: 50, damping: 40, mass: 1, restDelta: 0.5, restSpeed: 0.5 }}
         className="relative w-full overflow-hidden origin-top z-10 shrink-0"
       >
         {/* Background image */}
@@ -254,7 +254,7 @@ export default function HomePage() {
               opacity: showBoxLeft ? 1 : 0,
               y: showBoxLeft ? 0 : 60,
             }}
-            transition={{ type: 'spring', stiffness: 50, damping: 30, mass: 1 }}
+            transition={{ type: 'spring', stiffness: 50, damping: 40, mass: 1, restDelta: 0.5, restSpeed: 0.5 }}
             className="glass-card p-6 sm:p-8 flex flex-col"
           >
             {/* Onglets */}
