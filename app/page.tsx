@@ -209,7 +209,7 @@ export default function HomePage() {
         {/* Background image */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&q=80&auto=format"
+            src="https://images.unsplash.com/photo-1440581572325-0bea30075d9d?w=1920&q=80&auto=format"
             alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
           />
         </div>
@@ -477,13 +477,19 @@ export default function HomePage() {
    ═══════════════════════════════════════════════════════════════ */
 
 function TabPreview({ index }: { index: number }) {
-  const bg = "bg-gradient-to-b from-sky-100/40 via-emerald-50/30 to-green-100/20 h-full";
+  const bgPhoto = (
+    <>
+      <img src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=960&q=80&auto=format" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px]" />
+    </>
+  );
 
   if (index === 0) {
     // Écoles — dashboard preview
     return (
-      <div className={`${bg} p-6 sm:p-8 flex items-center justify-center`}>
-        <div className="bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+      <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden">
+        {bgPhoto}
+        <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
           <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Écoles de la circonscription</p>
           <div className="space-y-2">
             {[
@@ -508,8 +514,9 @@ function TabPreview({ index }: { index: number }) {
   if (index === 1) {
     // Évaluations — barres de progression
     return (
-      <div className={`${bg} p-6 sm:p-8 flex items-center justify-center`}>
-        <div className="bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+      <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden">
+        {bgPhoto}
+        <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
           <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-4">Éval. nationales CP — Français</p>
           <div className="space-y-3">
             {[
@@ -541,8 +548,9 @@ function TabPreview({ index }: { index: number }) {
   if (index === 2) {
     // Enseignants — chat/profils
     return (
-      <div className={`${bg} p-6 sm:p-8 flex items-center justify-center`}>
-        <div className="bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+      <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden">
+        {bgPhoto}
+        <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
           <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Annuaire enseignants</p>
           <div className="space-y-2.5">
             {[
@@ -566,8 +574,9 @@ function TabPreview({ index }: { index: number }) {
   }
   // Statistiques — graph bars
   return (
-    <div className={`${bg} p-6 sm:p-8 flex items-center justify-center`}>
-      <div className="bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
+    <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden">
+        {bgPhoto}
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-sm border border-white/30">
         <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-4">Effectifs par niveau</p>
         <div className="flex items-end gap-3 h-40 px-2">
           {[
