@@ -314,16 +314,14 @@ export default function HomePage() {
                   exit={{ opacity: 0, y: -8 }}
                   transition={spring}
                 >
-                  <Link href={tabs[activeTab].href} className="block group">
-                    <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-tightest text-zen-text mb-3 leading-tight group-hover:text-zen-text-secondary transition-colors">
-                      {tabs[activeTab].title}
-                    </h2>
-                    <p className="text-zen-text-secondary text-[15px] leading-relaxed mb-6 max-w-md">
-                      {tabs[activeTab].desc}
-                    </p>
-                    <span className="btn-primary-zen inline-block">
-                      {tabs[activeTab].btn}
-                    </span>
+                  <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-tightest text-zen-text mb-3 leading-tight">
+                    {tabs[activeTab].title}
+                  </h2>
+                  <p className="text-zen-text-secondary text-[15px] leading-relaxed mb-6 max-w-md">
+                    {tabs[activeTab].desc}
+                  </p>
+                  <Link href={tabs[activeTab].href} className="btn-primary-zen inline-block">
+                    {tabs[activeTab].btn}
                   </Link>
                 </motion.div>
               </AnimatePresence>
@@ -339,6 +337,7 @@ export default function HomePage() {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="glass-card p-0 overflow-hidden"
           >
+            <Link href={tabs[activeTab].href} className="block h-full">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -351,6 +350,7 @@ export default function HomePage() {
                 <TabPreview index={activeTab} tabs={tabs} />
               </motion.div>
             </AnimatePresence>
+            </Link>
           </motion.div>
         </div>
 
