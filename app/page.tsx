@@ -30,10 +30,9 @@ export default function HomePage() {
     offset: ['start start', 'end start'],
   });
 
-  // Shrink: scale down, round corners, AND reduce height to become a banner
-  const heroScale = useTransform(scrollYProgress, [0, 0.4], [1, 0.9]);
-  const heroBorderRadius = useTransform(scrollYProgress, [0, 0.4], [0, 40]);
-  const heroHeight = useTransform(scrollYProgress, [0, 0.4], ['100vh', '40vh']);
+  // Shrink: scale + borderRadius only — NO height animation (GPU-only transforms)
+  const heroScale = useTransform(scrollYProgress, [0, 0.4], [1, 0.85]);
+  const heroBorderRadius = useTransform(scrollYProgress, [0, 0.4], [0, 60]);
   const heroContentOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const heroContentY = useTransform(scrollYProgress, [0, 0.2], [0, -40]);
 
@@ -182,18 +181,18 @@ export default function HomePage() {
       {/* ═══ HERO WRAPPER — 150vh gives scroll room for the shrink animation ═══ */}
       <div ref={heroRef} className="relative z-0 h-[150vh]">
         {/* Sticky inner — stays fixed while user scrolls through the 150vh wrapper */}
-        <div className="sticky top-0 flex items-start justify-center">
+        <div className="sticky top-0 h-screen overflow-hidden">
           <motion.section
             style={{
               scale: heroScale,
               borderRadius: heroBorderRadius,
-              height: heroHeight,
-              transformOrigin: 'top center',
+              originY: 0,
+              height: '100%',
             }}
             className="relative w-full overflow-hidden"
           >
-            {/* Background image — HD landscape with parallax */}
-            <motion.div className="absolute inset-0" style={{ y: bgY }}>
+            {/* Background image — HD landscape, fixed height to avoid jitter */}
+            <motion.div className="absolute inset-0 h-[100vh]" style={{ y: bgY }}>
               <img
                 src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&q=80&auto=format"
                 alt="" className="w-full h-full object-cover" aria-hidden="true"
@@ -274,7 +273,7 @@ export default function HomePage() {
       </div>
 
       {/* ═══ DEUX BOXES — slides over the shrunk hero ═══ */}
-      <section className="relative z-10 bg-[#e8e8e8] px-3 sm:px-5 pb-6 pt-8">
+      <section className="relative z-10 bg-white px-3 sm:px-5 pb-6 pt-8 rounded-t-[32px]">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4" style={{ minHeight: '70vh' }}>
 
           {/* BOX GAUCHE — Onglets + Texte + Bouton */}
