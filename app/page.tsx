@@ -277,18 +277,18 @@ export default function HomePage() {
             className="glass-card p-6 sm:p-8 flex flex-col"
           >
             {/* Onglets */}
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-x-5 sm:gap-x-8 gap-y-1 border-b border-white/15 mb-0">
               {tabs.map((tab, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveTab(i)}
-                  className={`px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-300 ${
+                  className={`pb-3 text-left transition-colors duration-300 border-b-2 ${
                     activeTab === i
-                      ? 'bg-zen-accent text-white shadow-sm'
-                      : 'bg-white/30 text-zen-text-muted hover:bg-white/50 hover:text-zen-text-secondary'
+                      ? 'text-zen-text border-zen-text'
+                      : 'text-zen-text-muted hover:text-zen-text-secondary border-transparent'
                   }`}
                 >
-                  {tab.label}
+                  <div className="font-semibold text-[13px] tracking-tight">{tab.label}</div>
                 </button>
               ))}
             </div>
