@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 
 const spring = { type: 'spring' as const, stiffness: 70, damping: 20, mass: 1 };
 const springFast = { type: 'spring' as const, stiffness: 200, damping: 22, mass: 0.8 };
@@ -17,6 +17,7 @@ export default function HomePage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [hoverTab, setHoverTab] = useState<number | null>(null);
 
 
   // State-driven animation — triggered by button click
@@ -257,21 +258,46 @@ export default function HomePage() {
             className="glass-card p-6 sm:p-8 flex flex-col"
           >
             {/* Onglets */}
-            <div className="flex flex-wrap gap-x-5 sm:gap-x-8 gap-y-1 border-b border-white/15 mb-0">
-              {tabs.map((tab, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveTab(i)}
-                  className={`pb-3 text-left transition-colors duration-300 border-b-2 ${
-                    activeTab === i
-                      ? 'text-zen-text border-zen-text'
-                      : 'text-zen-text-muted hover:text-zen-text-secondary border-transparent'
-                  }`}
-                >
-                  <div className="font-semibold text-[15px] tracking-tight">{tab.label}</div>
-                </button>
-              ))}
-            </div>
+            <LayoutGroup>
+              <div className="flex flex-wrap">
+                {tabs.map((tab, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveTab(i)}
+                    onMouseEnter={() => setHoverTab(i)}
+                    onMouseLeave={() => setHoverTab(null)}
+                    className={`py-2 relative transition-colors duration-300 ${
+                      activeTab === i ? 'text-zen-text' : 'text-zen-text-muted hover:text-zen-text'
+                    }`}
+                  >
+                    <div className="px-4 py-2 relative">
+                      <span className="relative z-10 font-semibold text-[15px] tracking-tight">{tab.label}</span>
+                      {hoverTab === i && (
+                        <motion.div
+                          layoutId="tab-hover-bg"
+                          className="absolute inset-0 bg-zen-text/[0.06] rounded-md"
+                          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                        />
+                      )}
+                    </div>
+                    {activeTab === i && (
+                      <motion.div
+                        layoutId="tab-active-line"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-zen-text"
+                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                      />
+                    )}
+                    {hoverTab === i && hoverTab !== activeTab && (
+                      <motion.div
+                        layoutId="tab-hover-line"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-zen-text/30"
+                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </LayoutGroup>
 
             {/* Contenu onglet — fade in after box is fully visible */}
             <motion.div
