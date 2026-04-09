@@ -228,25 +228,18 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...spring, delay: 0.1 }}
-            className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 text-sm text-white/90 mb-8"
+            className="flex items-center gap-6 mb-8"
           >
-            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-            Académie de Guyane · Cayenne 2 Roura
+            <Image src="/logo-circonscription.png" alt="Logo" width={140} height={140} className="rounded-3xl shrink-0" />
+            <h1 className="text-[clamp(2.5rem,6vw,5rem)] font-bold leading-[1.02] tracking-tightest text-white text-left">
+              Circonscription<br />Cayenne 2 — Roura
+            </h1>
           </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...spring, delay: 0.25 }}
-            className="text-[clamp(3rem,7vw,6rem)] font-bold leading-[1.02] tracking-tightest text-white mb-6 max-w-4xl"
-          >
-            L&apos;École au cœur<br />de la Guyane.
-          </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ ...spring, delay: 0.4 }}
+            transition={{ ...spring, delay: 0.3 }}
             className="text-white/70 text-lg sm:text-xl font-light max-w-xl mb-10 leading-relaxed"
           >
             Tableau de bord de la circonscription.
