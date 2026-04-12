@@ -277,7 +277,7 @@ export default function HomePage() {
       </motion.section>
 
       {/* ═══ DEUX BOXES — appear below hero after shrink, staggered ═══ */}
-      <div className={`flex-1 pt-4 pb-0 min-h-0 overflow-hidden ${heroShrunk ? '' : 'invisible h-0 pt-0'}`}>
+      <div className={`flex-1 pt-4 pb-px min-h-0 overflow-hidden px-px ${heroShrunk ? '' : 'invisible h-0 pt-0'}`}>
         <div className="grid lg:grid-cols-2 gap-4 h-full">
 
           {/* BOX GAUCHE — appears first */}
@@ -288,7 +288,7 @@ export default function HomePage() {
               y: showBoxLeft ? 0 : 60,
             }}
             transition={{ type: 'tween', duration: 1.5, ease: [0.25, 1, 0.5, 1] }}
-            className="glass-card p-6 sm:p-8 flex flex-col"
+            className="glass-card border-0 p-6 sm:p-8 flex flex-col"
           >
             {/* Onglets */}
             <LayoutGroup>

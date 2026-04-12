@@ -71,11 +71,12 @@ h1, h2, h3 {
                 box-shadow 0.4s ease,
                 border-color 0.3s ease;
     will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
     cursor: pointer;
   }
   .glass-card:hover {
     transform: scale(1.02) translateY(-3px);
-    border-color: rgba(0,0,0,0.10);
     box-shadow: 0 8px 36px 0 rgba(0,0,0,0.12);
   }
   .glass-card:hover .card-icon {
