@@ -136,7 +136,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-white h-screen overflow-hidden relative p-3 sm:p-4">
-      <div className="bg-[#e8e8e8] rounded-[24px] h-full overflow-hidden relative flex flex-col">
+      <div className="bg-white rounded-[24px] h-full overflow-hidden relative flex flex-col">
 
       {/* ═══ DOCK NAVIGATION — fixed, always on top ═══ */}
       <motion.div
@@ -368,7 +368,7 @@ export default function HomePage() {
               opacity: showBoxRight ? 1 : 0,
             }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="glass-card p-0 overflow-hidden"
+            className="rounded-[32px] overflow-hidden"
           >
             <Link href={tabs[activeTab].href} className="block h-full">
             <AnimatePresence mode="wait">
@@ -494,12 +494,12 @@ function TabPreview({ index, tabs }: { index: number; tabs: { title: string; des
   const bgPhoto = (
     <>
       <img src="/zeedoo-rio-branco-4569465.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
-      <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-white/20" />
     </>
   );
 
   const wrapper = (children: React.ReactNode) => (
-    <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden">
+    <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden rounded-[32px]">
       {bgPhoto}
       {children}
     </div>
