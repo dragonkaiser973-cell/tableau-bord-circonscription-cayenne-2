@@ -8,6 +8,7 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 const spring = { type: 'spring' as const, stiffness: 70, damping: 20, mass: 1 };
 const springFast = { type: 'spring' as const, stiffness: 200, damping: 22, mass: 0.8 };
 
+
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState('');
@@ -22,6 +23,12 @@ export default function HomePage() {
 
   // State-driven animation — triggered by button click
   const [heroShrunk, setHeroShrunk] = useState(false);
+  const [treeLanded, setTreeLanded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setTreeLanded(true), 2800);
+    return () => clearTimeout(timer);
+  }, []);
   const [showBoxLeft, setShowBoxLeft] = useState(false);
   const [showBoxRight, setShowBoxRight] = useState(false);
   const [showBoxLeftContent, setShowBoxLeftContent] = useState(false);
@@ -165,13 +172,39 @@ export default function HomePage() {
         transition={{ type: 'tween', duration: 1.5, ease: [0.25, 1, 0.5, 1] }}
         className="relative w-full overflow-hidden origin-top z-10 shrink-0"
       >
-        {/* Background image */}
+        {/* Background – sky layer */}
         <div className="absolute inset-0">
+          <img
+            src="/image_1775949440617607.png"
+            alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
+          />
+        </div>
+
+        {/* Foreground – tree with transparent background, slides up with bounce */}
+        <motion.div
+          initial={{ y: '40%', opacity: 0 }}
+          animate={{ y: '0%', opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 30, damping: 10, mass: 1.5, delay: 0.7 }}
+          className="absolute inset-0 pointer-events-none"
+        >
+          <img
+            src="/tree-transparent.png"
+            alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
+          />
+        </motion.div>
+
+        {/* Final composited image – covers any halo once tree animation settles */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: treeLanded ? 1 : 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="absolute inset-0 pointer-events-none"
+        >
           <img
             src="/IMG_4258.jpeg"
             alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
           />
-        </div>
+        </motion.div>
 
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/5 to-black/30" />
