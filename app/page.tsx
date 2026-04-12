@@ -235,7 +235,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...spring, delay: 0.3 }}
-            className="text-white/70 text-lg sm:text-xl font-light max-w-xl mb-10 leading-relaxed"
+            className="text-white text-lg sm:text-xl font-medium max-w-xl mb-10 leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]"
           >
             Tableau de bord de la circonscription.
             <br className="hidden sm:block" />
