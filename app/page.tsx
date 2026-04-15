@@ -23,12 +23,7 @@ export default function HomePage() {
 
   // State-driven animation — triggered by button click
   const [heroShrunk, setHeroShrunk] = useState(false);
-  const [treeLanded, setTreeLanded] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setTreeLanded(true), 2800);
-    return () => clearTimeout(timer);
-  }, []);
+  const [videoEnded, setVideoEnded] = useState(false);
   const [showBoxLeft, setShowBoxLeft] = useState(false);
   const [showBoxRight, setShowBoxRight] = useState(false);
   const [showBoxLeftContent, setShowBoxLeftContent] = useState(false);
@@ -172,36 +167,29 @@ export default function HomePage() {
         transition={{ type: 'tween', duration: 1.5, ease: [0.25, 1, 0.5, 1] }}
         className="relative w-full overflow-hidden origin-top z-10 shrink-0"
       >
-        {/* Background – sky layer */}
-        <div className="absolute inset-0">
-          <img
-            src="/image_1775949440617607.png"
-            alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
-          />
-        </div>
-
-        {/* Foreground – tree with transparent background, slides up with bounce */}
-        <motion.div
-          initial={{ y: '40%', opacity: 0 }}
-          animate={{ y: '0%', opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 30, damping: 10, mass: 1.5, delay: 0.7 }}
-          className="absolute inset-0 pointer-events-none"
+        {/* Hero video – plays once, frozen on last frame via poster overlay */}
+        <video
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          poster="/untitled_topazlabs_video-upscale_2026-04-15_03-18-07_frame_0_08_0f.jpeg"
+          onEnded={() => setVideoEnded(true)}
+          className="absolute inset-0 w-full h-[100vh] object-cover"
+          aria-hidden="true"
         >
-          <img
-            src="/tree-transparent.png"
-            alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
-          />
-        </motion.div>
+          <source src="/hero-720p.mp4" type="video/mp4" />
+        </video>
 
-        {/* Final composited image – covers any halo once tree animation settles */}
+        {/* Final still – fades in when video ends, also acts as fallback */}
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: treeLanded ? 1 : 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          animate={{ opacity: videoEnded ? 1 : 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
           className="absolute inset-0 pointer-events-none"
         >
           <img
-            src="/IMG_4258.jpeg"
+            src="/untitled_topazlabs_video-upscale_2026-04-15_03-18-07_frame_0_08_0f.jpeg"
             alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
           />
         </motion.div>
