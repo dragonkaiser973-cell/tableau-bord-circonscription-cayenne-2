@@ -72,10 +72,12 @@ export async function middleware(request: NextRequest) {
     // /api/questionnaires/soumissions reste toujours public
     const isQuestionnairesExact = pathname === '/api/questionnaires' &&
       ['POST', 'PUT', 'DELETE'].includes(request.method);
-    if (!isQuestionnairesExact) {
+    const isEnseignantsWrite = pathname === '/api/enseignants' &&
+      ['PUT', 'DELETE'].includes(request.method);
+    if (!isQuestionnairesExact && !isEnseignantsWrite) {
       return NextResponse.next();
     }
-    // Pour /api/questionnaires en écriture → continuer vers vérification token
+    // Pour /api/questionnaires ou /api/enseignants en écriture → continuer vers vérification token
   }
 
   // Toutes les autres routes API → token requis
@@ -95,8 +97,9 @@ export async function middleware(request: NextRequest) {
   // Routes admin → rôle admin requis
   const isAdminRoute = ADMIN_API_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'));
   const isQuestionnairesWrite = pathname.startsWith('/api/questionnaires') && ['POST', 'PUT', 'DELETE'].includes(request.method);
+  const isEnseignantsWriteAdmin = pathname === '/api/enseignants' && ['PUT', 'DELETE'].includes(request.method);
 
-  if ((isAdminRoute || isQuestionnairesWrite) && payload.role !== 'admin') {
+  if ((isAdminRoute || isQuestionnairesWrite || isEnseignantsWriteAdmin) && payload.role !== 'admin') {
     return NextResponse.json({ error: 'Accès réservé aux administrateurs' }, { status: 403 });
   }
 

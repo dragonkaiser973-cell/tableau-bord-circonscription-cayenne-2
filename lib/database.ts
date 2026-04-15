@@ -443,6 +443,43 @@ export async function createEnseignant(enseignant: any) {
   }
 }
 
+export async function updateEnseignant(id: number, updates: any) {
+  if (isSupabaseConfigured()) {
+    try {
+      const { data, error } = await supabase
+        .from('enseignants')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Supabase error updating enseignant:', error);
+        return null;
+      }
+      return data;
+    } catch (error) {
+      console.error('❌ Error updating enseignant:', error);
+      return null;
+    }
+  }
+
+  // Fallback JSON
+  const enseignants = readJSON(files.enseignants, []);
+  const index = enseignants.findIndex((e: any) => e.id === id);
+  if (index < 0) return null;
+
+  enseignants[index] = {
+    ...enseignants[index],
+    ...updates,
+    id: enseignants[index].id,
+    created_at: enseignants[index].created_at,
+    updated_at: new Date().toISOString(),
+  };
+  writeJSON(files.enseignants, enseignants);
+  return enseignants[index];
+}
+
 // ============ EVALUATIONS ============
 export async function getEvaluations(filters?: any) {
   if (isSupabaseConfigured()) {

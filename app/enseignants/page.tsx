@@ -45,6 +45,18 @@ export default function EnseignantsPage() {
   const [selectedSpecialite, setSelectedSpecialite] = useState('');
   const [hasDecharge, setHasDecharge] = useState('');
 
+  // Mode édition (admin only)
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState<Partial<Enseignant>>({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const role = localStorage.getItem('userRole');
+    setIsAdmin(role === 'admin');
+  }, []);
+
   // Fonction pour normaliser les noms (enlever accents, tirets, espaces multiples)
   const normaliserNom = (nom: string): string => {
     return nom
@@ -385,6 +397,71 @@ if (structuresRes.ok) {
     setShowExportModal(true);
   };
 
+  // ── Édition inline ──
+  const startEditing = (ens: Enseignant) => {
+    setEditingId(ens.id);
+    setEditValues({ ...ens });
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditValues({});
+  };
+
+  const saveEditing = async () => {
+    if (!editingId || !editValues) return;
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch('/api/enseignants', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: editingId, ...editValues }),
+      });
+      if (res.ok) {
+        // Mettre à jour localement
+        setEnseignants(prev => prev.map(e => e.id === editingId ? { ...e, ...editValues } as Enseignant : e));
+        setEditingId(null);
+        setEditValues({});
+      } else {
+        alert('Erreur lors de la sauvegarde');
+      }
+    } catch {
+      alert('Erreur réseau');
+    }
+    setSaving(false);
+  };
+
+  // Valeurs uniques pour les menus déroulants
+  const uniqueEcoles = [...new Map(enseignants.map(e => [e.ecole_uai, { uai: e.ecole_uai, nom: e.ecole_nom }])).values()].sort((a, b) => a.nom.localeCompare(b.nom));
+  const uniqueStatuts = [...new Set(enseignants.map(e => e.statut).filter(Boolean))].sort();
+  const uniqueNiveaux = [...new Set(enseignants.map(e => e.niveau_classe).filter(Boolean))].sort();
+  const uniqueDisciplines = [...new Set(enseignants.map(e => e.discipline).filter(Boolean))].sort();
+  const uniqueModes = [...new Set(enseignants.map(e => e.mode_affectation).filter(Boolean))].sort();
+
+  const EditSelect = ({ field, options, value }: { field: keyof Enseignant; options: string[]; value: string }) => (
+    <select
+      value={value || ''}
+      onChange={e => setEditValues(prev => ({ ...prev, [field]: e.target.value }))}
+      className="w-full px-1 py-0.5 text-sm border rounded bg-white"
+    >
+      <option value="">-</option>
+      {options.map(o => <option key={o} value={o}>{o}</option>)}
+    </select>
+  );
+
+  const EditInput = ({ field, value, type = 'text' }: { field: keyof Enseignant; value: string | number; type?: string }) => (
+    <input
+      type={type}
+      value={value ?? ''}
+      onChange={e => setEditValues(prev => ({ ...prev, [field]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value }))}
+      className="w-full px-1 py-0.5 text-sm border rounded"
+    />
+  );
+
   const filteredEnseignants = getFilteredEnseignants();
   const stats = getStatistiques();
   const annees = getUniqueValues('annee_scolaire');
@@ -409,12 +486,24 @@ if (structuresRes.ok) {
                 <p className="text-xl opacity-90 mt-2">Recherche et parcours des enseignants de la circonscription</p>
               </div>
             </div>
-            <button
-              onClick={handleExportPDF}
-              className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
-            >
-              📄 Exporter en PDF
-            </button>
+            <div className="flex items-center gap-3">
+              {isAdmin && (
+                <button
+                  onClick={() => { setEditMode(!editMode); setEditingId(null); }}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2 ${
+                    editMode ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-yellow-400 text-gray-900 hover:bg-yellow-300'
+                  }`}
+                >
+                  {editMode ? '✕ Quitter édition' : '✏️ Mode édition'}
+                </button>
+              )}
+              <button
+                onClick={handleExportPDF}
+                className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
+              >
+                📄 Exporter en PDF
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -604,6 +693,7 @@ if (structuresRes.ok) {
               <table className="data-table">
                 <thead>
                   <tr>
+                    {editMode && <th className="w-24">Actions</th>}
                     <th>Nom</th>
                     <th>École</th>
                     <th>Année</th>
@@ -621,33 +711,79 @@ if (structuresRes.ok) {
                 <tbody>
                   {filteredEnseignants.map((ens, idx) => {
                     const echelonInfo = calculerEchelonComplet(ens.anciennete, ens.code_grade);
-                    
+                    const isEditing = editMode && editingId === ens.id;
+
                     // Nettoyer la spécialité : masquer "SANS SPECIALITE"
-                    const specialite = ens.discipline && 
+                    const specialite = ens.discipline &&
                                       !ens.discipline.toUpperCase().includes('SANS SPECIALITE') &&
                                       !ens.discipline.toUpperCase().includes('SANS SPÉCIALITÉ')
-                                      ? ens.discipline 
+                                      ? ens.discipline
                                       : '';
-                    
+
                     return (
-                      <tr key={idx}>
+                      <tr key={idx} className={isEditing ? 'bg-yellow-50' : ''}>
+                        {editMode && (
+                          <td className="text-center">
+                            {isEditing ? (
+                              <div className="flex gap-1 justify-center">
+                                <button onClick={saveEditing} disabled={saving} className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 disabled:opacity-50">
+                                  {saving ? '...' : '✓'}
+                                </button>
+                                <button onClick={cancelEditing} className="px-2 py-1 bg-gray-400 text-white rounded text-xs hover:bg-gray-500">
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <button onClick={() => startEditing(ens)} className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">
+                                ✏️
+                              </button>
+                            )}
+                          </td>
+                        )}
                         <td className="font-semibold">
-                          {ens.nom} {ens.prenom}
+                          {isEditing ? (
+                            <div className="flex gap-1">
+                              <EditInput field="nom" value={editValues.nom || ''} />
+                              <EditInput field="prenom" value={editValues.prenom || ''} />
+                            </div>
+                          ) : (
+                            <>{ens.nom} {ens.prenom}</>
+                          )}
                         </td>
-                        <td>{ens.ecole_nom}</td>
+                        <td>
+                          {isEditing ? (
+                            <select
+                              value={editValues.ecole_uai || ''}
+                              onChange={e => {
+                                const ecole = uniqueEcoles.find(ec => ec.uai === e.target.value);
+                                setEditValues(prev => ({ ...prev, ecole_uai: e.target.value, ecole_nom: ecole?.nom || '' }));
+                              }}
+                              className="w-full px-1 py-0.5 text-sm border rounded bg-white"
+                            >
+                              <option value="">-</option>
+                              {uniqueEcoles.map(ec => <option key={ec.uai} value={ec.uai}>{ec.nom}</option>)}
+                            </select>
+                          ) : ens.ecole_nom}
+                        </td>
                         <td>{ens.annee_scolaire}</td>
                         <td>
-                          <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                            ens.statut === 'Titulaire' ? 'bg-green-100 text-green-800' :
-                            ens.statut === 'Stagiaire' ? 'bg-orange-100 text-orange-800' :
-                            ens.statut === 'Contractuel' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {ens.statut}
-                          </span>
+                          {isEditing ? (
+                            <EditSelect field="statut" options={['Titulaire', 'Stagiaire', 'Contractuel', 'Autre']} value={editValues.statut || ''} />
+                          ) : (
+                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                              ens.statut === 'Titulaire' ? 'bg-green-100 text-green-800' :
+                              ens.statut === 'Stagiaire' ? 'bg-orange-100 text-orange-800' :
+                              ens.statut === 'Contractuel' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {ens.statut}
+                            </span>
+                          )}
                         </td>
                         <td className="text-center">
-                          {ens.anciennete > 0 ? (
+                          {isEditing ? (
+                            <EditInput field="anciennete" value={editValues.anciennete ?? 0} type="number" />
+                          ) : ens.anciennete > 0 ? (
                             <span className="text-sm font-semibold text-primary-700">
                               {ens.anciennete} an{ens.anciennete > 1 ? 's' : ''}
                             </span>
@@ -658,7 +794,9 @@ if (structuresRes.ok) {
                           )}
                         </td>
                         <td>
-                          {echelonInfo.affichage !== '-' ? (
+                          {isEditing ? (
+                            <EditInput field="code_grade" value={editValues.code_grade || ''} />
+                          ) : echelonInfo.affichage !== '-' ? (
                             <div className="text-sm">
                               <div className="font-semibold text-primary-700">{echelonInfo.classe}</div>
                               <div className="text-gray-600">Échelon {echelonInfo.echelon}</div>
@@ -668,7 +806,9 @@ if (structuresRes.ok) {
                           )}
                         </td>
                         <td>
-                          {specialite ? (
+                          {isEditing ? (
+                            <EditSelect field="discipline" options={uniqueDisciplines} value={editValues.discipline || ''} />
+                          ) : specialite ? (
                             <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-purple-100 text-purple-800">
                               {specialite}
                             </span>
@@ -677,21 +817,42 @@ if (structuresRes.ok) {
                           )}
                         </td>
                         <td>
-                          <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                            ens.mode_affectation === 'Affectation Définitive' ? 'bg-blue-100 text-blue-800' :
-                            ens.mode_affectation === 'Affectation Provisoire' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-600'
-                          }`}>
-                            {ens.mode_affectation === 'Affectation Définitive' ? 'Définitive' :
-                             ens.mode_affectation === 'Affectation Provisoire' ? 'Provisoire' :
-                             '-'}
-                          </span>
+                          {isEditing ? (
+                            <EditSelect field="mode_affectation" options={uniqueModes} value={editValues.mode_affectation || ''} />
+                          ) : (
+                            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                              ens.mode_affectation === 'Affectation Définitive' ? 'bg-blue-100 text-blue-800' :
+                              ens.mode_affectation === 'Affectation Provisoire' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-600'
+                            }`}>
+                              {ens.mode_affectation === 'Affectation Définitive' ? 'Définitive' :
+                               ens.mode_affectation === 'Affectation Provisoire' ? 'Provisoire' :
+                               '-'}
+                            </span>
+                          )}
                         </td>
-                        <td>{ens.niveau_classe || '-'}</td>
-                        <td className="text-center">{ens.effectif_classe || '-'}</td>
-                        <td className="text-center">{(ens.quotite * 100).toFixed(0)}%</td>
                         <td>
-                          {ens.decharge_binome ? (
+                          {isEditing ? (
+                            <EditSelect field="niveau_classe" options={uniqueNiveaux} value={editValues.niveau_classe || ''} />
+                          ) : ens.niveau_classe || '-'}
+                        </td>
+                        <td className="text-center">
+                          {isEditing ? (
+                            <EditInput field="effectif_classe" value={editValues.effectif_classe ?? 0} type="number" />
+                          ) : ens.effectif_classe || '-'}
+                        </td>
+                        <td className="text-center">
+                          {isEditing ? (
+                            <EditInput field="quotite" value={editValues.quotite ?? 1} type="number" />
+                          ) : `${(ens.quotite * 100).toFixed(0)}%`}
+                        </td>
+                        <td>
+                          {isEditing ? (
+                            <div className="space-y-1">
+                              <EditInput field="decharge_binome" value={editValues.decharge_binome || ''} />
+                              <EditInput field="nom_decharge_binome" value={editValues.nom_decharge_binome || ''} />
+                            </div>
+                          ) : ens.decharge_binome ? (
                             <div className="text-sm">
                               <div className="font-semibold text-primary-600">{ens.decharge_binome}</div>
                               {ens.nom_decharge_binome && (

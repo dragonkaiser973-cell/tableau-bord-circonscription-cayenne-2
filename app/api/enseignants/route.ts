@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEnseignants } from '@/lib/database';
+import { getEnseignants, updateEnseignant } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,5 +31,26 @@ export async function GET(request: NextRequest) {
       { message: 'Erreur du serveur' },
       { status: 500 }
     );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID requis' }, { status: 400 });
+    }
+
+    const result = await updateEnseignant(id, updates);
+    if (!result) {
+      return NextResponse.json({ message: 'Enseignant non trouvé' }, { status: 404 });
+    }
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour:', error);
+    return NextResponse.json({ message: 'Erreur du serveur' }, { status: 500 });
   }
 }
