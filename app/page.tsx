@@ -173,7 +173,7 @@ export default function HomePage() {
           muted
           playsInline
           preload="auto"
-          poster="/untitled_topazlabs_video-upscale_2026-04-15_03-18-07_frame_0_08_0f.jpeg"
+          poster="/hero-poster.jpeg"
           onEnded={() => setVideoEnded(true)}
           className="absolute inset-0 w-full h-[100vh] object-cover"
           aria-hidden="true"
@@ -189,7 +189,7 @@ export default function HomePage() {
           className="absolute inset-0 pointer-events-none"
         >
           <img
-            src="/untitled_topazlabs_video-upscale_2026-04-15_03-18-07_frame_0_08_0f.jpeg"
+            src="/hero-poster.jpeg"
             alt="" className="w-full h-[100vh] object-cover" aria-hidden="true"
           />
         </motion.div>
