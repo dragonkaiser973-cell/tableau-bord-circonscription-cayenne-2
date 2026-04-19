@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Boussole d'état d'esprit — tactile</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  h1 { font-size: 24px; font-weight: 600; }
+  .subtitle { color: #94a3b8; font-size: 13px; margin-top: 2px; }
+
+  .phase-switcher {
+    display: flex;
+    gap: 6px;
+    background: rgba(255,255,255,0.05);
+    padding: 4px;
+    border-radius: 14px;
+  }
+  .phase-btn {
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .phase-btn.active { background: #6366f1; color: white; }
+
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+    min-height: 0;
+  }
+
+  .compass-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .compass-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    position: relative;
+  }
+  .compass {
+    position: relative;
+    height: 100%;
+    aspect-ratio: 1;
+    max-width: 100%;
+  }
+  .grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 10% 10%;
+    border-radius: 12px;
+    border: 1px dashed rgba(255,255,255,0.08);
+  }
+  .axis-x, .axis-y { position: absolute; background: rgba(255,255,255,0.2); }
+  .axis-x { left: 0; right: 0; top: 50%; height: 1px; }
+  .axis-y { top: 0; bottom: 0; left: 50%; width: 1px; }
+
+  .axis-label {
+    position: absolute;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .label-top    { top: -26px; left: 50%; transform: translateX(-50%); color: #10b981; }
+  .label-bottom { bottom: -26px; left: 50%; transform: translateX(-50%); color: #ef4444; }
+  .label-left   { top: 50%; left: -80px; transform: translateY(-50%); color: #f59e0b; }
+  .label-right  { top: 50%; right: -72px; transform: translateY(-50%); color: #3b82f6; }
+
+  .quadrant-tag {
+    position: absolute;
+    font-size: 10px;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .q-tr { top: 8px; right: 8px; }
+  .q-tl { top: 8px; left: 8px; }
+  .q-br { bottom: 8px; right: 8px; }
+  .q-bl { bottom: 8px; left: 8px; }
+
+  .emoji {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    user-select: none;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  }
+  .emoji.before {
+    opacity: 0.35;
+    filter: grayscale(0.6) drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    font-size: 26px;
+  }
+  .emoji.after {
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50%      { transform: translate(-50%, -50%) scale(1.08); }
+  }
+
+  svg.overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .compass:not(.show-evol) .evol-only { display: none; }
+  body:not(.mode-evolution) .evol-card { display: none; }
+  .waiting-msg {
+    background: rgba(99,102,241,0.08);
+    border: 1px dashed rgba(99,102,241,0.35);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    color: #c7d2fe;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  body.mode-evolution .waiting-msg { display: none; }
+
+  .center-shift {
+    position: absolute;
+    background: rgba(99,102,241,0.15);
+    border: 2px solid #6366f1;
+    border-radius: 50%;
+    transform: translate(-50%,-50%);
+    pointer-events: none;
+  }
+
+  /* Bottom emoji palette */
+  .palette {
+    margin-top: 40px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .palette-sep {
+    width: 1px; align-self: stretch;
+    background: rgba(255,255,255,0.08);
+    margin: 0 2px;
+  }
+  .palette-label {
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    margin-right: 6px;
+  }
+  .palette-emoji {
+    width: 64px; min-height: 68px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border-radius: 12px;
+    cursor: grab;
+    background: rgba(255,255,255,0.04);
+    border: 2px solid transparent;
+    transition: all 0.15s;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .palette-emoji .pe-emo { font-size: 28px; line-height: 1; }
+  .palette-emoji .pe-lbl {
+    font-size: 10px;
+    color: #94a3b8;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+  }
+  .palette-emoji.selected .pe-lbl { color: #c7d2fe; }
+  .palette-emoji:active { cursor: grabbing; }
+  .emoji.after, .emoji.before { cursor: grab; touch-action: none; }
+  .emoji.dragging { opacity: 0.3 !important; }
+  .ghost {
+    position: fixed;
+    font-size: 36px;
+    pointer-events: none;
+    z-index: 1000;
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+    animation: none !important;
+  }
+  .palette-emoji:hover { background: rgba(255,255,255,0.08); }
+  .palette-emoji.selected {
+    background: rgba(99,102,241,0.2);
+    border-color: #6366f1;
+    transform: scale(1.1);
+  }
+  .palette-hint {
+    margin-left: auto;
+    font-size: 12px;
+    color: #94a3b8;
+    font-style: italic;
+  }
+
+  /* Side panel */
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+  }
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 18px;
+  }
+  .card h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
+
+  .count-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .count-row:last-child { margin-bottom: 0; }
+  .count-row .num { font-size: 24px; font-weight: 600; }
+  .count-row .lbl { font-size: 12px; color: #94a3b8; }
+
+  .shift-big {
+    font-size: 28px;
+    font-weight: 600;
+    color: #10b981;
+    margin-bottom: 4px;
+  }
+  .shift-desc { font-size: 12px; color: #cbd5e1; line-height: 1.4; }
+
+  .emoji-evol {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .emoji-evol:last-child { border-bottom: none; }
+  .ee-emo { font-size: 22px; width: 28px; text-align: center; }
+  .ee-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; position: relative; }
+  .ee-bar { height: 100%; border-radius: 3px; }
+  .ee-up { background: #10b981; }
+  .ee-down { background: #ef4444; }
+  .ee-delta { font-size: 11px; color: #94a3b8; width: 32px; text-align: right; }
+
+  .export-btn {
+    padding: 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white; border: none;
+    border-radius: 12px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+  }
+
+  .legend {
+    display: flex; gap: 18px; justify-content: center;
+    font-size: 12px; color: #94a3b8;
+    padding-top: 8px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div>
+      <h1>Boussole d'état d'esprit · <span style="color:#6366f1">tactile</span></h1>
+      <div class="subtitle">Formation "Différenciation pédagogique" · anonyme · 17 avril 2026</div>
+    </div>
+    <div class="phase-switcher">
+      <button class="phase-btn">Avant</button>
+      <button class="phase-btn">Après</button>
+      <button class="phase-btn active">Évolution</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="compass-card">
+      <div class="compass-wrap">
+        <div class="compass">
+          <div class="grid-bg"></div>
+          <div class="axis-x"></div>
+          <div class="axis-y"></div>
+          <div class="axis-label label-top">↑ Confiance</div>
+          <div class="axis-label label-bottom">↓ Doute</div>
+          <div class="axis-label label-left">Calme ←</div>
+          <div class="axis-label label-right">→ Énergie</div>
+
+          <div class="quadrant-tag q-tl">confiance posée</div>
+          <div class="quadrant-tag q-tr">confiance active</div>
+          <div class="quadrant-tag q-bl">abattement</div>
+          <div class="quadrant-tag q-br">tension</div>
+
+          <!-- Arrow showing cloud center shift -->
+          <svg class="overlay evol-only" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <marker id="arrBig" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M0,0 L10,5 L0,10 z" fill="#6366f1"/>
+              </marker>
+            </defs>
+            <line x1="40" y1="58" x2="62" y2="32" stroke="#6366f1" stroke-width="0.7" stroke-dasharray="2,2" marker-end="url(#arrBig)" opacity="0.8"/>
+          </svg>
+
+          <!-- Centers of gravity -->
+          <div class="center-shift evol-only" style="left:40%; top:58%; width:14px; height:14px; opacity:0.5; background:transparent; border-color:#94a3b8;"></div>
+          <div class="center-shift evol-only" style="left:62%; top:32%; width:18px; height:18px;"></div>
+
+          <div id="emojis"></div>
+        </div>
+      </div>
+
+      <div class="palette">
+        <span class="palette-label">Choisir un émoji</span>
+        <div class="palette-emoji" data-emoji="😴"><span class="pe-emo">😴</span><span class="pe-lbl">épuisé</span></div>
+        <div class="palette-emoji" data-emoji="😰"><span class="pe-emo">😰</span><span class="pe-lbl">stressé</span></div>
+        <div class="palette-emoji" data-emoji="😤"><span class="pe-emo">😤</span><span class="pe-lbl">frustré</span></div>
+        <div class="palette-emoji" data-emoji="😟"><span class="pe-emo">😟</span><span class="pe-lbl">inquiet</span></div>
+        <div class="palette-emoji" data-emoji="😵‍💫"><span class="pe-emo">😵‍💫</span><span class="pe-lbl">dépassé</span></div>
+        <div class="palette-emoji" data-emoji="😒"><span class="pe-emo">😒</span><span class="pe-lbl">sceptique</span></div>
+        <div class="palette-sep"></div>
+        <div class="palette-emoji" data-emoji="❓"><span class="pe-emo">❓</span><span class="pe-lbl">perdu</span></div>
+        <div class="palette-emoji" data-emoji="😐"><span class="pe-emo">😐</span><span class="pe-lbl">neutre</span></div>
+        <div class="palette-emoji" data-emoji="🤔"><span class="pe-emo">🤔</span><span class="pe-lbl">perplexe</span></div>
+        <div class="palette-emoji" data-emoji="🧠"><span class="pe-emo">🧠</span><span class="pe-lbl">réflexion</span></div>
+        <div class="palette-sep"></div>
+        <div class="palette-emoji" data-emoji="👀"><span class="pe-emo">👀</span><span class="pe-lbl">curieux</span></div>
+        <div class="palette-emoji selected" data-emoji="🙂"><span class="pe-emo">🙂</span><span class="pe-lbl">serein</span></div>
+        <div class="palette-emoji" data-emoji="💡"><span class="pe-emo">💡</span><span class="pe-lbl">éclairé</span></div>
+        <div class="palette-emoji" data-emoji="💪"><span class="pe-emo">💪</span><span class="pe-lbl">motivé</span></div>
+        <div class="palette-emoji" data-emoji="✨"><span class="pe-emo">✨</span><span class="pe-lbl">inspiré</span></div>
+        <div class="palette-emoji" data-emoji="🔥"><span class="pe-emo">🔥</span><span class="pe-lbl">enthousiaste</span></div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><span style="font-size:16px;opacity:0.45;filter:grayscale(0.6)">🤔</span> avant</div>
+        <div class="legend-item"><span style="font-size:16px">💪</span> après</div>
+        <div class="legend-item"><span style="color:#6366f1">⇢</span> déplacement du nuage</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="card">
+        <h3>Participation</h3>
+        <div class="count-row"><span class="num">10</span><span class="lbl">dépôts avant</span></div>
+        <div class="count-row"><span class="num">10</span><span class="lbl">dépôts après</span></div>
+      </div>
+
+      <div class="waiting-msg">
+        Mode participant actif.<br>
+        Les résultats d'analyse apparaîtront en mode <strong>Évolution</strong>.
+      </div>
+
+      <div class="card evol-card">
+        <h3>Déplacement global</h3>
+        <div class="shift-big">↗ +38%</div>
+        <div class="shift-desc">Le nuage a migré de la zone <em>abattement</em> vers <em>confiance active</em>.</div>
+      </div>
+
+      <div class="card evol-card">
+        <h3>Évolution des émojis</h3>
+        <div class="emoji-evol"><span class="ee-emo">💪</span><div class="ee-bar-wrap"><div class="ee-bar ee-up" style="width:70%"></div></div><span class="ee-delta">+3</span></div>
+        <div class="emoji-evol"><span class="ee-emo">✨</span><div class="ee-bar-wrap"><div class="ee-bar ee-up" style="width:60%"></div></div><span class="ee-delta">+3</span></div>
+        <div class="emoji-evol"><span class="ee-emo">💡</span><div class="ee-bar-wrap"><div class="ee-bar ee-up" style="width:40%"></div></div><span class="ee-delta">+2</span></div>
+        <div class="emoji-evol"><span class="ee-emo">🤔</span><div class="ee-bar-wrap"><div class="ee-bar ee-down" style="width:45%"></div></div><span class="ee-delta">−2</span></div>
+        <div class="emoji-evol"><span class="ee-emo">😴</span><div class="ee-bar-wrap"><div class="ee-bar ee-down" style="width:30%"></div></div><span class="ee-delta">−1</span></div>
+      </div>
+
+      <button class="export-btn evol-card" id="exportBtn">⬇ Exporter (CSV + JSON)</button>
+    </div>
+  </div>
+
+<script>
+(function() {
+  const compass = document.querySelector('.compass');
+  const emojisLayer = document.getElementById('emojis');
+  const palette = document.querySelector('.palette');
+  const phaseBtns = document.querySelectorAll('.phase-btn');
+  const exportBtn = document.getElementById('exportBtn');
+
+  // État initial (échantillon) — données anonymes {phase, emoji, x, y}
+  let placed = [
+    {phase:'avant', emoji:'😴', x:30, y:70},
+    {phase:'avant', emoji:'🤔', x:40, y:55},
+    {phase:'avant', emoji:'😟', x:25, y:65},
+    {phase:'avant', emoji:'😐', x:52, y:60},
+    {phase:'avant', emoji:'🧠', x:38, y:48},
+    {phase:'avant', emoji:'❓', x:45, y:68},
+    {phase:'avant', emoji:'🤔', x:55, y:52},
+    {phase:'avant', emoji:'😵‍💫', x:32, y:58},
+    {phase:'avant', emoji:'😰', x:48, y:72},
+    {phase:'avant', emoji:'🙂', x:60, y:45},
+    {phase:'apres', emoji:'✨', x:68, y:25},
+    {phase:'apres', emoji:'💪', x:72, y:30},
+    {phase:'apres', emoji:'🙂', x:58, y:35},
+    {phase:'apres', emoji:'🔥', x:75, y:20},
+    {phase:'apres', emoji:'💡', x:55, y:42},
+    {phase:'apres', emoji:'💪', x:65, y:38},
+    {phase:'apres', emoji:'✨', x:60, y:28},
+    {phase:'apres', emoji:'🤔', x:52, y:55},
+    {phase:'apres', emoji:'💡', x:70, y:22},
+    {phase:'apres', emoji:'🙂', x:62, y:40},
+  ];
+
+  // Mode : 'avant' ou 'apres' = phase active (dépôts); 'evolution' = lecture seule
+  let mode = 'evolution';
+
+  function render() {
+    compass.classList.toggle('show-evol', mode === 'evolution');
+    document.body.classList.toggle('mode-evolution', mode === 'evolution');
+    emojisLayer.innerHTML = '';
+    placed.forEach((p, i) => {
+      // En mode "avant" ou "apres", n'afficher que la phase correspondante.
+      // En mode "evolution", tout afficher.
+      if (mode !== 'evolution' && p.phase !== mode) return;
+      const el = document.createElement('div');
+      el.className = 'emoji ' + (p.phase === 'avant' ? 'before' : 'after');
+      el.textContent = p.emoji;
+      el.style.left = p.x + '%';
+      el.style.top  = p.y + '%';
+      el.dataset.index = i;
+      emojisLayer.appendChild(el);
+    });
+  }
+
+  // --- Drag & drop ---
+  let ghost = null;
+  let dragSource = null; // {from:'palette'|'compass', emoji, index?}
+
+  function createGhost(emoji, x, y) {
+    ghost = document.createElement('div');
+    ghost.className = 'ghost';
+    ghost.textContent = emoji;
+    ghost.style.left = x + 'px';
+    ghost.style.top  = y + 'px';
+    document.body.appendChild(ghost);
+  }
+  function moveGhost(x, y) {
+    if (!ghost) return;
+    ghost.style.left = x + 'px';
+    ghost.style.top  = y + 'px';
+  }
+  function clearGhost() {
+    if (ghost) ghost.remove();
+    ghost = null;
+    dragSource = null;
+  }
+
+  function compassCoords(clientX, clientY) {
+    const r = compass.getBoundingClientRect();
+    if (clientX < r.left || clientX > r.right || clientY < r.top || clientY > r.bottom) return null;
+    return {
+      x: ((clientX - r.left) / r.width)  * 100,
+      y: ((clientY - r.top)  / r.height) * 100,
+    };
+  }
+
+  // Palette : début de drag
+  palette.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest('.palette-emoji');
+    if (!el) return;
+    if (mode === 'evolution') {
+      flash("Choisis d'abord 'Avant' ou 'Après' en haut à droite");
+      return;
+    }
+    e.preventDefault();
+    palette.querySelectorAll('.palette-emoji').forEach(n => n.classList.remove('selected'));
+    el.classList.add('selected');
+    const emo = el.dataset.emoji;
+    dragSource = { from: 'palette', emoji: emo };
+    createGhost(emo, e.clientX, e.clientY);
+  });
+
+  // Emoji déjà posé : drag pour repositionner
+  emojisLayer.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest('.emoji');
+    if (!el) return;
+    if (mode === 'evolution') return;
+    const idx = parseInt(el.dataset.index, 10);
+    if (placed[idx].phase !== mode) return; // ne bouge que les émojis de la phase active
+    e.preventDefault();
+    el.classList.add('dragging');
+    dragSource = { from: 'compass', emoji: placed[idx].emoji, index: idx, el };
+    createGhost(placed[idx].emoji, e.clientX, e.clientY);
+  });
+
+  document.addEventListener('pointermove', (e) => {
+    if (ghost) moveGhost(e.clientX, e.clientY);
+  });
+
+  document.addEventListener('pointerup', (e) => {
+    if (!dragSource) return;
+    const coords = compassCoords(e.clientX, e.clientY);
+    if (dragSource.from === 'palette' && coords) {
+      placed.push({ phase: mode, emoji: dragSource.emoji, x: coords.x, y: coords.y });
+    } else if (dragSource.from === 'compass') {
+      if (coords) {
+        placed[dragSource.index].x = coords.x;
+        placed[dragSource.index].y = coords.y;
+      } else {
+        // lâcher hors boussole = suppression
+        placed.splice(dragSource.index, 1);
+      }
+      dragSource.el?.classList.remove('dragging');
+    }
+    clearGhost();
+    render();
+  });
+
+  // Phase switcher
+  phaseBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      phaseBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const txt = btn.textContent.trim().toLowerCase();
+      mode = txt === 'avant' ? 'avant' : txt === 'après' ? 'apres' : 'evolution';
+      render();
+    });
+  });
+
+  // Dictionnaire émoji → mot (depuis la palette)
+  const emoLabels = {};
+  document.querySelectorAll('.palette-emoji').forEach(el => {
+    emoLabels[el.dataset.emoji] = el.querySelector('.pe-lbl').textContent;
+  });
+
+  // Export CSV + JSON
+  exportBtn.addEventListener('click', () => {
+    const enriched = placed.map(p => ({ ...p, label: emoLabels[p.emoji] || '' }));
+    const json = JSON.stringify(enriched, null, 2);
+    const csv = 'phase,emoji,label,x,y\n' + enriched.map(p => `${p.phase},${p.emoji},${p.label},${p.x.toFixed(2)},${p.y.toFixed(2)}`).join('\n');
+    download('boussole.json', json, 'application/json');
+    download('boussole.csv',  csv,  'text/csv');
+  });
+  function download(name, content, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  // Petit toast temporaire
+  let toastTimer;
+  function flash(msg) {
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#6366f1;color:white;padding:12px 20px;border-radius:10px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:2000;';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.style.transition='opacity 0.4s'; t.style.opacity='0'; }, 2400);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -60,7 +60,9 @@ export async function POST(request: NextRequest) {
       'statistiques_ecoles',
       'stagiaires_m2',
       'evenements',
-      'effectifs'
+      'effectifs',
+      'boussole_deposits',
+      'boussole_sessions'
     ];
 
     const erreurs: string[] = [];

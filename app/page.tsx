@@ -116,6 +116,7 @@ export default function HomePage() {
 
   // Tabs supplémentaires — visibles uniquement pour les utilisateurs connectés
   const authTabs = [
+    { label: 'Formations', title: 'Formations', desc: 'Outils interactifs pour vos temps de formation (boussole d\'état d\'esprit, etc.).', btn: 'Accéder', href: '/formations' },
     { label: 'Données', title: 'Données', desc: 'Gestion et import des données de la circonscription.', btn: 'Gérer', href: '/donnees' },
     { label: 'Calendrier', title: 'Calendrier', desc: 'Calendrier des événements et réunions de la circonscription.', btn: 'Consulter', href: '/calendrier' },
     { label: 'Archives', title: 'Archives', desc: 'Accédez aux archives des années précédentes.', btn: 'Consulter', href: '/archives' },

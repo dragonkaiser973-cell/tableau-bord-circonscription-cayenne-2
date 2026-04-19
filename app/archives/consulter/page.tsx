@@ -267,6 +267,18 @@ function ConsulterArchiveContent() {
                 </p>
               </div>
             </Link>
+
+            {brutes.boussole_sessions && brutes.boussole_sessions.length > 0 && (
+              <Link href={`/archives/consulter/formations/boussole?annee=${annee}`}>
+                <div className="p-6 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg border-2 border-indigo-200 hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="text-4xl mb-3">🧭</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Boussole d&apos;état d&apos;esprit</h3>
+                  <p className="text-sm text-gray-600">
+                    {brutes.boussole_sessions.length} session{brutes.boussole_sessions.length > 1 ? 's' : ''} de formation archivée{brutes.boussole_sessions.length > 1 ? 's' : ''}
+                  </p>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>

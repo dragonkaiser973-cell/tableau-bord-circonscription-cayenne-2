@@ -172,12 +172,16 @@ export async function POST(request: NextRequest) {
   resEnseignants,
   resEcoles,
   resStagiaires,
-  resEvenementsData
+  resEvenementsData,
+  resBoussoleSessions,
+  resBoussoleDeposits
 ] = await Promise.all([
   supabase.from('enseignants').select('*'),
   supabase.from('ecoles').select('*'),
   supabase.from('stagiaires_m2').select('*').eq('annee_scolaire', anneeScolaire),
-  supabase.from('evenements').select('*').order('date_debut', { ascending: true })
+  supabase.from('evenements').select('*').order('date_debut', { ascending: true }),
+  supabase.from('boussole_sessions').select('*').order('date_formation', { ascending: false }),
+  supabase.from('boussole_deposits').select('*')
 ]);
 
 // Charger TOUTES les évaluations avec pagination
@@ -211,6 +215,8 @@ while (hasMore) {
 const enseignants = resEnseignants.data || [];
 const ecoles = resEcoles.data || [];
 const stagiaires_m2 = resStagiaires.data || [];
+const boussole_sessions = resBoussoleSessions.data || [];
+const boussole_deposits = resBoussoleDeposits.data || [];
 // Adapter le format Supabase (snake_case) → camelCase attendu dans l'archive
 const evenements = (resEvenementsData.data || []).map((e: any) => ({
   id: e.id,
@@ -317,7 +323,8 @@ console.log(`   - ${Array.isArray(ecoles_identite) ? ecoles_identite.length : 0}
         evaluations: evaluations.length > 0,
         statistiques: statistiques_ecoles.length > 0,
         stagiaires: stagiaires_m2.length > 0,
-        calendrier: evenements.length > 0
+        calendrier: evenements.length > 0,
+        boussole: boussole_sessions.length > 0
       },
       stats: {
         nombreEcoles: ecoles_identite.length,
@@ -326,7 +333,9 @@ console.log(`   - ${Array.isArray(ecoles_identite) ? ecoles_identite.length : 0}
         nombreEnseignants: enseignants.length,
         nombreStagiaires: stagiaires_m2.length,
         nombreEvaluations: evaluations.length,
-        nombreEvenements: evenements.length
+        nombreEvenements: evenements.length,
+        nombreBoussoleSessions: boussole_sessions.length,
+        nombreBoussoleDeposits: boussole_deposits.length
       }
     };
     
@@ -341,7 +350,9 @@ console.log(`   - ${Array.isArray(ecoles_identite) ? ecoles_identite.length : 0}
       statistiques_ecoles,
       stagiaires_m2,
       enseignants,
-      evenements
+      evenements,
+      boussole_sessions,
+      boussole_deposits
     };
     
     const donnees_calculees = {
