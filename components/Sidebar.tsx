@@ -6,12 +6,13 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 interface NavItem {
-  href: string;
+  href?: string;
   label: string;
   icon: React.ReactNode;
   requiresAuth?: boolean;
   requiresAdmin?: boolean;
-  category: 'main' | 'auth' | 'admin' | 'tools';
+  category: 'main' | 'auth' | 'admin' | 'tools' | 'info';
+  items?: NavItem[];
 }
 
 const navItems: NavItem[] = [
@@ -21,6 +22,7 @@ const navItems: NavItem[] = [
   { href: '/enseignants', label: 'Enseignants', icon: <UsersIcon />, category: 'main' },
   { href: '/statistiques', label: 'Statistiques', icon: <PieChartIcon />, category: 'main' },
   { href: '/questionnaires', label: 'Questionnaires', icon: <ClipboardIcon />, category: 'main' },
+  { href: '/formations', label: 'Formations', icon: <CompassIcon />, category: 'auth', requiresAuth: true },
   { href: '/donnees', label: 'Données', icon: <DatabaseIcon />, category: 'auth', requiresAuth: true },
   { href: '/calendrier', label: 'Calendrier', icon: <CalendarIcon />, category: 'auth', requiresAuth: true },
   { href: '/pilotage', label: 'Pilotage', icon: <DashboardIcon />, category: 'auth', requiresAuth: true },
@@ -28,8 +30,18 @@ const navItems: NavItem[] = [
   { href: '/archives', label: 'Archives', icon: <ArchiveIcon />, category: 'auth', requiresAuth: true },
   { href: '/admin', label: 'Administration', icon: <ShieldIcon />, category: 'admin', requiresAdmin: true },
   { href: '/questionnaires/admin', label: 'Gérer questionnaires', icon: <SettingsIcon />, category: 'admin', requiresAdmin: true },
+  { href: '/admin/annuaire', label: 'Gérer annuaire', icon: <AddressBookIcon />, category: 'admin', requiresAdmin: true },
   { href: '/analyse-classe', label: 'Analyse classe', icon: <MicroscopeIcon />, category: 'tools' },
   { href: '/aide-analyse-classe', label: 'Guide', icon: <BookIcon />, category: 'tools' },
+  { href: '/outils/annuaire', label: 'Annuaire', icon: <AddressBookIcon />, category: 'info' },
+  {
+    label: 'Ressources',
+    icon: <FolderIcon />,
+    category: 'info',
+    items: [
+      { href: '/outils/digipad', label: 'Digipad', icon: <LinkIcon />, category: 'info' },
+    ],
+  },
 ];
 
 const categoryLabels: Record<string, string> = {
@@ -37,6 +49,7 @@ const categoryLabels: Record<string, string> = {
   auth: 'Espace réservé',
   admin: 'Administration',
   tools: 'Outils',
+  info: 'Informations',
 };
 
 export default function Sidebar() {
@@ -45,6 +58,7 @@ export default function Sidebar() {
   const [userRole, setUserRole] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -82,6 +96,13 @@ export default function Sidebar() {
     setIsMobileOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    const parent = navItems.find(item =>
+      item.items?.some(sub => sub.href && (pathname === sub.href || pathname.startsWith(sub.href + '/')))
+    );
+    if (parent) setOpenSubmenu(parent.label);
+  }, [pathname]);
+
   const filteredItems = navItems.filter(item => {
     if (item.requiresAdmin && (!isAuthenticated || userRole !== 'admin')) return false;
     if (item.requiresAuth && !isAuthenticated) return false;
@@ -96,6 +117,7 @@ export default function Sidebar() {
 
   // Ne pas afficher la sidebar sur la page d'accueil
   if (pathname === '/') return null;
+  if (pathname.endsWith('/salle') || pathname.includes('/salle/')) return null;
 
   return (
     <>
@@ -144,7 +166,7 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3">
-          {['main', 'auth', 'admin', 'tools'].map(category => {
+          {['main', 'auth', 'admin', 'tools', 'info'].map(category => {
             const items = groupedItems[category];
             if (!items || items.length === 0) return null;
             return (
@@ -156,11 +178,89 @@ export default function Sidebar() {
                 )}
                 <ul className="space-y-0.5">
                   {items.map(item => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                    const hasSubitems = !!item.items && item.items.length > 0;
+                    const isActive = !hasSubitems && !!item.href && (pathname === item.href || pathname.startsWith(item.href + '/'));
+                    const isSubmenuOpen = openSubmenu === item.label;
+                    const hasActiveChild = hasSubitems && item.items!.some(sub => sub.href && (pathname === sub.href || pathname.startsWith(sub.href + '/')));
+
+                    if (hasSubitems) {
+                      return (
+                        <li key={item.label}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isCollapsed) {
+                                setIsCollapsed(false);
+                                setOpenSubmenu(item.label);
+                              } else {
+                                setOpenSubmenu(isSubmenuOpen ? null : item.label);
+                              }
+                            }}
+                            className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 text-zen-text-secondary hover:bg-zen-bg hover:text-zen-text font-normal
+                              ${isCollapsed ? 'justify-center' : ''}
+                            `}
+                            title={isCollapsed ? item.label : undefined}
+                            aria-expanded={isSubmenuOpen}
+                          >
+                            <span className="flex-shrink-0 w-5 h-5 transition-all duration-200 text-zen-text-muted group-hover:text-zen-text-secondary group-hover:scale-110">
+                              {item.icon}
+                            </span>
+
+                            {!isCollapsed && (
+                              <>
+                                <span className="truncate flex-1 text-left transition-all duration-200 group-hover:translate-x-0.5">{item.label}</span>
+                                <span className={`flex-shrink-0 w-4 h-4 text-zen-text-muted transition-transform duration-200 ${isSubmenuOpen ? 'rotate-180' : ''}`}>
+                                  <ChevronDownIcon />
+                                </span>
+                              </>
+                            )}
+
+                            {isCollapsed && (
+                              <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-zen-accent text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-lg">
+                                {item.label}
+                              </div>
+                            )}
+                          </button>
+
+                          {!isCollapsed && (
+                            <div className={`overflow-hidden transition-all duration-200 ease-in-out ${isSubmenuOpen ? 'max-h-96 mt-0.5' : 'max-h-0'}`}>
+                              <ul className="ml-4 pl-3 border-l border-zen-border space-y-0.5 py-0.5">
+                                {item.items!.map(sub => {
+                                  const subActive = !!sub.href && (pathname === sub.href || pathname.startsWith(sub.href + '/'));
+                                  return (
+                                    <li key={sub.href || sub.label}>
+                                      <Link
+                                        href={sub.href || '#'}
+                                        className={`group flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-200
+                                          ${subActive
+                                            ? 'bg-zen-accent text-white font-medium'
+                                            : 'text-zen-text-secondary hover:bg-zen-bg hover:text-zen-text font-normal'
+                                          }
+                                        `}
+                                      >
+                                        <span className={`flex-shrink-0 w-4 h-4 transition-all duration-200
+                                          ${subActive ? 'text-white' : 'text-zen-text-muted group-hover:text-zen-text-secondary group-hover:scale-110'}
+                                        `}>
+                                          {sub.icon}
+                                        </span>
+                                        <span className={`truncate transition-all duration-200 ${subActive ? '' : 'group-hover:translate-x-0.5'}`}>
+                                          {sub.label}
+                                        </span>
+                                      </Link>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    }
+
                     return (
                       <li key={item.href}>
                         <Link
-                          href={item.href}
+                          href={item.href!}
                           className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200
                             ${isActive
                               ? 'bg-zen-accent text-white font-medium'
@@ -263,6 +363,9 @@ function SettingsIcon() {
 function MicroscopeIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18h8M3 22h18M14 22a7 7 0 100-14h-1M9 14h2M9 12a2 2 0 01-2-2V6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2z" /></svg>;
 }
+function CompassIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" /></svg>;
+}
 function BookIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>;
 }
@@ -274,4 +377,16 @@ function CloseIcon() {
 }
 function ChevronLeftIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>;
+}
+function ChevronDownIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>;
+}
+function FolderIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" /></svg>;
+}
+function LinkIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" /></svg>;
+}
+function AddressBookIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4a2 2 0 012-2h12a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" /><path d="M2 8h2M2 12h2M2 16h2" /><circle cx="12" cy="11" r="3" /><path d="M7 18a5 5 0 0110 0" /></svg>;
 }

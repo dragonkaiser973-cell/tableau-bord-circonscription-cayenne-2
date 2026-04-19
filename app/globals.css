@@ -122,6 +122,16 @@ h1, h2, h3 {
   }
 }
 
+/* ═══ Annuaire fade-in ═══ */
+@keyframes annuaireFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadein {
+  opacity: 0;
+  animation: annuaireFadeIn 0.45s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
 /* ═══ Accessibility ═══ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
