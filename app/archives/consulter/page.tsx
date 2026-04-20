@@ -279,6 +279,21 @@ function ConsulterArchiveContent() {
                 </div>
               </Link>
             )}
+
+            {brutes.plan_formation && brutes.plan_formation.length > 0 && (
+              <Link href={`/archives/consulter/formations/plan-formation?annee=${annee}`}>
+                <div className="p-6 bg-gradient-to-br from-teal-50 to-teal-100 rounded-lg border-2 border-teal-200 hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="text-4xl mb-3">📚</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Plan de formation</h3>
+                  <p className="text-sm text-gray-600">
+                    {brutes.plan_formation.length} dispositif{brutes.plan_formation.length > 1 ? 's' : ''}
+                    {brutes.plan_formation_sessions && brutes.plan_formation_sessions.length > 0
+                      ? ` · ${brutes.plan_formation_sessions.length} session${brutes.plan_formation_sessions.length > 1 ? 's' : ''}`
+                      : ''}
+                  </p>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>

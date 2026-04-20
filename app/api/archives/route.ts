@@ -174,14 +174,20 @@ export async function POST(request: NextRequest) {
   resStagiaires,
   resEvenementsData,
   resBoussoleSessions,
-  resBoussoleDeposits
+  resBoussoleDeposits,
+  resPlanFormation,
+  resPlanFormationSessions,
+  resPlanFormationFormateurs
 ] = await Promise.all([
   supabase.from('enseignants').select('*'),
   supabase.from('ecoles').select('*'),
   supabase.from('stagiaires_m2').select('*').eq('annee_scolaire', anneeScolaire),
   supabase.from('evenements').select('*').order('date_debut', { ascending: true }),
   supabase.from('boussole_sessions').select('*').order('date_formation', { ascending: false }),
-  supabase.from('boussole_deposits').select('*')
+  supabase.from('boussole_deposits').select('*'),
+  supabase.from('plan_formation').select('*').order('ordre', { ascending: true }),
+  supabase.from('plan_formation_sessions').select('*').order('ordre', { ascending: true }),
+  supabase.from('plan_formation_formateurs').select('*').order('ordre', { ascending: true })
 ]);
 
 // Charger TOUTES les évaluations avec pagination
@@ -217,6 +223,9 @@ const ecoles = resEcoles.data || [];
 const stagiaires_m2 = resStagiaires.data || [];
 const boussole_sessions = resBoussoleSessions.data || [];
 const boussole_deposits = resBoussoleDeposits.data || [];
+const plan_formation = resPlanFormation.data || [];
+const plan_formation_sessions = resPlanFormationSessions.data || [];
+const plan_formation_formateurs = resPlanFormationFormateurs.data || [];
 // Adapter le format Supabase (snake_case) → camelCase attendu dans l'archive
 const evenements = (resEvenementsData.data || []).map((e: any) => ({
   id: e.id,
@@ -324,7 +333,8 @@ console.log(`   - ${Array.isArray(ecoles_identite) ? ecoles_identite.length : 0}
         statistiques: statistiques_ecoles.length > 0,
         stagiaires: stagiaires_m2.length > 0,
         calendrier: evenements.length > 0,
-        boussole: boussole_sessions.length > 0
+        boussole: boussole_sessions.length > 0,
+        planFormation: plan_formation.length > 0
       },
       stats: {
         nombreEcoles: ecoles_identite.length,
@@ -335,7 +345,10 @@ console.log(`   - ${Array.isArray(ecoles_identite) ? ecoles_identite.length : 0}
         nombreEvaluations: evaluations.length,
         nombreEvenements: evenements.length,
         nombreBoussoleSessions: boussole_sessions.length,
-        nombreBoussoleDeposits: boussole_deposits.length
+        nombreBoussoleDeposits: boussole_deposits.length,
+        nombrePlanFormation: plan_formation.length,
+        nombrePlanFormationSessions: plan_formation_sessions.length,
+        nombrePlanFormationSessionsFaites: plan_formation_sessions.filter((s: any) => s.fait).length
       }
     };
     
@@ -352,7 +365,10 @@ console.log(`   - ${Array.isArray(ecoles_identite) ? ecoles_identite.length : 0}
       enseignants,
       evenements,
       boussole_sessions,
-      boussole_deposits
+      boussole_deposits,
+      plan_formation,
+      plan_formation_sessions,
+      plan_formation_formateurs
     };
     
     const donnees_calculees = {

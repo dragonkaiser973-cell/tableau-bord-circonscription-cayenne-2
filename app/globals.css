@@ -132,6 +132,32 @@ h1, h2, h3 {
   animation: annuaireFadeIn 0.45s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
 }
 
+/* ═══ Plan de formation ═══ */
+@keyframes pfSlideIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-pf-slidein {
+  opacity: 0;
+  animation: pfSlideIn 0.55s cubic-bezier(0.16, 0.8, 0.24, 1) forwards;
+}
+
+@keyframes pfPulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.35); }
+  70% { box-shadow: 0 0 0 14px rgba(99, 102, 241, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+.animate-pf-pulse { animation: pfPulseRing 2.4s ease-out infinite; }
+
+@keyframes pfBarGrow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.animate-pf-bar {
+  transform-origin: left center;
+  animation: pfBarGrow 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
 /* ═══ Accessibility ═══ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
