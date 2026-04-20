@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { motion, LayoutGroup } from 'framer-motion';
+
+const sbSpring = { type: 'spring' as const, stiffness: 320, damping: 28 };
 
 interface NavItem {
   href?: string;
@@ -22,7 +25,18 @@ const navItems: NavItem[] = [
   { href: '/enseignants', label: 'Enseignants', icon: <UsersIcon />, category: 'main' },
   { href: '/statistiques', label: 'Statistiques', icon: <PieChartIcon />, category: 'main' },
   { href: '/questionnaires', label: 'Questionnaires', icon: <ClipboardIcon />, category: 'main' },
-  { href: '/formations', label: 'Formations', icon: <CompassIcon />, category: 'auth', requiresAuth: true },
+  {
+    label: 'Formations',
+    icon: <CompassIcon />,
+    category: 'auth',
+    requiresAuth: true,
+    items: [
+      { href: '/formations/boussole',     label: "Boussole d'état d'esprit", icon: <CompassIcon />, category: 'auth' },
+      { href: '/formations/plan',         label: 'Plan de formation',        icon: <ListIcon />,    category: 'auth' },
+      { href: '/formations/scenarisation', label: 'Scénarisation ABC',       icon: <FilmIcon />,    category: 'auth' },
+      { href: '/formations/bilan',        label: 'Bilan',                    icon: <PieChartIcon />, category: 'auth' },
+    ],
+  },
   { href: '/donnees', label: 'Données', icon: <DatabaseIcon />, category: 'auth', requiresAuth: true },
   { href: '/calendrier', label: 'Calendrier', icon: <CalendarIcon />, category: 'auth', requiresAuth: true },
   { href: '/pilotage', label: 'Pilotage', icon: <DashboardIcon />, category: 'auth', requiresAuth: true },
@@ -31,6 +45,7 @@ const navItems: NavItem[] = [
   { href: '/admin', label: 'Administration', icon: <ShieldIcon />, category: 'admin', requiresAdmin: true },
   { href: '/questionnaires/admin', label: 'Gérer questionnaires', icon: <SettingsIcon />, category: 'admin', requiresAdmin: true },
   { href: '/admin/annuaire', label: 'Gérer annuaire', icon: <AddressBookIcon />, category: 'admin', requiresAdmin: true },
+  { href: '/admin/plan-formation', label: 'Gérer plan formation', icon: <ListIcon />, category: 'admin', requiresAdmin: true },
   { href: '/analyse-classe', label: 'Analyse classe', icon: <MicroscopeIcon />, category: 'tools' },
   { href: '/aide-analyse-classe', label: 'Guide', icon: <BookIcon />, category: 'tools' },
   { href: '/outils/annuaire', label: 'Annuaire', icon: <AddressBookIcon />, category: 'info' },
@@ -59,6 +74,8 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  const [hoverItem, setHoverItem] = useState<string | null>(null);
+  const [hoverSub, setHoverSub] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -165,10 +182,16 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
+        <nav
+          className="flex-1 overflow-y-auto py-4 px-3"
+          onMouseLeave={() => setHoverItem(null)}
+        >
           {['main', 'auth', 'admin', 'tools', 'info'].map(category => {
             const items = groupedItems[category];
             if (!items || items.length === 0) return null;
+            const hoverBgId = `sb-hover-bg-${category}`;
+            const activeLineId = `sb-active-line-${category}`;
+            const hoverLineId = `sb-hover-line-${category}`;
             return (
               <div key={category} className="mb-6">
                 {!isCollapsed && (
@@ -176,123 +199,196 @@ export default function Sidebar() {
                     {categoryLabels[category]}
                   </p>
                 )}
-                <ul className="space-y-0.5">
-                  {items.map(item => {
-                    const hasSubitems = !!item.items && item.items.length > 0;
-                    const isActive = !hasSubitems && !!item.href && (pathname === item.href || pathname.startsWith(item.href + '/'));
-                    const isSubmenuOpen = openSubmenu === item.label;
-                    const hasActiveChild = hasSubitems && item.items!.some(sub => sub.href && (pathname === sub.href || pathname.startsWith(sub.href + '/')));
+                <LayoutGroup id={category}>
+                  <ul className="space-y-0.5">
+                    {items.map(item => {
+                      const hasSubitems = !!item.items && item.items.length > 0;
+                      const isActive = !hasSubitems && !!item.href && (pathname === item.href || pathname.startsWith(item.href + '/'));
+                      const isSubmenuOpen = openSubmenu === item.label;
+                      const hasActiveChild = hasSubitems && item.items!.some(sub => sub.href && (pathname === sub.href || pathname.startsWith(sub.href + '/')));
+                      const itemKey = item.href || item.label;
+                      const isHovered = hoverItem === itemKey;
+                      const parentHighlight = hasSubitems && hasActiveChild && !isSubmenuOpen;
 
-                    if (hasSubitems) {
+                      if (hasSubitems) {
+                        return (
+                          <li key={item.label}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isCollapsed) {
+                                  setIsCollapsed(false);
+                                  setOpenSubmenu(item.label);
+                                } else {
+                                  setOpenSubmenu(isSubmenuOpen ? null : item.label);
+                                }
+                              }}
+                              onMouseEnter={() => setHoverItem(itemKey)}
+                              className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors duration-200 font-normal
+                                ${parentHighlight ? 'text-zen-text font-medium' : 'text-zen-text-secondary hover:text-zen-text'}
+                                ${isCollapsed ? 'justify-center' : ''}
+                              `}
+                              title={isCollapsed ? item.label : undefined}
+                              aria-expanded={isSubmenuOpen}
+                            >
+                              {isHovered && !isCollapsed && (
+                                <motion.div
+                                  layoutId={hoverBgId}
+                                  className="absolute inset-0 bg-zen-text/[0.06] rounded-xl"
+                                  transition={sbSpring}
+                                />
+                              )}
+                              {parentHighlight && !isCollapsed && (
+                                <motion.div
+                                  layoutId={activeLineId}
+                                  className="absolute bottom-1 left-3 right-3 h-0.5 bg-zen-text rounded-full"
+                                  transition={sbSpring}
+                                />
+                              )}
+                              {isHovered && !parentHighlight && !isCollapsed && (
+                                <motion.div
+                                  layoutId={hoverLineId}
+                                  className="absolute bottom-1 left-3 right-3 h-0.5 bg-zen-text/30 rounded-full"
+                                  transition={sbSpring}
+                                />
+                              )}
+                              <span className="relative z-10 flex-shrink-0 w-5 h-5 transition-all duration-200 text-zen-text-muted group-hover:text-zen-text-secondary group-hover:scale-110">
+                                {item.icon}
+                              </span>
+
+                              {!isCollapsed && (
+                                <>
+                                  <span className="relative z-10 truncate flex-1 text-left">{item.label}</span>
+                                  <span className={`relative z-10 flex-shrink-0 w-4 h-4 text-zen-text-muted transition-transform duration-200 ${isSubmenuOpen ? 'rotate-180' : ''}`}>
+                                    <ChevronDownIcon />
+                                  </span>
+                                </>
+                              )}
+
+                              {isCollapsed && (
+                                <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-zen-accent text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-lg">
+                                  {item.label}
+                                </div>
+                              )}
+                            </button>
+
+                            {!isCollapsed && (
+                              <div
+                                className={`overflow-hidden transition-all duration-200 ease-in-out ${isSubmenuOpen ? 'max-h-96 mt-0.5' : 'max-h-0'}`}
+                                onMouseLeave={() => setHoverSub(null)}
+                              >
+                                <LayoutGroup id={`${category}-${item.label}-sub`}>
+                                  <ul className="ml-4 pl-3 border-l border-zen-border space-y-0.5 py-0.5">
+                                    {item.items!.map(sub => {
+                                      const subActive = !!sub.href && (pathname === sub.href || pathname.startsWith(sub.href + '/'));
+                                      const subKey = sub.href || sub.label;
+                                      const subHovered = hoverSub === subKey;
+                                      return (
+                                        <li key={sub.href || sub.label}>
+                                          <Link
+                                            href={sub.href || '#'}
+                                            onMouseEnter={() => setHoverSub(subKey)}
+                                            className={`group relative flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors duration-200
+                                              ${subActive ? 'text-zen-text font-medium' : 'text-zen-text-secondary hover:text-zen-text font-normal'}
+                                            `}
+                                          >
+                                            {subHovered && (
+                                              <motion.div
+                                                layoutId="sb-sub-hover-bg"
+                                                className="absolute inset-0 bg-zen-text/[0.06] rounded-xl"
+                                                transition={sbSpring}
+                                              />
+                                            )}
+                                            {subActive && (
+                                              <motion.div
+                                                layoutId="sb-sub-active-line"
+                                                className="absolute bottom-1 left-3 right-3 h-0.5 bg-zen-text rounded-full"
+                                                transition={sbSpring}
+                                              />
+                                            )}
+                                            {subHovered && !subActive && (
+                                              <motion.div
+                                                layoutId="sb-sub-hover-line"
+                                                className="absolute bottom-1 left-3 right-3 h-0.5 bg-zen-text/30 rounded-full"
+                                                transition={sbSpring}
+                                              />
+                                            )}
+                                            <span className={`relative z-10 flex-shrink-0 w-4 h-4 transition-all duration-200
+                                              ${subActive ? 'text-zen-text' : 'text-zen-text-muted group-hover:text-zen-text-secondary group-hover:scale-110'}
+                                            `}>
+                                              {sub.icon}
+                                            </span>
+                                            <span className="relative z-10 truncate">
+                                              {sub.label}
+                                            </span>
+                                          </Link>
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </LayoutGroup>
+                              </div>
+                            )}
+                          </li>
+                        );
+                      }
+
                       return (
-                        <li key={item.label}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (isCollapsed) {
-                                setIsCollapsed(false);
-                                setOpenSubmenu(item.label);
-                              } else {
-                                setOpenSubmenu(isSubmenuOpen ? null : item.label);
-                              }
-                            }}
-                            className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 text-zen-text-secondary hover:bg-zen-bg hover:text-zen-text font-normal
+                        <li key={item.href}>
+                          <Link
+                            href={item.href!}
+                            onMouseEnter={() => setHoverItem(itemKey)}
+                            className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors duration-200
+                              ${isActive ? 'text-zen-text font-medium' : 'text-zen-text-secondary hover:text-zen-text font-normal'}
                               ${isCollapsed ? 'justify-center' : ''}
                             `}
                             title={isCollapsed ? item.label : undefined}
-                            aria-expanded={isSubmenuOpen}
                           >
-                            <span className="flex-shrink-0 w-5 h-5 transition-all duration-200 text-zen-text-muted group-hover:text-zen-text-secondary group-hover:scale-110">
+                            {isHovered && !isCollapsed && (
+                              <motion.div
+                                layoutId={hoverBgId}
+                                className="absolute inset-0 bg-zen-text/[0.06] rounded-xl"
+                                transition={sbSpring}
+                              />
+                            )}
+                            {isActive && !isCollapsed && (
+                              <motion.div
+                                layoutId={activeLineId}
+                                className="absolute bottom-1 left-3 right-3 h-0.5 bg-zen-text rounded-full"
+                                transition={sbSpring}
+                              />
+                            )}
+                            {isHovered && !isActive && !isCollapsed && (
+                              <motion.div
+                                layoutId={hoverLineId}
+                                className="absolute bottom-1 left-3 right-3 h-0.5 bg-zen-text/30 rounded-full"
+                                transition={sbSpring}
+                              />
+                            )}
+                            <span className={`relative z-10 flex-shrink-0 w-5 h-5 transition-all duration-200
+                              ${isActive ? 'text-zen-text' : 'text-zen-text-muted group-hover:text-zen-text-secondary group-hover:scale-110'}
+                            `}>
                               {item.icon}
                             </span>
 
                             {!isCollapsed && (
-                              <>
-                                <span className="truncate flex-1 text-left transition-all duration-200 group-hover:translate-x-0.5">{item.label}</span>
-                                <span className={`flex-shrink-0 w-4 h-4 text-zen-text-muted transition-transform duration-200 ${isSubmenuOpen ? 'rotate-180' : ''}`}>
-                                  <ChevronDownIcon />
-                                </span>
-                              </>
+                              <span className="relative z-10 truncate">
+                                {item.label}
+                              </span>
                             )}
 
+                            {/* Tooltip collapsed */}
                             {isCollapsed && (
                               <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-zen-accent text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-lg">
                                 {item.label}
                               </div>
                             )}
-                          </button>
-
-                          {!isCollapsed && (
-                            <div className={`overflow-hidden transition-all duration-200 ease-in-out ${isSubmenuOpen ? 'max-h-96 mt-0.5' : 'max-h-0'}`}>
-                              <ul className="ml-4 pl-3 border-l border-zen-border space-y-0.5 py-0.5">
-                                {item.items!.map(sub => {
-                                  const subActive = !!sub.href && (pathname === sub.href || pathname.startsWith(sub.href + '/'));
-                                  return (
-                                    <li key={sub.href || sub.label}>
-                                      <Link
-                                        href={sub.href || '#'}
-                                        className={`group flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-200
-                                          ${subActive
-                                            ? 'bg-zen-accent text-white font-medium'
-                                            : 'text-zen-text-secondary hover:bg-zen-bg hover:text-zen-text font-normal'
-                                          }
-                                        `}
-                                      >
-                                        <span className={`flex-shrink-0 w-4 h-4 transition-all duration-200
-                                          ${subActive ? 'text-white' : 'text-zen-text-muted group-hover:text-zen-text-secondary group-hover:scale-110'}
-                                        `}>
-                                          {sub.icon}
-                                        </span>
-                                        <span className={`truncate transition-all duration-200 ${subActive ? '' : 'group-hover:translate-x-0.5'}`}>
-                                          {sub.label}
-                                        </span>
-                                      </Link>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            </div>
-                          )}
+                          </Link>
                         </li>
                       );
-                    }
-
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href!}
-                          className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200
-                            ${isActive
-                              ? 'bg-zen-accent text-white font-medium'
-                              : 'text-zen-text-secondary hover:bg-zen-bg hover:text-zen-text font-normal'
-                            }
-                            ${isCollapsed ? 'justify-center' : ''}
-                          `}
-                          title={isCollapsed ? item.label : undefined}
-                        >
-                          <span className={`flex-shrink-0 w-5 h-5 transition-all duration-200
-                            ${isActive ? 'text-white' : 'text-zen-text-muted group-hover:text-zen-text-secondary group-hover:scale-110'}
-                          `}>
-                            {item.icon}
-                          </span>
-
-                          {!isCollapsed && (
-                            <span className={`truncate transition-all duration-200 ${isActive ? '' : 'group-hover:translate-x-0.5'}`}>
-                              {item.label}
-                            </span>
-                          )}
-
-                          {/* Tooltip collapsed */}
-                          {isCollapsed && (
-                            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-zen-accent text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-lg">
-                              {item.label}
-                            </div>
-                          )}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+                    })}
+                  </ul>
+                </LayoutGroup>
               </div>
             );
           })}
@@ -387,6 +483,12 @@ function FolderIcon() {
 function LinkIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" /></svg>;
 }
+function ListIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>;
+}
 function AddressBookIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4a2 2 0 012-2h12a2 2 0 012 2v16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" /><path d="M2 8h2M2 12h2M2 16h2" /><circle cx="12" cy="11" r="3" /><path d="M7 18a5 5 0 0110 0" /></svg>;
+}
+function FilmIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><path d="M7 3v18M17 3v18M3 12h18M3 7.5h4M3 16.5h4M17 7.5h4M17 16.5h4" /></svg>;
 }
