@@ -57,17 +57,24 @@ export default function FormationsPage() {
             </div>
           </Link>
 
-          <div className="card border-2 border-dashed border-gray-200 opacity-60">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-2xl flex-shrink-0">➕</div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-400 mb-1">Nouveaux outils à venir</h2>
-                <p className="text-gray-400 text-sm">
-                  Nuage de mots, évaluation à chaud, quiz collectif… D&apos;autres outils seront ajoutés au fur et à mesure.
-                </p>
+          <Link href="/formations/scenarisation">
+            <div className="card hover:shadow-2xl transition-all cursor-pointer border-2 border-transparent hover:border-primary-200">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-[#45b8a0] text-white rounded-lg flex items-center justify-center text-2xl flex-shrink-0">🎬</div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-800 mb-1">Scénarisation ABC</h2>
+                  <p className="text-gray-500 text-sm">
+                    Concevez une formation par glisser-déposer selon la méthode <em>Active · Blended · Connected</em> de l&apos;UCL. Cartes recto-verso, 3 phases, export PDF.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4">
+                <span className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-semibold inline-block">
+                  Ouvrir →
+                </span>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </div>
