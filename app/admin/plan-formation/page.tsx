@@ -709,7 +709,7 @@ export default function AdminPlanFormationPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-700 via-purple-600 to-pink-500 text-white py-10 px-6">
+      <div className="bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0] text-white py-10 px-6">
         <div className="container mx-auto">
           <Link href="/formations/plan" className="inline-flex items-center gap-2 text-white/85 hover:text-white mb-4 text-sm">
             ← Voir la page publique
