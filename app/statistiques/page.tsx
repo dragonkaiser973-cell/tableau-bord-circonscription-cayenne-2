@@ -6,6 +6,7 @@ import { Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale, T
 import { Bar, Pie } from 'react-chartjs-2';
 import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
+import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
@@ -253,26 +254,31 @@ export default function StatistiquesPage() {
       <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         
         {/* Cards statistiques principales */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8" id="section-stats-generales">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
-            <div className="text-sm opacity-90 mb-2">Élèves</div>
-            <div className="text-4xl font-bold">{totalEleves}</div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
-            <div className="text-sm opacity-90 mb-2">Classes</div>
-            <div className="text-4xl font-bold">{totalClasses}</div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
-            <div className="text-sm opacity-90 mb-2">Enseignants</div>
-            <div className="text-4xl font-bold">{totalEnseignants}</div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-6 shadow-lg">
-            <div className="text-sm opacity-90 mb-2">Écoles</div>
-            <div className="text-4xl font-bold">{totalEcoles}</div>
-          </div>
+        <div className="flex flex-wrap gap-3 mb-8" id="section-stats-generales">
+          <StatPill
+            value={totalEleves}
+            label="Élèves"
+            gradient="from-sky-400 via-cyan-400 to-teal-400"
+            variant="light"
+          />
+          <StatPill
+            value={totalClasses}
+            label="Classes"
+            gradient="from-emerald-400 via-teal-400 to-cyan-400"
+            variant="light"
+          />
+          <StatPill
+            value={totalEnseignants}
+            label="Enseignants"
+            gradient="from-violet-400 via-fuchsia-400 to-pink-400"
+            variant="light"
+          />
+          <StatPill
+            value={totalEcoles}
+            label="Écoles"
+            gradient="from-amber-400 via-orange-400 to-rose-500"
+            variant="light"
+          />
         </div>
 
         {/* Moyennes évaluations */}

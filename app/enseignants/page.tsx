@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { calculerEchelonComplet } from '@/lib/echelons';
 import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
+import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 
 interface Enseignant {
@@ -509,26 +510,31 @@ if (structuresRes.ok) {
       {/* Contenu principal */}
       <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         {/* Statistiques */}
-        <div className="grid md:grid-cols-4 gap-6 mb-6" id="section-stats">
-          <div className="card bg-gradient-to-br from-primary-500 to-primary-700 text-white">
-            <h3 className="text-xs uppercase tracking-wider opacity-90 mb-2">Total enseignants</h3>
-            <div className="text-4xl font-bold">{stats.total}</div>
-          </div>
-          
-          <div className="card bg-gradient-to-br from-info to-primary-800 text-white">
-            <h3 className="text-xs uppercase tracking-wider opacity-90 mb-2">Titulaires</h3>
-            <div className="text-4xl font-bold">{stats.parStatut['Titulaire'] || 0}</div>
-          </div>
-          
-          <div className="card bg-gradient-to-br from-warning to-[#d66028] text-white">
-            <h3 className="text-xs uppercase tracking-wider opacity-90 mb-2">Stagiaires</h3>
-            <div className="text-4xl font-bold">{stats.parStatut['Stagiaire'] || 0}</div>
-          </div>
-          
-          <div className="card bg-gradient-to-br from-success to-success-light text-white">
-            <h3 className="text-xs uppercase tracking-wider opacity-90 mb-2">Contractuels</h3>
-            <div className="text-4xl font-bold">{stats.parStatut['Contractuel'] || 0}</div>
-          </div>
+        <div className="flex flex-wrap gap-3 mb-8" id="section-stats">
+          <StatPill
+            value={stats.total}
+            label="Enseignants"
+            gradient="from-sky-400 via-cyan-400 to-teal-400"
+            variant="light"
+          />
+          <StatPill
+            value={stats.parStatut['Titulaire'] || 0}
+            label="Titulaires"
+            gradient="from-emerald-400 via-teal-400 to-cyan-400"
+            variant="light"
+          />
+          <StatPill
+            value={stats.parStatut['Stagiaire'] || 0}
+            label="Stagiaires"
+            gradient="from-amber-400 via-orange-400 to-rose-500"
+            variant="light"
+          />
+          <StatPill
+            value={stats.parStatut['Contractuel'] || 0}
+            label="Contractuels"
+            gradient="from-violet-400 via-fuchsia-400 to-pink-400"
+            variant="light"
+          />
         </div>
 
         {/* Filtres de recherche */}
