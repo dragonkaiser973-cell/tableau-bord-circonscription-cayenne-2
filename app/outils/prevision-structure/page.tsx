@@ -8,6 +8,8 @@ import {
   NIVEAUX,
   NiveauKey,
   Prevision,
+  REP_PLUS_MAX,
+  REP_PLUS_NIVEAUX,
   computeStats,
   makeEmptyPrevision,
 } from './types';
@@ -30,6 +32,7 @@ function loadFromStorage(): Prevision[] | null {
       safe.anneeN = p.anneeN ?? safe.anneeN;
       safe.anneeN1 = p.anneeN1 ?? safe.anneeN1;
       safe.nbClasses = Math.max(1, Math.min(MAX_CLASSES, Number(p.nbClasses) || 1));
+      safe.repPlus = Boolean(p.repPlus);
       for (const n of NIVEAUX) {
         safe.effectifs[n.key] = Number(p.effectifs?.[n.key]) || 0;
         const row = p.repartition?.[n.key] || [];
@@ -197,6 +200,8 @@ export default function PrevisionStructurePage() {
               })
             }
           />
+
+          <RepPlusBanner p={active} stats={stats} />
 
           <Grid
             p={active}
@@ -412,7 +417,7 @@ function IdentityBlock({
           className="md:col-span-2"
         />
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-4">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
         <div className="inline-flex items-center gap-3 bg-slate-50 rounded-2xl border border-slate-200 px-4 py-2.5">
           <span className="text-xs font-bold tracking-[0.15em] uppercase text-slate-500">
             Nombre de classes
@@ -427,6 +432,33 @@ function IdentityBlock({
           />
           <span className="text-xs text-slate-400">max {MAX_CLASSES}</span>
         </div>
+
+        <button
+          type="button"
+          onClick={() => onChange({ repPlus: !p.repPlus })}
+          aria-pressed={p.repPlus}
+          className={`inline-flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition-all active:translate-y-px ${
+            p.repPlus
+              ? 'bg-rose-50 border-rose-200 text-rose-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]'
+              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <span
+            className={`relative inline-flex w-8 h-4 rounded-full transition-colors ${
+              p.repPlus ? 'bg-rose-500' : 'bg-slate-300'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${
+                p.repPlus ? 'translate-x-4' : 'translate-x-0.5'
+              }`}
+            />
+          </span>
+          École REP+
+          <span className="text-[11px] font-medium text-slate-400">
+            (CP · CE1 max {REP_PLUS_MAX})
+          </span>
+        </button>
       </div>
     </section>
   );
@@ -457,6 +489,63 @@ function FieldText({
         className="bg-slate-50 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none transition-all focus:ring-2 focus:ring-primary-400 focus:bg-white"
       />
     </label>
+  );
+}
+
+/* ------ REP+ banner ------ */
+
+function RepPlusBanner({
+  p,
+  stats,
+}: {
+  p: Prevision;
+  stats: ReturnType<typeof computeStats>;
+}) {
+  if (!p.repPlus) return null;
+  const v = stats.repPlusViolations;
+  if (v.length === 0) {
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={spring}
+        className="mt-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 print:mt-3 print:rounded-lg"
+      >
+        <span className="inline-flex w-7 h-7 items-center justify-center rounded-full bg-emerald-500 text-white">
+          <CheckIcon />
+        </span>
+        <span>
+          <strong className="font-bold">REP+ respecté</strong> — aucun groupe CP ou CE1 ne
+          dépasse {REP_PLUS_MAX} élèves.
+        </span>
+      </motion.div>
+    );
+  }
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={spring}
+      className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 print:mt-3 print:rounded-lg"
+    >
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 inline-flex w-7 h-7 items-center justify-center rounded-full bg-rose-500 text-white shrink-0">
+          <AlertIcon />
+        </span>
+        <div className="text-sm text-rose-900">
+          <strong className="font-bold">Seuil REP+ dépassé</strong> sur {v.length} groupe
+          {v.length > 1 ? 's' : ''} —{' '}
+          <span className="text-rose-700">
+            {v
+              .map((x) => `${x.niveau} C${x.classe + 1} : ${x.value}`)
+              .join(' · ')}
+          </span>
+          . Les classes dédoublées CP et CE1 doivent compter {REP_PLUS_MAX} élèves maximum.
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -557,16 +646,29 @@ function Grid({
                   <td className="px-1 py-1 text-center text-sm font-bold tabular-nums ps-print-cell">
                     <RestePill value={reste} />
                   </td>
-                  {classes.map((c) => (
-                    <td key={c} className="px-0.5 py-1 ps-print-cell">
-                      <NumberCell
-                        value={p.repartition[n.key][c]}
-                        onChange={(v) => onCellChange(n.key, c, v)}
-                        dataCell={`${ni}:${c}`}
-                        onKeyDown={(e) => onGridKeyDown(e, ni, c)}
-                      />
-                    </td>
-                  ))}
+                  {classes.map((c) => {
+                    const v = p.repartition[n.key][c];
+                    const overRepPlus =
+                      p.repPlus &&
+                      REP_PLUS_NIVEAUX.includes(n.key) &&
+                      v > REP_PLUS_MAX;
+                    return (
+                      <td key={c} className="px-0.5 py-1 ps-print-cell">
+                        <NumberCell
+                          value={v}
+                          onChange={(v2) => onCellChange(n.key, c, v2)}
+                          dataCell={`${ni}:${c}`}
+                          onKeyDown={(e) => onGridKeyDown(e, ni, c)}
+                          danger={overRepPlus}
+                          dangerTitle={
+                            overRepPlus
+                              ? `REP+ : un groupe ${n.label} dépasse ${REP_PLUS_MAX} élèves`
+                              : undefined
+                          }
+                        />
+                      </td>
+                    );
+                  })}
                 </tr>
               );
             })}
@@ -639,12 +741,16 @@ function NumberCell({
   strong,
   dataCell,
   onKeyDown,
+  danger,
+  dangerTitle,
 }: {
   value: number;
   onChange: (v: number) => void;
   strong?: boolean;
   dataCell?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  danger?: boolean;
+  dangerTitle?: string;
 }) {
   const display = value === 0 ? '' : String(value);
   return (
@@ -653,13 +759,18 @@ function NumberCell({
       pattern="[0-9]*"
       value={display}
       data-cell={dataCell}
+      title={dangerTitle}
       onKeyDown={onKeyDown}
       onChange={(e) => {
         const v = e.target.value.replace(/[^0-9]/g, '');
         onChange(v === '' ? 0 : Number(v));
       }}
       onFocus={(e) => e.target.select()}
-      className={`w-full text-center tabular-nums bg-transparent border-0 rounded-md py-1 text-slate-900 outline-none transition-colors hover:bg-slate-100/70 focus:bg-white focus:ring-2 focus:ring-primary-400 ${
+      className={`w-full text-center tabular-nums border rounded-md py-1 outline-none transition-colors focus:ring-2 ${
+        danger
+          ? 'bg-rose-50 border-rose-300 text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 focus:bg-white focus:ring-rose-400'
+          : 'bg-transparent border-transparent text-slate-900 hover:bg-slate-100/70 focus:bg-white focus:ring-primary-400'
+      } ${
         strong ? 'font-bold text-[15px]' : 'font-semibold text-[13px]'
       } print:hover:bg-transparent print:focus:bg-transparent`}
       placeholder="·"
@@ -854,4 +965,7 @@ function GridIcon() {
 }
 function TrashIcon() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>;
+}
+function AlertIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
 }

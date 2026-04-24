@@ -40,12 +40,16 @@ export type Prevision = {
   anneeN: string;
   anneeN1: string;
   nbClasses: number;
+  repPlus: boolean;
   effectifs: Record<NiveauKey, number>;
   repartition: Record<NiveauKey, number[]>;
   commPositifs: string;
   commNegatifs: string;
   updatedAt: number;
 };
+
+export const REP_PLUS_MAX = 12;
+export const REP_PLUS_NIVEAUX: NiveauKey[] = ['CP', 'CE1'];
 
 export function makeEmptyPrevision(id: string): Prevision {
   const effectifs = {} as Record<NiveauKey, number>;
@@ -61,6 +65,7 @@ export function makeEmptyPrevision(id: string): Prevision {
     anneeN: '2025-2026',
     anneeN1: '2026-2027',
     nbClasses: 5,
+    repPlus: false,
     effectifs,
     repartition,
     commPositifs: '',
@@ -129,6 +134,17 @@ export function computeStats(p: Prevision) {
     else if (nn >= 4) autres++;
   }
 
+  const repPlusViolations: { niveau: NiveauKey; classe: number; value: number }[] = [];
+  if (p.repPlus) {
+    for (const key of REP_PLUS_NIVEAUX) {
+      const row = p.repartition[key] || [];
+      for (let c = 0; c < p.nbClasses; c++) {
+        const v = row[c] || 0;
+        if (v > REP_PLUS_MAX) repPlusViolations.push({ niveau: key, classe: c, value: v });
+      }
+    }
+  }
+
   return {
     perClasse,
     niveauxParClasse,
@@ -148,5 +164,6 @@ export function computeStats(p: Prevision) {
     triples,
     autres,
     classesNonVides: classesRemplies.length,
+    repPlusViolations,
   };
 }
