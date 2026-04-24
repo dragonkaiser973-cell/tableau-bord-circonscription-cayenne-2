@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AuroraHeader from '@/components/AuroraHeader';
 
 type Tel = { type: 'fixe' | 'mobile'; number: string };
 
@@ -262,18 +263,17 @@ export default function AdminAnnuairePage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-6">
-      <div className="container mx-auto max-w-6xl">
-        <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
-          <div>
-            <Link href="/outils/annuaire" className="text-sm text-gray-500 hover:text-gray-900 mb-2 inline-block">
-              ← Voir l&apos;annuaire public
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Gérer l&apos;annuaire</h1>
-            <p className="text-gray-500 mt-1">Équipe de circonscription · Écoles · Directions</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Administration"
+        title="Gérer"
+        titleAccent="l'annuaire."
+        subtitle="Équipe de circonscription · Écoles · Directions."
+        backHref="/outils/annuaire"
+        backLabel="Voir l'annuaire public"
+      />
 
+      <div className="container mx-auto max-w-6xl px-6 py-8 -mt-20 relative z-10">
         {message && (
           <div className={`mb-4 p-3 rounded-lg text-sm ${message.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
             {message.text}

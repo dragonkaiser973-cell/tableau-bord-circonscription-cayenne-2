@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AuroraHeader from '@/components/AuroraHeader';
 
 interface Session {
   id: string;
@@ -105,27 +106,15 @@ export default function BoussolePage() {
   if (!ready) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/formations" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6 transition-colors">
-            ← Retour aux formations
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">🧭</div>
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold">Boussole d&apos;état d&apos;esprit</h1>
-              <p className="text-xl opacity-90 mt-2">Vos sessions de formation</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-white/90 text-sm">
-            {sessions.length} session{sessions.length !== 1 ? 's' : ''} enregistrée{sessions.length !== 1 ? 's' : ''}
-          </p>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Formation — Avant / après"
+        title="Boussole"
+        titleAccent="d'état d'esprit."
+        subtitle="Sonder les enseignants avant et après chaque formation pour mesurer l'évolution."
+        backHref="/formations"
+        backLabel="Retour aux formations"
+        action={
           <button
             onClick={() => {
               setFormTitre('');
@@ -134,10 +123,22 @@ export default function BoussolePage() {
               setError(null);
               setShowCreateModal(true);
             }}
-            className="bg-white text-primary-700 px-5 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all"
+            className="inline-flex items-center gap-2 bg-gradient-to-br from-amber-300 to-orange-400 text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all"
           >
-            + Nouvelle session
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Nouvelle session
           </button>
+        }
+      />
+
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
+        <div className="mb-6">
+          <p className="text-slate-500 text-sm">
+            {sessions.length} session{sessions.length !== 1 ? 's' : ''} enregistrée{sessions.length !== 1 ? 's' : ''}
+          </p>
         </div>
 
         {loading ? (
