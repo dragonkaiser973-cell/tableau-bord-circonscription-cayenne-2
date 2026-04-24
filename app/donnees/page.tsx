@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import MultiFileUploader from '@/components/MultiFileUploader';
+import AuroraHeader from '@/components/AuroraHeader';
 
 // Composant pour un bouton de reset individuel
 function ResetButton({ 
@@ -400,25 +401,17 @@ export default function DonneesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      {/* Header */}
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'accueil
-          </Link>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">💾</div>
-            <div>
-              <h1 className="text-5xl font-bold">Gestion des données</h1>
-              <p className="text-xl opacity-90 mt-2">Importation et administration</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Import & Export"
+        title="Gestion des"
+        titleAccent="données."
+        subtitle="Import des fichiers ZIP, administration et archivage des données de la circonscription."
+        backLabel="Retour à l'accueil"
+      />
 
       {/* Contenu */}
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         {/* Barre de progression */}
         {uploading && (
           <div className="card mb-6 bg-blue-50 border-2 border-blue-200">

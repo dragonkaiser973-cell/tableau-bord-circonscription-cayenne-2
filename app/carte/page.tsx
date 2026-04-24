@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AuroraHeader from '@/components/AuroraHeader';
 
 export default function CartePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -111,27 +112,17 @@ export default function CartePage() {
   const stats = getStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      {/* Header */}
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'accueil
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-              🗺️
-            </div>
-            <div>
-              <h1 className="text-5xl font-bold">Carte des Écoles</h1>
-              <p className="text-xl opacity-90 mt-2">Localisation géographique de la circonscription</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Géolocalisation"
+        title="Carte de la"
+        titleAccent="circonscription."
+        subtitle="Cartographie interactive : écoles de Cayenne, Cacao et Roura, avec typologie et effectifs."
+        backLabel="Retour à l'accueil"
+      />
 
       {/* Contenu */}
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         
         {/* Statistiques */}
         <div className="grid md:grid-cols-5 gap-4 mb-6">

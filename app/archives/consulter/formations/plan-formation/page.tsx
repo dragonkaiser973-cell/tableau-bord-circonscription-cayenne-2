@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import AuroraHeader from '@/components/AuroraHeader';
+import StatPill from '@/components/StatPill';
 
 // ───────────────────────── Types ─────────────────────────
 type Membre = { raccourci: string };
@@ -318,41 +320,27 @@ function ArchivePlanFormationContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-violet-50">
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-purple-600 to-pink-500 text-white">
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 30%, white 0, transparent 45%), radial-gradient(circle at 80% 70%, white 0, transparent 40%)' }} />
-        <div className="relative container mx-auto px-6 py-10">
-          <Link href={`/archives/consulter?annee=${annee}`} className="inline-flex items-center gap-2 text-white/85 hover:text-white mb-4 transition-colors">
-            ← Retour à l&apos;archive {annee}
-          </Link>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center text-3xl shadow-inner">📚</div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold">Plan de formation</h1>
-              <p className="text-lg opacity-95 mt-1">Archive · année {annee}</p>
-            </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker={`Archive · année ${annee}`}
+        title="Plan de"
+        titleAccent="formation."
+        subtitle="Dispositifs, sessions et volumes horaires planifiés et réalisés sur l'année."
+        backHref={`/archives/consulter?annee=${annee}`}
+        backLabel={`Retour à l'archive ${annee}`}
+      >
+        {!loading && formations.length > 0 && (
+          <div className="flex flex-wrap gap-3">
+            <StatPill value={stats.total} label="Dispositifs" gradient="from-sky-400 via-cyan-400 to-teal-400" />
+            <StatPill value={stats.sessions} label="Sessions" gradient="from-violet-400 via-fuchsia-400 to-pink-400" />
+            <StatPill value={stats.sessionsFaites} label="Réalisées" gradient="from-emerald-400 via-teal-400 to-cyan-400" />
+            <StatPill value={`${stats.heures}h`} label="Heures prévues" gradient="from-amber-400 via-orange-400 to-rose-500" />
+            <StatPill value={`${stats.heuresFaites}h`} label="Heures faites" gradient="from-indigo-400 via-blue-500 to-cyan-400" />
           </div>
+        )}
+      </AuroraHeader>
 
-          {!loading && formations.length > 0 && (
-            <div className="mt-8 grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
-              {[
-                { label: 'Dispositifs',      value: stats.total },
-                { label: 'Sessions totales', value: stats.sessions },
-                { label: 'Sessions faites',  value: stats.sessionsFaites },
-                { label: 'Heures prévues',   value: `${stats.heures}h` },
-                { label: 'Heures réalisées', value: `${stats.heuresFaites}h` },
-              ].map((s, i) => (
-                <div key={i} className="bg-white/10 backdrop-blur rounded-xl p-3 text-center border border-white/15 animate-pf-slidein" style={{ animationDelay: `${i * 80}ms` }}>
-                  <div className="text-2xl md:text-3xl font-black">{s.value}</div>
-                  <div className="text-xs md:text-sm opacity-80 uppercase tracking-wider">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         {loading ? (
           <div className="card text-center py-16">
             <div className="text-4xl mb-4">⏳</div>

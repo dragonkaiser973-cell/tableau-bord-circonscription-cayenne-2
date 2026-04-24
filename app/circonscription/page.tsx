@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import PDFExportModal from '@/components/PDFExportModal';
+import AuroraHeader from '@/components/AuroraHeader';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
@@ -247,33 +248,29 @@ export default function CirconscriptionPage() {
   const statsEval = getStatsEvaluations();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'accueil
-          </Link>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-                🌍
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold">Circonscription Cayenne 2 - Roura</h1>
-                <p className="text-xl opacity-90 mt-2">Vue d'ensemble et statistiques globales</p>
-              </div>
-            </div>
-            <button
-              onClick={handleExportPDF}
-              className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
-            >
-              📄 Exporter en PDF
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Vue d'ensemble"
+        title="Circonscription"
+        titleAccent="Cayenne 2 — Roura."
+        subtitle="Statistiques globales, personnel, écoles et résultats aux évaluations nationales."
+        backLabel="Retour à l'accueil"
+        action={
+          <button
+            onClick={handleExportPDF}
+            className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md text-primary-700 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-white hover:-translate-y-0.5 transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Exporter en PDF
+          </button>
+        }
+      />
 
-      <div id="circonscription-content" className="container mx-auto px-6 py-8">
+      <div id="circonscription-content" className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         
         {/* Encart Circonscription */}
         <div className="card mb-6 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200">

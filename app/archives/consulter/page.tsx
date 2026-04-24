@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import AuroraHeader from '@/components/AuroraHeader';
 
 function ConsulterArchiveContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -83,25 +84,17 @@ function ConsulterArchiveContent() {
   const calendrier = donnees.calendrier || {};
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/archives" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour aux archives
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">📅</div>
-            <div>
-              <h1 className="text-5xl font-bold">Archive {annee}</h1>
-              <p className="text-xl opacity-90 mt-2">
-                Archivé le {new Date(archive.dateArchivage).toLocaleDateString('fr-FR')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker={`Archivé le ${new Date(archive.dateArchivage).toLocaleDateString('fr-FR')}`}
+        title="Archive"
+        titleAccent={`${annee}.`}
+        subtitle="Vue consolidée de l'année scolaire archivée : pilotage, statistiques, enseignants et calendrier."
+        backHref="/archives"
+        backLabel="Retour aux archives"
+      />
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         <div className="card mb-8 bg-blue-50 border-2 border-blue-300">
           <div className="flex items-center gap-3">
             <span className="text-3xl">📖</span>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import AuroraHeader from '@/components/AuroraHeader';
 
 // ───────────── Types ─────────────
 type Formateur = { id: string; raccourci: string; nom_complet: string; statut: string; ordre: number };
@@ -708,23 +709,16 @@ export default function AdminPlanFormationPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0] text-white py-10 px-6">
-        <div className="container mx-auto">
-          <Link href="/formations/plan" className="inline-flex items-center gap-2 text-white/85 hover:text-white mb-4 text-sm">
-            ← Voir la page publique
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center text-2xl">⚙️</div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold">Gestion du plan de formation</h1>
-              <p className="text-lg opacity-90 mt-1">Année 2025-2026</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AuroraHeader
+        kicker="Administration · 2025-2026"
+        title="Gestion du"
+        titleAccent="plan de formation."
+        subtitle="Pilotage des formations, sessions et formateurs."
+        backHref="/formations/plan"
+        backLabel="Voir la page publique"
+      />
 
-      <div className="container mx-auto px-6 py-6">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
           {(['formations', 'formateurs'] as const).map((t) => (

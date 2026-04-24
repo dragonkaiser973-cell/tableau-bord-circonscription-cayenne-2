@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Pie, Bar } from 'react-chartjs-2';
 import PDFExportModal from '@/components/PDFExportModal';
+import AuroraHeader from '@/components/AuroraHeader';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 import {
   Chart as ChartJS,
@@ -383,44 +384,59 @@ export default function QuestionnairesAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      {/* Header */}
-      <div className="text-white py-12 px-6">
-        <div className="container mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <Link href="/" className="text-white/90 hover:text-white transition-colors">← Retour à l&apos;accueil</Link>
-            {vue !== 'liste' && (
-              <>
-                <span className="text-white/40">/</span>
-                <button onClick={() => setVue('liste')} className="text-white/90 hover:text-white transition-colors">
-                  Questionnaires
-                </button>
-              </>
-            )}
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">📋</div>
-              <div>
-                <h1 className="text-4xl font-bold">
-                  {vue === 'liste' && 'Questionnaires'}
-                  {vue === 'creer' && 'Nouveau questionnaire'}
-                  {vue === 'modifier' && 'Modifier le questionnaire'}
-                  {vue === 'resultats' && 'Résultats'}
-                </h1>
-                <p className="text-xl opacity-90 mt-1">Administration</p>
-              </div>
-            </div>
-            {vue === 'liste' && (
-              <button onClick={ouvrirCreation} className="bg-white text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors shadow-lg">
-                ➕ Nouveau questionnaire
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Administration"
+        title={
+          vue === 'liste'
+            ? 'Gestion des'
+            : vue === 'creer'
+              ? 'Nouveau'
+              : vue === 'modifier'
+                ? 'Modifier le'
+                : 'Résultats du'
+        }
+        titleAccent={
+          vue === 'liste'
+            ? 'questionnaires.'
+            : vue === 'creer'
+              ? 'questionnaire.'
+              : vue === 'modifier'
+                ? 'questionnaire.'
+                : 'questionnaire.'
+        }
+        subtitle="Création, suivi et analyse des questionnaires."
+        backHref="/"
+        backLabel="Retour à l'accueil"
+        action={
+          vue === 'liste' ? (
+            <button
+              onClick={ouvrirCreation}
+              className="inline-flex items-center gap-2 bg-gradient-to-br from-amber-300 to-orange-400 text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Nouveau questionnaire
+            </button>
+          ) : undefined
+        }
+      >
+        {vue !== 'liste' && (
+          <button
+            onClick={() => setVue('liste')}
+            className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium backdrop-blur-md bg-white/10 border border-white/20 rounded-full px-4 py-1.5 transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            Retour à la liste
+          </button>
+        )}
+      </AuroraHeader>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         {/* Message */}
         {message && (
           <div className={`card mb-6 ${message.type === 'success' ? 'bg-green-50 border-2 border-green-200' : 'bg-red-50 border-2 border-red-200'}`}>

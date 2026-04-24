@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import AuroraHeader from '@/components/AuroraHeader';
 
 const SMILEYS = ['😞', '😕', '😐', '😊', '😄'];
 
@@ -115,53 +116,51 @@ export default function RepondreQuestionnairePage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0] flex items-center justify-center">
-      <div className="text-center text-white"><div className="text-6xl mb-4">⏳</div><p className="text-xl">Chargement...</p></div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
+      <div className="text-center text-white">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-white/30 border-t-white animate-spin" />
+        <p className="text-xl">Chargement...</p>
+      </div>
     </div>
   );
 
   if (erreur) return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0] flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-6">
       <div className="card text-center max-w-md w-full">
-        <div className="text-6xl mb-4">🔒</div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">{erreur}</h2>
-        <Link href="/questionnaires" className="text-primary-600 hover:underline">← Retour aux questionnaires</Link>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">{erreur}</h2>
+        <Link href="/questionnaires" className="text-primary-600 hover:underline">Retour aux questionnaires</Link>
       </div>
     </div>
   );
 
   if (soumis) return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0] flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-6">
       <div className="card text-center max-w-md w-full">
-        <div className="text-7xl mb-6">🎉</div>
+        <svg className="w-16 h-16 mx-auto mb-6 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
         <h2 className="text-2xl font-bold text-gray-800 mb-3">Merci pour votre réponse !</h2>
         <p className="text-gray-500 mb-6">Votre réponse a bien été enregistrée.</p>
         <Link href="/questionnaires" className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors inline-block">
-          ← Retour aux questionnaires
+          Retour aux questionnaires
         </Link>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      {/* Header */}
-      <div className="text-white py-12 px-6">
-        <div className="container mx-auto max-w-2xl">
-          <Link href="/questionnaires" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6 transition-colors">
-            ← Tous les questionnaires
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center text-2xl">📋</div>
-            <div>
-              <h1 className="text-3xl font-bold">{questionnaire.titre}</h1>
-              {questionnaire.description && <p className="opacity-90 mt-1">{questionnaire.description}</p>}
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Questionnaire"
+        title={questionnaire.titre}
+        subtitle={questionnaire.description || undefined}
+        backHref="/questionnaires"
+        backLabel="Tous les questionnaires"
+        padding="py-12 md:py-14"
+      />
 
-      <div className="container mx-auto px-6 py-8 max-w-2xl">
+      <div className="container mx-auto max-w-2xl px-6 py-8 -mt-20 relative z-10">
         {/* Nom du répondant */}
         <div className="card mb-6">
           <label className="block text-sm font-semibold text-gray-700 mb-2">

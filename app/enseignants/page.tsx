@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { calculerEchelonComplet } from '@/lib/echelons';
 import PDFExportModal from '@/components/PDFExportModal';
+import AuroraHeader from '@/components/AuroraHeader';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 
 interface Enseignant {
@@ -469,47 +470,44 @@ if (structuresRes.ok) {
   const niveaux = getUniqueValues('niveau_classe');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      {/* Header */}
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'accueil
-          </Link>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-                👨‍🏫
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold">Enseignants</h1>
-                <p className="text-xl opacity-90 mt-2">Recherche et parcours des enseignants de la circonscription</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              {isAdmin && (
-                <button
-                  onClick={() => { setEditMode(!editMode); setEditingId(null); }}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2 ${
-                    editMode ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-yellow-400 text-gray-900 hover:bg-yellow-300'
-                  }`}
-                >
-                  {editMode ? '✕ Quitter édition' : '✏️ Mode édition'}
-                </button>
-              )}
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Liste complète"
+        title="Annuaire des"
+        titleAccent="enseignants."
+        subtitle="Recherche, parcours et affectations des enseignants de la circonscription."
+        backLabel="Retour à l'accueil"
+        action={
+          <>
+            {isAdmin && (
               <button
-                onClick={handleExportPDF}
-                className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
+                onClick={() => { setEditMode(!editMode); setEditingId(null); }}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg transition-all ${
+                  editMode
+                    ? 'bg-rose-500/90 text-white hover:bg-rose-500 hover:-translate-y-0.5'
+                    : 'bg-amber-300/95 text-slate-900 hover:bg-amber-300 hover:-translate-y-0.5'
+                }`}
               >
-                📄 Exporter en PDF
+                {editMode ? 'Quitter édition' : 'Mode édition'}
               </button>
-            </div>
-          </div>
-        </div>
-      </div>
+            )}
+            <button
+              onClick={handleExportPDF}
+              className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md text-primary-700 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-white hover:-translate-y-0.5 transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Exporter en PDF
+            </button>
+          </>
+        }
+      />
 
       {/* Contenu principal */}
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         {/* Statistiques */}
         <div className="grid md:grid-cols-4 gap-6 mb-6" id="section-stats">
           <div className="card bg-gradient-to-br from-primary-500 to-primary-700 text-white">

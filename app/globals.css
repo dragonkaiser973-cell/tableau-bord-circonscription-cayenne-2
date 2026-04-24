@@ -1,4 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -131,6 +134,78 @@ h1, h2, h3 {
   opacity: 0;
   animation: annuaireFadeIn 0.45s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
 }
+
+/* ═══ Aurora backdrop — animated mesh gradient blobs ═══ */
+@keyframes auroraShift {
+  0%   { transform: translate3d(0%, 0%, 0) scale(1); }
+  33%  { transform: translate3d(8%, -6%, 0) scale(1.08); }
+  66%  { transform: translate3d(-5%, 9%, 0) scale(0.95); }
+  100% { transform: translate3d(0%, 0%, 0) scale(1); }
+}
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.55;
+  will-change: transform;
+  animation: auroraShift 18s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient-text {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease-in-out infinite;
+}
+
+/* ═══ Shimmer for skeleton / hover edge ═══ */
+@keyframes shimmerSlide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.shimmer-edge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  transform: translateX(-100%);
+  transition: opacity 0.3s;
+  opacity: 0;
+  pointer-events: none;
+}
+.shimmer-edge:hover::before {
+  opacity: 1;
+  animation: shimmerSlide 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══ Pulse ring for featured IEN badge ═══ */
+@keyframes auroraPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(69, 184, 160, 0.55); }
+  50%      { box-shadow: 0 0 0 14px rgba(69, 184, 160, 0); }
+}
+.animate-aurora-pulse { animation: auroraPulse 2.4s ease-out infinite; }
+
+/* ═══ Spotlight card — radial follows cursor via CSS vars ═══ */
+.spotlight-card {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(69, 184, 160, 0.18), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 1;
+}
+.spotlight-card:hover::after { opacity: 1; }
+.spotlight-card > * { position: relative; z-index: 2; }
 
 /* ═══ Plan de formation ═══ */
 @keyframes pfSlideIn {

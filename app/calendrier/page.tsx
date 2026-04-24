@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PDFExportModal from '@/components/PDFExportModal';
+import AuroraHeader from '@/components/AuroraHeader';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 
 interface Evenement {
@@ -301,47 +302,53 @@ export default function CalendrierPage() {
   const vacances = getVacancesScolaires(anneeActuelle);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'accueil
-          </Link>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-                📅
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold">Calendrier</h1>
-                <p className="text-xl opacity-90 mt-2">Année scolaire {getAnneeScolaire()}</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowExportModal(true)}
-                className="bg-white text-primary-600 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors shadow-lg flex items-center gap-2"
-              >
-                📥 Exporter en PDF
-              </button>
-              <button 
-                onClick={() => setViewMode(viewMode === 'mois' ? 'annee' : 'mois')} 
-                className="bg-white/20 text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/30 transition-colors flex items-center gap-2"
-              >
-                {viewMode === 'mois' ? '📆 Vue annuelle' : '📅 Vue mensuelle'}
-              </button>
-              <button onClick={() => setShowUpdateModal(true)} className="bg-white/20 text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/30 transition-colors">
-                🔄 Changer d'année
-              </button>
-              <button onClick={() => openModal()} className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors">
-                ➕ Nouvel événement
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker={`Année scolaire ${getAnneeScolaire()}`}
+        title="Calendrier des"
+        titleAccent="événements."
+        subtitle="Vacances, formations, conseils, réunions. Vue mensuelle ou annuelle."
+        backLabel="Retour à l'accueil"
+        action={
+          <>
+            <button
+              onClick={() => setViewMode(viewMode === 'mois' ? 'annee' : 'mois')}
+              className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2.5 rounded-full font-semibold text-sm hover:bg-white/15 hover:-translate-y-0.5 transition-all"
+            >
+              {viewMode === 'mois' ? 'Vue annuelle' : 'Vue mensuelle'}
+            </button>
+            <button
+              onClick={() => setShowUpdateModal(true)}
+              className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white px-4 py-2.5 rounded-full font-semibold text-sm hover:bg-white/15 hover:-translate-y-0.5 transition-all"
+            >
+              Changer d&apos;année
+            </button>
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md text-primary-700 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-white hover:-translate-y-0.5 transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              PDF
+            </button>
+            <button
+              onClick={() => openModal()}
+              className="inline-flex items-center gap-2 bg-gradient-to-br from-amber-300 to-orange-400 text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Nouvel événement
+            </button>
+          </>
+        }
+      />
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         <div className="card mb-6">
           <div className="space-y-3">
             <div className="flex items-center gap-6 flex-wrap">

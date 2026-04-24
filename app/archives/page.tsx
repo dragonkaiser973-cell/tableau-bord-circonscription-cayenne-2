@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AuroraHeader from '@/components/AuroraHeader';
 
 export default function ArchivesPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -110,38 +111,32 @@ export default function ArchivesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      {/* Header */}
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'accueil
-          </Link>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-                📚
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold">Archives</h1>
-                <p className="text-xl opacity-90 mt-2">Consultation des années scolaires passées</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setNewAnneeScolaire(generateAnneeScolaire());
-                setShowCreateModal(true);
-              }}
-              className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
-            >
-              ➕ Nouvelle archive
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Années antérieures"
+        title="Archives"
+        titleAccent="pédagogiques."
+        subtitle="Consultez les données et évaluations des années scolaires passées."
+        backLabel="Retour à l'accueil"
+        action={
+          <button
+            onClick={() => {
+              setNewAnneeScolaire(generateAnneeScolaire());
+              setShowCreateModal(true);
+            }}
+            className="inline-flex items-center gap-2 bg-gradient-to-br from-amber-300 to-orange-400 text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Nouvelle archive
+          </button>
+        }
+      />
 
       {/* Contenu */}
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         {/* Message */}
         {message && (
           <div className={`card mb-6 ${message.type === 'success' ? 'bg-green-50 border-2 border-green-200' : 'bg-red-50 border-2 border-red-200'}`}>

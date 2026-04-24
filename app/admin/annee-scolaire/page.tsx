@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { detecterAnneeScolaire, anneeScolaireSuivante } from '@/lib/annee-scolaire';
+import AuroraHeader from '@/components/AuroraHeader';
 
 export default function ChangerAnneeScolairePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -121,7 +122,7 @@ export default function ChangerAnneeScolairePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
         <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-white/30 border-t-white animate-spin" />
           <p className="text-xl">Chargement...</p>
         </div>
       </div>
@@ -132,10 +133,9 @@ export default function ChangerAnneeScolairePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
         <div className="text-center text-white">
-          <div className="text-6xl mb-4">❌</div>
           <p className="text-xl mb-4">Erreur de chargement</p>
           <Link href="/pilotage" className="btn-primary inline-block">
-            ← Retour
+            Retour
           </Link>
         </div>
       </div>
@@ -143,27 +143,18 @@ export default function ChangerAnneeScolairePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      {/* Header */}
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/pilotage" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour au pilotage
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-              🔄
-            </div>
-            <div>
-              <h1 className="text-5xl font-bold">Changement d'année scolaire</h1>
-              <p className="text-xl opacity-90 mt-2">Gestion du passage à la nouvelle année</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Administration"
+        title="Changement"
+        titleAccent="d'année scolaire."
+        subtitle="Gestion du passage à la nouvelle année scolaire."
+        backHref="/pilotage"
+        backLabel="Retour au pilotage"
+      />
 
       {/* Contenu */}
-      <div className="container mx-auto px-6 py-8 -mt-8 relative z-10">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         
         {/* Alerte */}
         <div className="bg-red-100 border-2 border-red-500 rounded-xl p-6 mb-6">

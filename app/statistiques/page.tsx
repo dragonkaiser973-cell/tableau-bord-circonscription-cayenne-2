@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import PDFExportModal from '@/components/PDFExportModal';
+import AuroraHeader from '@/components/AuroraHeader';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
@@ -216,45 +217,40 @@ export default function StatistiquesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-emerald-400">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
         <div className="text-center text-white">
-          <div className="text-6xl mb-4">📊</div>
-          <p className="text-xl">Chargement des statistiques...</p>
+          <div className="w-12 h-12 rounded-full border-4 border-white/30 border-t-white animate-spin mx-auto mb-4" />
+          <p className="text-lg font-medium">Chargement des statistiques...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-emerald-400">
-      {/* Header */}
-      <div className="text-white py-12 px-6">
-        <div className="container mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'accueil
-          </Link>
-          <div className="flex items-center justify-between w-full mb-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-                📊
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold">Statistiques</h1>
-                <p className="text-xl opacity-90 mt-2">Circonscription Cayenne 2 - Roura</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowExportModal(true)}
-              className="px-6 py-3 bg-white text-primary-600 rounded-lg font-semibold hover:bg-white/90 transition-colors shadow-lg flex items-center gap-2"
-            >
-              📥 Exporter en PDF
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Cayenne 2 — Roura"
+        title="Statistiques"
+        titleAccent="globales."
+        subtitle="Vision agrégée : élèves, classes, enseignants, moyennes aux évaluations nationales."
+        backLabel="Retour à l'accueil"
+        action={
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md text-primary-700 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-white hover:-translate-y-0.5 transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Exporter en PDF
+          </button>
+        }
+      />
 
       {/* Contenu */}
-      <div className="container mx-auto px-6 py-8 -mt-8 relative z-10">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         
         {/* Cards statistiques principales */}
         <div className="grid md:grid-cols-4 gap-4 mb-8" id="section-stats-generales">

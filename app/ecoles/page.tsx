@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import AuroraHeader from '@/components/AuroraHeader';
+import SpotlightCard from '@/components/SpotlightCard';
+import StatPill from '@/components/StatPill';
+import GradientMonogram, { initials } from '@/components/GradientMonogram';
 
 interface EcoleIdentite {
   uai: string;
@@ -90,6 +94,14 @@ export default function EcolesPage() {
     return '🏛️';
   };
 
+  const getGradientForType = (type: string | undefined | null): string => {
+    if (!type) return 'from-slate-400 via-slate-500 to-slate-600';
+    if (type.includes('Maternelle')) return 'from-rose-400 via-pink-400 to-fuchsia-400';
+    if (type.includes('Élémentaire')) return 'from-sky-400 via-cyan-400 to-teal-400';
+    if (type.includes('Primaire')) return 'from-amber-400 via-orange-400 to-rose-500';
+    return 'from-violet-400 via-indigo-500 to-blue-500';
+  };
+
   // Fonction pour filtrer les dispositifs des classes
   const filterDispositifsFromClasses = (classes: any[], dispositifs: any[]) => {
     if (!dispositifs || dispositifs.length === 0) return classes;
@@ -128,105 +140,114 @@ export default function EcolesPage() {
   const totalDispositifs = structures.reduce((sum, s) => sum + (s.dispositifs?.length || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-emerald-400">
-      {/* En-tête avec gradient du thème */}
-      <div className="text-white py-12 px-6">
-        <div className="container mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'accueil
-          </Link>
-          <h1 className="text-4xl font-bold mb-2">🏫 Écoles de la Circonscription</h1>
-          <p className="text-white/90 text-lg">Cayenne 2 - Roura</p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Cayenne 2 — Roura"
+        title="Écoles de la"
+        titleAccent="circonscription."
+        subtitle="Identité, structure, directeurs et dispositifs pour chacune des écoles du territoire."
+        backLabel="Retour à l'accueil"
+      />
 
       {/* Contenu principal */}
-      <div className="container mx-auto px-4 py-8 -mt-8 relative z-10">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
 
         {/* Statistiques */}
         {ecoles.length > 0 && (
-          <div className="grid md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
-              <div className="text-3xl font-bold">{ecoles.length}</div>
-              <div className="text-blue-100 text-sm">Écoles</div>
-            </div>
-            <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
-              <div className="text-3xl font-bold">{totalClasses}</div>
-              <div className="text-green-100 text-sm">Classes</div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
-              <div className="text-3xl font-bold">{totalEleves}</div>
-              <div className="text-purple-100 text-sm">Élèves</div>
-            </div>
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-6 shadow-lg">
-              <div className="text-3xl font-bold">{totalDispositifs}</div>
-              <div className="text-orange-100 text-sm">Dispositifs</div>
-            </div>
+          <div className="flex flex-wrap gap-3 mb-8">
+            <StatPill
+              value={ecoles.length}
+              label="Écoles"
+              gradient="from-sky-400 via-cyan-400 to-teal-400"
+              variant="light"
+            />
+            <StatPill
+              value={totalClasses}
+              label="Classes"
+              gradient="from-emerald-400 via-teal-400 to-cyan-400"
+              variant="light"
+            />
+            <StatPill
+              value={totalEleves}
+              label="Élèves"
+              gradient="from-violet-400 via-fuchsia-400 to-pink-400"
+              variant="light"
+            />
+            <StatPill
+              value={totalDispositifs}
+              label="Dispositifs"
+              gradient="from-amber-400 via-orange-400 to-rose-500"
+              variant="light"
+            />
           </div>
         )}
 
         {/* Liste des écoles */}
         {ecoles.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <div className="text-6xl mb-4">🏫</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Aucune école chargée</h3>
-            <p className="text-gray-600 mb-6">Importez les fichiers ZIP depuis la page Données</p>
-            <Link 
+          <div className="bg-white border border-slate-200 rounded-3xl shadow-[0_1px_0_rgba(15,23,42,0.02),0_16px_36px_-20px_rgba(15,23,42,0.1)] p-12 text-center">
+            <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 21h18" />
+                <path d="M5 21V7l7-4 7 4v14" />
+                <path d="M9 21v-8h6v8" />
+              </svg>
+            </div>
+            <h3 className="font-[Outfit,sans-serif] text-2xl font-bold text-slate-900 tracking-tight mb-2">Aucune école chargée</h3>
+            <p className="text-slate-500 mb-6">Importez les fichiers ZIP depuis la page Données.</p>
+            <Link
               href="/donnees"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0] text-white rounded-full font-semibold shadow-[0_8px_20px_-6px_rgba(30,90,120,0.4)] hover:shadow-[0_12px_30px_-8px_rgba(30,90,120,0.55)] hover:-translate-y-0.5 transition-all"
             >
-              💾 Aller à la page Données
+              Aller à la page Données
             </Link>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {ecoles.map((ecole) => {
               const structure = structures.find(s => s.uai === ecole.uai);
               const classesFiltered = structure ? filterDispositifsFromClasses(structure.classes, structure.dispositifs || []) : [];
               const nbClasses = classesFiltered.length;
               const nbEleves = classesFiltered.reduce((sum, c) => sum + c.nbEleves, 0);
+              const gradient = getGradientForType(ecole.type);
 
               return (
-                <div
-                  key={ecole.uai}
-                  onClick={() => openModal(ecole)}
-                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer border-2 border-transparent hover:border-blue-500 p-6 relative group"
-                >
-                  {/* Badge UAI */}
-                  <div className="absolute top-4 right-4 bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-mono">
-                    {ecole.uai}
+                <SpotlightCard key={ecole.uai} accent={gradient} onClick={() => openModal(ecole)}>
+                  {/* Header row: monogram + UAI badge */}
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <GradientMonogram text={initials(ecole.nom)} gradient={gradient} size="md" />
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 border border-slate-200 px-2.5 py-1 text-[10px] font-mono font-semibold text-slate-500 tracking-wide">
+                      {ecole.uai}
+                    </div>
                   </div>
 
-                  {/* Icône */}
-                  <div className="text-5xl mb-4">{getIconForType(ecole.type)}</div>
-
-                  {/* Nom */}
-                  <h3 className="text-xl font-bold text-gray-800 mb-2 pr-24">
+                  {/* Name */}
+                  <h3 className="font-[Outfit,sans-serif] text-lg font-semibold text-slate-950 tracking-tight leading-tight mb-1.5">
                     {ecole.nom}
                   </h3>
 
                   {/* Type */}
-                  <p className="text-sm text-gray-600 mb-4">{ecole.type || 'École publique'}</p>
+                  <p className="text-[12px] font-medium text-slate-500 tracking-wide mb-5">
+                    {ecole.type || 'École publique'}
+                  </p>
 
-                  {/* Statistiques */}
-                  <div className="flex items-center gap-4 text-sm text-gray-500 border-t pt-4">
-                    <div className="flex items-center gap-1">
-                      <span className="font-semibold text-blue-600">{nbClasses}</span>
-                      <span>classes</span>
+                  {/* Stats */}
+                  <div className="flex items-center gap-5 pt-4 border-t border-slate-100">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-[Outfit,sans-serif] font-bold text-lg text-slate-950 tabular-nums">{nbClasses}</span>
+                      <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-slate-400">classes</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span className="font-semibold text-purple-600">{nbEleves}</span>
-                      <span>élèves</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-[Outfit,sans-serif] font-bold text-lg text-slate-950 tabular-nums">{nbEleves}</span>
+                      <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-slate-400">élèves</span>
+                    </div>
+                    <div className="ml-auto text-slate-400 group-hover:text-[#45b8a0] group-hover:translate-x-0.5 transition-all">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14" />
+                        <path d="M12 5l7 7-7 7" />
+                      </svg>
                     </div>
                   </div>
-
-                  {/* Flèche */}
-                  <div className="absolute bottom-4 right-4 text-gray-400 group-hover:text-blue-500 transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
+                </SpotlightCard>
               );
             })}
           </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import AuroraHeader from '@/components/AuroraHeader';
 
 const steps = [
   {
@@ -152,26 +153,17 @@ export default function AideAnalyseClassePage() {
   const [openStep, setOpenStep] = useState<number | null>(0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      {/* Header */}
-      <div className="text-white py-16 px-6">
-        <div className="container mx-auto">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6 transition-colors">
-            ← Retour à l&apos;accueil
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-              📖
-            </div>
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold">Guide d&apos;utilisation</h1>
-              <p className="text-xl opacity-90 mt-2">Outil d&apos;analyse des évaluations nationales — Classe</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker="Outil d'analyse — Classe"
+        title="Guide"
+        titleAccent="d'utilisation."
+        subtitle="Tout ce qu'il faut savoir pour importer et analyser les évaluations nationales d'une classe."
+        backHref="/"
+        backLabel="Retour à l'accueil"
+      />
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
 
         {/* Bouton accès rapide */}
         <div className="card mb-8 bg-teal-50 border-2 border-teal-200">

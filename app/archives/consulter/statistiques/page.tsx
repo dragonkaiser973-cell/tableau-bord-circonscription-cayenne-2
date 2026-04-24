@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+import AuroraHeader from '@/components/AuroraHeader';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
 
@@ -231,41 +232,18 @@ function StatistiquesPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-700 via-primary-500 to-emerald-400">
-      {/* Header */}
-      <div className="text-white py-12 px-6">
-        <div className="container mx-auto">
-          <Link href={`/archives/consulter?annee=${annee}`} className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6">
-            ← Retour à l'archive {annee}
-          </Link>
-          
-          {/* Banner mode archive */}
-          <div className="bg-amber-500/20 border-2 border-amber-300 rounded-lg p-4 mb-6 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">📖</span>
-              <div>
-                <h3 className="text-lg font-bold">Mode Consultation Archive</h3>
-                <p className="opacity-90">Statistiques - Année scolaire {annee}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between w-full mb-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center text-3xl">
-                📊
-              </div>
-              <div>
-                <h1 className="text-5xl font-bold">Statistiques</h1>
-                <p className="text-xl opacity-90 mt-2">Circonscription Cayenne 2 - Roura - {annee}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50">
+      <AuroraHeader
+        kicker={`Mode archive · ${annee}`}
+        title="Statistiques"
+        titleAccent="archivées."
+        subtitle={`Vue consolidée des indicateurs pour l'année scolaire ${annee}.`}
+        backHref={`/archives/consulter?annee=${annee}`}
+        backLabel={`Retour à l'archive ${annee}`}
+      />
 
       {/* Contenu */}
-      <div className="container mx-auto px-6 py-8 -mt-8 relative z-10">
+      <div className="container mx-auto max-w-7xl px-6 py-8 -mt-20 relative z-10">
         
         {/* Cards statistiques principales */}
         <div className="grid md:grid-cols-4 gap-4 mb-8" id="section-stats-generales">
