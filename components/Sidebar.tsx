@@ -48,6 +48,7 @@ const navItems: NavItem[] = [
   { href: '/admin/plan-formation', label: 'Gérer plan formation', icon: <ListIcon />, category: 'admin', requiresAdmin: true },
   { href: '/analyse-classe', label: 'Analyse classe', icon: <MicroscopeIcon />, category: 'tools' },
   { href: '/aide-analyse-classe', label: 'Guide', icon: <BookIcon />, category: 'tools' },
+  { href: '/outils/prevision-structure', label: 'Prévision structure', icon: <DashboardIcon />, category: 'tools' },
   { href: '/outils/annuaire', label: 'Annuaire', icon: <AddressBookIcon />, category: 'info' },
   {
     label: 'Ressources',
