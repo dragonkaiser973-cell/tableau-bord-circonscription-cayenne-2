@@ -28,11 +28,98 @@ function numeric(v: unknown): number {
   return 0;
 }
 
+const LEVEL_BY_LABEL: Record<string, NiveauKey> = NIVEAUX.reduce(
+  (acc, n) => {
+    acc[n.label.toLowerCase()] = n.key;
+    return acc;
+  },
+  {} as Record<string, NiveauKey>,
+);
+
+function readString(ws: XLSX.WorkSheet, col: number, row: number): string {
+  const v = ws[cellRef(col, row)]?.v;
+  return typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '';
+}
+
+/**
+ * Read one sheet written by our extended export.
+ * Layout: row 1 title, row 2 meta, row 4 column headers "Niveau | Effectif | Répartis | Reste | C1 | ..."
+ */
+function readExtendedSheet(ws: XLSX.WorkSheet, sheetName: string): Prevision | null {
+  const headerA4 = readString(ws, 0, 4).toLowerCase();
+  if (!headerA4.startsWith('niveau')) return null;
+
+  const p = makeEmptyPrevision(crypto.randomUUID());
+  const title = readString(ws, 0, 1);
+  const m = title.match(/—\s*(.+)$/);
+  p.ecole = (m ? m[1].trim() : sheetName).trim();
+
+  const meta2 = readString(ws, 0, 2);
+  const meta2b = readString(ws, 1, 2);
+  const meta2c = readString(ws, 2, 2);
+  const auteurM = [meta2, meta2b, meta2c].find((s) => /auteur/i.test(s));
+  if (auteurM) p.auteur = auteurM.replace(/^.*:\s*/, '').trim();
+  const anneeM = [meta2, meta2b, meta2c].find((s) => /année\s*n\s*:/i.test(s));
+  if (anneeM) p.anneeN = anneeM.replace(/^.*:\s*/, '').trim();
+  const nbM = [meta2, meta2b, meta2c].find((s) => /nb\s*classes/i.test(s));
+  const nbFromMeta = nbM ? Number(nbM.replace(/[^0-9]/g, '')) : 0;
+
+  let maxClassCol = 0;
+  for (let c = 4; c < 4 + MAX_CLASSES; c++) {
+    const h = readString(ws, c, 4);
+    if (!h) break;
+    maxClassCol = c;
+  }
+  const nbClasses = Math.max(1, Math.min(MAX_CLASSES, nbFromMeta || maxClassCol - 3));
+  p.nbClasses = nbClasses;
+
+  for (let r = 5; r <= 15; r++) {
+    const label = readString(ws, 0, r).toLowerCase();
+    if (!label) continue;
+    const key = LEVEL_BY_LABEL[label];
+    if (!key) continue;
+    p.effectifs[key] = numeric(ws[cellRef(1, r)]?.v);
+    for (let c = 0; c < nbClasses; c++) {
+      const col = 4 + c;
+      p.repartition[key][c] = numeric(ws[cellRef(col, r)]?.v);
+    }
+  }
+
+  return p;
+}
+
 /**
  * Read the official circo Excel template.
  * The template has 15 class columns (G..U = col 6..20) and 11 levels (rows 4..14).
  * Each school is in its own sheet.
  */
+function readTemplateSheet(ws: XLSX.WorkSheet, sheetName: string): Prevision {
+  const ecoleCell = ws[cellRef(0, 1)];
+  const nbClassesCell = ws[cellRef(2, 3)];
+  const nbClasses = Math.max(1, Math.min(MAX_CLASSES, Math.round(numeric(nbClassesCell?.v))));
+  const rawName =
+    typeof ecoleCell?.v === 'string' && ecoleCell.v.trim().length > 0
+      ? ecoleCell.v.trim()
+      : sheetName;
+
+  const p = makeEmptyPrevision(crypto.randomUUID());
+  p.ecole = rawName;
+  p.nbClasses = nbClasses || 1;
+
+  for (const n of NIVEAUX) {
+    const row = TEMPLATE_ROW_BY_NIVEAU[n.key];
+    const effCell = ws[cellRef(3, row)];
+    p.effectifs[n.key] = numeric(effCell?.v);
+
+    for (let c = 0; c < Math.min(15, nbClasses); c++) {
+      const col = 6 + c;
+      const cell = ws[cellRef(col, row)];
+      p.repartition[n.key][c] = numeric(cell?.v);
+    }
+  }
+  return p;
+}
+
 export async function importFromTemplate(file: File): Promise<Prevision[]> {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array' });
@@ -43,30 +130,8 @@ export async function importFromTemplate(file: File): Promise<Prevision[]> {
     const ws = wb.Sheets[sheetName];
     if (!ws) continue;
 
-    const ecoleCell = ws[cellRef(0, 1)];
-    const nbClassesCell = ws[cellRef(2, 3)];
-    const nbClasses = Math.max(1, Math.min(MAX_CLASSES, Math.round(numeric(nbClassesCell?.v))));
-    const rawName =
-      typeof ecoleCell?.v === 'string' && ecoleCell.v.trim().length > 0
-        ? ecoleCell.v.trim()
-        : sheetName;
-
-    const p = makeEmptyPrevision(crypto.randomUUID());
-    p.ecole = rawName;
-    p.nbClasses = nbClasses || 1;
-
-    for (const n of NIVEAUX) {
-      const row = TEMPLATE_ROW_BY_NIVEAU[n.key];
-      const effCell = ws[cellRef(3, row)];
-      p.effectifs[n.key] = numeric(effCell?.v);
-
-      for (let c = 0; c < Math.min(15, nbClasses); c++) {
-        const col = 6 + c;
-        const cell = ws[cellRef(col, row)];
-        p.repartition[n.key][c] = numeric(cell?.v);
-      }
-    }
-    previsions.push(p);
+    const extended = readExtendedSheet(ws, sheetName);
+    previsions.push(extended ?? readTemplateSheet(ws, sheetName));
   }
 
   if (previsions.length === 0) throw new Error('Aucune feuille exploitable.');
