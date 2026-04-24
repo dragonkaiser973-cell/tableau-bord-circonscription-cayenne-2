@@ -6,6 +6,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 import { Bar, Pie } from 'react-chartjs-2';
 import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
+import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
@@ -345,58 +346,35 @@ export default function CirconscriptionPage() {
         </div>
 
         {/* Statistiques globales */}
-        <div className="grid md:grid-cols-4 gap-6 mb-6" id="stats-grid">
-          <div className="card bg-gradient-to-br from-primary-500 to-primary-700 text-white">
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">🏫</div>
-              <div>
-                <h3 className="text-xs uppercase tracking-wider opacity-90 mb-1">Écoles</h3>
-                <div className="text-4xl font-bold">{statsEcoles.total}</div>
-                <div className="text-sm opacity-90 mt-1">
-                  {statsEcoles.elementaires} élémentaires • {statsEcoles.maternelles} maternelles • {statsEcoles.primaires} primaires
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card bg-gradient-to-br from-info to-primary-800 text-white">
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">👨‍🏫</div>
-              <div>
-                <h3 className="text-xs uppercase tracking-wider opacity-90 mb-1">Enseignants</h3>
-                <div className="text-4xl font-bold">{statsEns.total}</div>
-                <div className="text-sm opacity-90 mt-1">
-                  {statsEns.avecSpecialite} avec spécialité
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card bg-gradient-to-br from-purple-500 to-purple-700 text-white">
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">📚</div>
-              <div>
-                <h3 className="text-xs uppercase tracking-wider opacity-90 mb-1">Réussite Français</h3>
-                <div className="text-4xl font-bold">{statsEval.moyenneFrancais.toFixed(1)}%</div>
-                <div className="text-sm opacity-90 mt-1">
-                  Moyenne au-dessus seuil 2
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card bg-gradient-to-br from-orange-500 to-orange-700 text-white">
-            <div className="flex items-center gap-4">
-              <div className="text-5xl">🔢</div>
-              <div>
-                <h3 className="text-xs uppercase tracking-wider opacity-90 mb-1">Réussite Maths</h3>
-                <div className="text-4xl font-bold">{statsEval.moyenneMaths.toFixed(1)}%</div>
-                <div className="text-sm opacity-90 mt-1">
-                  Moyenne au-dessus seuil 2
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="flex flex-wrap gap-3 mb-8" id="stats-grid">
+          <StatPill
+            value={statsEcoles.total}
+            label="Écoles"
+            sub={`${statsEcoles.elementaires} élém. · ${statsEcoles.maternelles} mat. · ${statsEcoles.primaires} prim.`}
+            gradient="from-sky-400 via-cyan-400 to-teal-400"
+            variant="light"
+          />
+          <StatPill
+            value={statsEns.total}
+            label="Enseignants"
+            sub={`${statsEns.avecSpecialite} avec spécialité`}
+            gradient="from-emerald-400 via-teal-400 to-cyan-400"
+            variant="light"
+          />
+          <StatPill
+            value={`${statsEval.moyenneFrancais.toFixed(1)}%`}
+            label="Réussite Français"
+            sub="Moyenne au-dessus seuil 2"
+            gradient="from-violet-400 via-fuchsia-400 to-pink-400"
+            variant="light"
+          />
+          <StatPill
+            value={`${statsEval.moyenneMaths.toFixed(1)}%`}
+            label="Réussite Maths"
+            sub="Moyenne au-dessus seuil 2"
+            gradient="from-amber-400 via-orange-400 to-rose-500"
+            variant="light"
+          />
         </div>
 
         {/* Graphiques en camembert */}

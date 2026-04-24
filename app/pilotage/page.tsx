@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
+import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFElement, PDFExportOptions } from '@/lib/pdfExport';
 
 export default function PilotagePage() {
@@ -309,24 +310,25 @@ export default function PilotagePage() {
         <div className="card mb-8" id="section-indicateurs">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">🎯 Indicateurs Clés</h2>
           
-          <div className="grid md:grid-cols-3 gap-6 mb-6">
-            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-              <div className="text-4xl mb-2">👥</div>
-              <div className="text-4xl font-bold text-blue-700">{indicateurs.effectifTotal}</div>
-              <div className="text-sm text-gray-600 mt-2">Élèves total</div>
-            </div>
-
-            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
-              <div className="text-4xl mb-2">🚪</div>
-              <div className="text-4xl font-bold text-green-700">{indicateurs.nbClasses}</div>
-              <div className="text-sm text-gray-600 mt-2">Classes total</div>
-            </div>
-
-            <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
-              <div className="text-4xl mb-2">📈</div>
-              <div className="text-4xl font-bold text-orange-700">{indicateurs.tauxMoyen}%</div>
-              <div className="text-sm text-gray-600 mt-2">Réussite moyenne</div>
-            </div>
+          <div className="flex flex-wrap gap-3 mb-6">
+            <StatPill
+              value={indicateurs.effectifTotal}
+              label="Élèves total"
+              gradient="from-sky-400 via-cyan-400 to-teal-400"
+              variant="light"
+            />
+            <StatPill
+              value={indicateurs.nbClasses}
+              label="Classes total"
+              gradient="from-emerald-400 via-teal-400 to-cyan-400"
+              variant="light"
+            />
+            <StatPill
+              value={`${indicateurs.tauxMoyen}%`}
+              label="Réussite moyenne"
+              gradient="from-amber-400 via-orange-400 to-rose-500"
+              variant="light"
+            />
           </div>
 
           {/* Détail Classes Dédoublées vs Standard */}

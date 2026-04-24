@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Line, Bar } from 'react-chartjs-2';
+import StatPill from '@/components/StatPill';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -255,36 +256,33 @@ function EvaluationsPageContent() {
     return (
       <div>
         {/* Statistiques */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="stat-card">
-            <h3 className="text-xs uppercase tracking-wider opacity-90 mb-2">
-              {selectedMatiere} - Au-dessus seuil 2
-            </h3>
-            <div className="text-4xl font-bold">{avgGroupe3}%</div>
-          </div>
-          
-          <div className="stat-card bg-gradient-to-br from-info to-primary-800">
-            <h3 className="text-xs uppercase tracking-wider opacity-90 mb-2">
-              Nombre de compétences
-            </h3>
-            <div className="text-4xl font-bold">{data.length}</div>
-          </div>
-          
-          <div className="stat-card bg-gradient-to-br from-success to-success-light">
-            <h3 className="text-xs uppercase tracking-wider opacity-90 mb-2">
-              Année scolaire
-            </h3>
-            <div className="text-4xl font-bold">{selectedAnnee}</div>
-          </div>
-
-          <div className="stat-card bg-gradient-to-br from-purple-500 to-purple-700">
-            <h3 className="text-xs uppercase tracking-wider opacity-90 mb-2">
-              Périmètre
-            </h3>
-            <div className="text-2xl font-bold">
-              {selectedEcole ? ecoles.find(e => e.uai === selectedEcole)?.nom || 'École' : 'Circonscription'}
-            </div>
-          </div>
+        <div className="flex flex-wrap gap-3 mb-8">
+          <StatPill
+            value={`${avgGroupe3}%`}
+            label={`${selectedMatiere} — Seuil 2`}
+            sub="Moyenne au-dessus seuil 2"
+            gradient="from-sky-400 via-cyan-400 to-teal-400"
+            variant="light"
+          />
+          <StatPill
+            value={data.length}
+            label="Compétences"
+            sub="Nombre évalué"
+            gradient="from-violet-400 via-fuchsia-400 to-pink-400"
+            variant="light"
+          />
+          <StatPill
+            value={selectedAnnee}
+            label="Année scolaire"
+            gradient="from-emerald-400 via-teal-400 to-cyan-400"
+            variant="light"
+          />
+          <StatPill
+            value={selectedEcole ? ecoles.find(e => e.uai === selectedEcole)?.nom || 'École' : 'Circonscription'}
+            label="Périmètre"
+            gradient="from-amber-400 via-orange-400 to-rose-500"
+            variant="light"
+          />
         </div>
 
         {/* Graphique */}

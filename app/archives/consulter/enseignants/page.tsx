@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { calculerEchelonComplet } from '@/lib/echelons';
 import { exportTableToPDF } from '@/lib/pdfExport';
+import StatPill from '@/components/StatPill';
 
 interface Enseignant {
   id: number;
@@ -235,23 +236,31 @@ function EnseignantsArchivesContent() {
       <div className="container mx-auto px-6 py-8">
         
         {/* Statistiques */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="card text-center">
-            <div className="text-sm text-gray-600 mb-2">Total</div>
-            <div className="text-4xl font-bold text-primary-700">{stats.total}</div>
-          </div>
-          <div className="card text-center">
-            <div className="text-sm text-gray-600 mb-2">Titulaires</div>
-            <div className="text-4xl font-bold text-green-600">{stats.titulaires}</div>
-          </div>
-          <div className="card text-center">
-            <div className="text-sm text-gray-600 mb-2">Stagiaires</div>
-            <div className="text-4xl font-bold text-orange-600">{stats.stagiaires}</div>
-          </div>
-          <div className="card text-center">
-            <div className="text-sm text-gray-600 mb-2">Contractuels</div>
-            <div className="text-4xl font-bold text-red-600">{stats.contractuels}</div>
-          </div>
+        <div className="flex flex-wrap gap-3 mb-8">
+          <StatPill
+            value={stats.total}
+            label="Enseignants"
+            gradient="from-sky-400 via-cyan-400 to-teal-400"
+            variant="light"
+          />
+          <StatPill
+            value={stats.titulaires}
+            label="Titulaires"
+            gradient="from-emerald-400 via-teal-400 to-cyan-400"
+            variant="light"
+          />
+          <StatPill
+            value={stats.stagiaires}
+            label="Stagiaires"
+            gradient="from-amber-400 via-orange-400 to-rose-500"
+            variant="light"
+          />
+          <StatPill
+            value={stats.contractuels}
+            label="Contractuels"
+            gradient="from-violet-400 via-fuchsia-400 to-pink-400"
+            variant="light"
+          />
         </div>
 
         {/* Filtres */}

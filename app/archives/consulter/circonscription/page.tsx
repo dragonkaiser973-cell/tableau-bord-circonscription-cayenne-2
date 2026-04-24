@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+import StatPill from '@/components/StatPill';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
@@ -325,23 +326,31 @@ function CirconscriptionArchiveContent() {
             Statistiques générales
           </h2>
           
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border-2 border-blue-200">
-              <div className="text-sm text-blue-600 font-semibold mb-1">ÉCOLES</div>
-              <div className="text-4xl font-bold text-blue-900">{statsEcoles.total}</div>
-            </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border-2 border-green-200">
-              <div className="text-sm text-green-600 font-semibold mb-1">ENSEIGNANTS</div>
-              <div className="text-4xl font-bold text-green-900">{statsEns.total}</div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg border-2 border-purple-200">
-              <div className="text-sm text-purple-600 font-semibold mb-1">PERSONNEL IEN</div>
-              <div className="text-4xl font-bold text-purple-900">{statsCirco.total}</div>
-            </div>
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-lg border-2 border-orange-200">
-              <div className="text-sm text-orange-600 font-semibold mb-1">IPS MOYEN</div>
-              <div className="text-4xl font-bold text-orange-900">{statsCirco.ipsMoyen.toFixed(1)}</div>
-            </div>
+          <div className="flex flex-wrap gap-3">
+            <StatPill
+              value={statsEcoles.total}
+              label="Écoles"
+              gradient="from-sky-400 via-cyan-400 to-teal-400"
+              variant="light"
+            />
+            <StatPill
+              value={statsEns.total}
+              label="Enseignants"
+              gradient="from-emerald-400 via-teal-400 to-cyan-400"
+              variant="light"
+            />
+            <StatPill
+              value={statsCirco.total}
+              label="Personnel IEN"
+              gradient="from-violet-400 via-fuchsia-400 to-pink-400"
+              variant="light"
+            />
+            <StatPill
+              value={statsCirco.ipsMoyen.toFixed(1)}
+              label="IPS moyen"
+              gradient="from-amber-400 via-orange-400 to-rose-500"
+              variant="light"
+            />
           </div>
         </div>
 

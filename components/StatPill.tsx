@@ -11,6 +11,8 @@ type StatPillProps = {
    *  - "dark": white text on translucent dark background (for use inside AuroraHeader)
    *  - "light": slate text on white background (for use on page content) */
   variant?: 'dark' | 'light';
+  /** Optional smaller caption displayed under the label, e.g. "5 élém. · 7 mat. · 6 prim." */
+  sub?: string;
 };
 
 /**
@@ -23,6 +25,7 @@ export default function StatPill({
   label,
   gradient,
   variant = 'dark',
+  sub,
 }: StatPillProps) {
   const isDark = variant === 'dark';
   return (
@@ -38,12 +41,23 @@ export default function StatPill({
       >
         {value}
       </div>
-      <div
-        className={`pr-3 text-[11px] font-bold tracking-[0.18em] uppercase ${
-          isDark ? 'text-white/85' : 'text-slate-600'
-        }`}
-      >
-        {label}
+      <div className="pr-3 flex flex-col">
+        <div
+          className={`text-[11px] font-bold tracking-[0.18em] uppercase leading-tight ${
+            isDark ? 'text-white/85' : 'text-slate-600'
+          }`}
+        >
+          {label}
+        </div>
+        {sub && (
+          <div
+            className={`text-[10.5px] font-medium mt-0.5 leading-tight ${
+              isDark ? 'text-white/60' : 'text-slate-400'
+            }`}
+          >
+            {sub}
+          </div>
+        )}
       </div>
     </div>
   );
