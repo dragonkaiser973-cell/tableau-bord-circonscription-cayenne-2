@@ -93,7 +93,16 @@ export function defaultPeriodeBounds(anneeStartYear: number): Record<Periode, { 
   };
 }
 
-export function makeEmptyRepartition(id: string, anneeN = '2025-2026'): Repartition108h {
+/** Returns the current school year as "YYYY-YYYY" — Aug+ starts a new year. */
+export function currentSchoolYear(): string {
+  const now = new Date();
+  const m = now.getMonth(); // 0..11, 7 = August
+  const y = now.getFullYear();
+  const start = m >= 7 ? y : y - 1;
+  return `${start}-${start + 1}`;
+}
+
+export function makeEmptyRepartition(id: string, anneeN = currentSchoolYear()): Repartition108h {
   const startYear = Number(anneeN.split('-')[0]) || new Date().getFullYear();
   return {
     id,

@@ -92,6 +92,42 @@ function setSlotColor(ws: ExcelJS.Worksheet, row: number, col: number, argb: str
   };
 }
 
+const JOURS_COURTS = ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'];
+
+function injectDates(ws: ExcelJS.Worksheet, anneeN: string) {
+  const startYear = Number((anneeN || '').split('-')[0]);
+  if (!startYear) return;
+  // The template merges Feb's unused day-29..day-31 cells (AM43:AS45). On leap years
+  // we need day 29 to be writeable, so unmerge it first.
+  try {
+    (ws as unknown as { unMergeCells: (range: string) => void }).unMergeCells('AM43:AS45');
+  } catch {
+    /* not merged or unsupported */
+  }
+  for (const monthIdxStr of Object.keys(MONTH_COLS)) {
+    const monthIdx0 = Number(monthIdxStr);
+    const layout = MONTH_COLS[monthIdx0];
+    // Sept-Dec → startYear; Jan-Jul → startYear+1
+    const yr = monthIdx0 >= 8 ? startYear : startYear + 1;
+    const totalDays = new Date(yr, monthIdx0 + 1, 0).getDate();
+    for (let d = 1; d <= 31; d++) {
+      const row = 14 + d;
+      const labelCell = ws.getRow(row).getCell(layout.dayLabel);
+      const numCell = ws.getRow(row).getCell(layout.num);
+      labelCell.style = JSON.parse(JSON.stringify(labelCell.style || {}));
+      numCell.style = JSON.parse(JSON.stringify(numCell.style || {}));
+      if (d <= totalDays) {
+        const wd = new Date(yr, monthIdx0, d).getDay();
+        labelCell.value = JOURS_COURTS[wd];
+        numCell.value = d;
+      } else {
+        labelCell.value = null;
+        numCell.value = null;
+      }
+    }
+  }
+}
+
 // CALCUL column V (top-left of merged V{row}:Y{row}) – row by category in the legend.
 const CALCUL_ROW_BY_CATEGORY: Record<CategoryKey, number> = {
   concertation: 6,
@@ -195,6 +231,7 @@ export async function exportRepartition(p: Repartition108h) {
 
   const calc = wb.getWorksheet('CALCUL 108H');
   if (!calc) throw new Error('Feuille CALCUL 108H absente du template.');
+  injectDates(calc, p.anneeN);
   injectCalendar(calc, p);
   injectCalcul(calc, p);
 
