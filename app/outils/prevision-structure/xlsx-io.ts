@@ -131,7 +131,8 @@ function readTemplateSheet(ws: XLSX.WorkSheet, sheetName: string): Prevision {
 
 function isEmptyPrevision(p: Prevision): boolean {
   for (const n of NIVEAUX) if ((p.effectifs[n.key] || 0) > 0) return false;
-  return !p.ecole || /^(EEPU NOM ECOLE|ECOLE\s*\d+)$/i.test(p.ecole);
+  const name = p.ecole.trim();
+  return !name || /^(EEPU NOM ECOLE|ECOLE\s*\d+)$/i.test(name);
 }
 
 export async function importFromTemplate(file: File): Promise<Prevision[]> {
@@ -193,32 +194,45 @@ function triggerDownload(blob: Blob, fname: string) {
   URL.revokeObjectURL(url);
 }
 
+function safeFilename(name: string): string {
+  const cleaned = name.replace(/[\\/:*?"<>|]/g, '_').trim();
+  return cleaned.slice(0, 80) || 'Ecole';
+}
+
+function safeSheetName(name: string): string {
+  const cleaned = name.replace(/[[\]\\/?:*]/g, '_').trim();
+  return cleaned.slice(0, 31) || 'École';
+}
+
 /**
  * Export into a copy of the official circo template, preserving merges, column widths,
  * formulas (reste per niveau, totaux, moyennes, écart-type), fills, borders and fonts.
- * Up to 15 schools (template has 15 pre-built sheets) with up to 34 classes each.
+ * One xlsx file per school, with the sheet renamed to the school name.
  */
 export async function exportToXlsx(previsions: Prevision[]) {
   const res = await fetch(TEMPLATE_URL);
   if (!res.ok) throw new Error('Template Excel introuvable (public/templates/).');
   const buf = await res.arrayBuffer();
 
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(buf);
+  for (let i = 0; i < previsions.length; i++) {
+    const p = previsions[i];
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(buf);
+    const ws = wb.worksheets[0];
+    if (!ws) throw new Error('Template invalide.');
 
-  const schoolSheets = wb.worksheets.filter(
-    (ws) => ws.name === 'EEPU NOM ECOLE' || /^ECOLE\s*\d+$/i.test(ws.name),
-  );
-  const limit = Math.min(previsions.length, schoolSheets.length);
+    if (p.ecole) ws.name = safeSheetName(p.ecole);
+    injectPrevisionExcelJS(ws, p);
 
-  for (let i = 0; i < limit; i++) {
-    injectPrevisionExcelJS(schoolSheets[i], previsions[i]);
+    const out = await wb.xlsx.writeBuffer();
+    const blob = new Blob([out], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const fname = `${safeFilename(p.ecole || `École ${i + 1}`)}.xlsx`;
+    triggerDownload(blob, fname);
+
+    if (i < previsions.length - 1) {
+      await new Promise((r) => setTimeout(r, 250));
+    }
   }
-
-  const out = await wb.xlsx.writeBuffer();
-  const blob = new Blob([out], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  });
-  const fname = `previsions_structure_${new Date().toISOString().slice(0, 10)}.xlsx`;
-  triggerDownload(blob, fname);
 }
