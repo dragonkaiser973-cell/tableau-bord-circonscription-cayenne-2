@@ -211,45 +211,30 @@ export default function Repartition108hPage() {
         subtitle="Coloriez votre calendrier de l'année par catégorie d'activité, puis détaillez chaque période. Multi-école, sauvegarde locale, export Excel."
         backLabel="Retour à l'accueil"
         padding="py-10 md:py-12"
-      >
-        <div className="flex flex-wrap items-center gap-2 mt-5 ps-no-print">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".xlsx,.xlsm"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onImport(f);
-              if (fileRef.current) fileRef.current.value = '';
-            }}
-          />
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-2 rounded-xl bg-white/80 backdrop-blur px-3 py-2 text-sm font-medium text-slate-800 shadow-sm border border-slate-200 hover:border-slate-300 hover:bg-white"
-          >
-            <UploadIcon /> Importer .xlsx
-          </button>
-          <button
-            onClick={onExport}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm border border-slate-900 hover:bg-slate-800"
-          >
-            <DownloadIcon /> Exporter .xlsx
-          </button>
-          <button
-            onClick={onAddSchool}
-            className="inline-flex items-center gap-2 rounded-xl bg-white/80 backdrop-blur px-3 py-2 text-sm font-medium text-slate-800 shadow-sm border border-slate-200 hover:border-slate-300 hover:bg-white"
-          >
-            <PlusIcon /> Ajouter une école
-          </button>
-          <button
-            onClick={onRemoveSchool}
-            className="inline-flex items-center gap-2 rounded-xl bg-white/80 backdrop-blur px-3 py-2 text-sm font-medium text-slate-700 shadow-sm border border-slate-200 hover:border-rose-300 hover:text-rose-700"
-          >
-            <TrashIcon /> {items.length > 1 ? 'Supprimer cette école' : 'Réinitialiser'}
-          </button>
-        </div>
-      </AuroraHeader>
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".xlsx,.xlsm"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onImport(f);
+                if (fileRef.current) fileRef.current.value = '';
+              }}
+            />
+            <TopBtn onClick={() => fileRef.current?.click()} icon={<UploadIcon />} label="Importer .xlsx" />
+            <TopBtn onClick={onExport} icon={<DownloadIcon />} label="Exporter .xlsx" primary />
+            <TopBtn onClick={onAddSchool} icon={<PlusIcon />} label="Ajouter une école" />
+            <TopBtn
+              onClick={onRemoveSchool}
+              icon={<TrashIcon />}
+              label={items.length > 1 ? 'Supprimer cette école' : 'Réinitialiser'}
+            />
+          </div>
+        }
+      />
 
       <main className="mx-auto w-full max-w-[1720px] px-4 md:px-6 pb-16 -mt-4 relative z-10">
         <SchoolTabs items={items} activeId={activeId} onSelect={setActiveId} />
@@ -934,6 +919,32 @@ function StatCard({
       <div className="text-2xl font-semibold tabular-nums mt-0.5">{value}</div>
       {sub && <div className="text-xs opacity-70 mt-0.5">{sub}</div>}
     </div>
+  );
+}
+
+function TopBtn({
+  onClick,
+  icon,
+  label,
+  primary,
+}: {
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+  primary?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all active:translate-y-px ${
+        primary
+          ? 'bg-white text-primary-700 hover:bg-white/90 shadow-[0_6px_18px_-6px_rgba(0,0,0,0.25)]'
+          : 'bg-white/10 backdrop-blur-md border border-white/25 text-white hover:bg-white/20'
+      }`}
+    >
+      <span className="w-4 h-4 inline-flex items-center justify-center">{icon}</span>
+      {label}
+    </button>
   );
 }
 
