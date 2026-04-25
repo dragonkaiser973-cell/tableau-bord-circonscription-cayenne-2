@@ -49,6 +49,7 @@ const navItems: NavItem[] = [
   { href: '/analyse-classe', label: 'Analyse classe', icon: <MicroscopeIcon />, category: 'tools' },
   { href: '/aide-analyse-classe', label: 'Guide', icon: <BookIcon />, category: 'tools' },
   { href: '/outils/prevision-structure', label: 'Prévision structure', icon: <DashboardIcon />, category: 'tools' },
+  { href: '/outils/repartition-108h', label: 'Répartition 108h', icon: <ClipboardIcon />, category: 'tools' },
   { href: '/outils/annuaire', label: 'Annuaire', icon: <AddressBookIcon />, category: 'info' },
   {
     label: 'Ressources',
