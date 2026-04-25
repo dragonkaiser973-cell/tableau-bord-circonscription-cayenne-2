@@ -9,7 +9,7 @@ export default function DigipadPage() {
         kicker="Ressources partagées · La Digitale"
         title="Digipad de la"
         titleAccent="circonscription."
-        subtitle="Mur collaboratif de ressources pédagogiques pour les enseignants de Cayenne 2 — Roura."
+        subtitle="Mur collaboratif de ressources pédagogiques pour les directeurs de Cayenne 2 — Roura."
         backLabel="Retour à l'accueil"
         padding="py-10 md:py-12"
       />
