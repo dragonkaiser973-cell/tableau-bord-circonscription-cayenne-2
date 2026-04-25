@@ -311,7 +311,9 @@ function readCalendar(ws: ExcelJS.Worksheet): Record<string, { category: Categor
       const slotColors: string[] = [];
       for (let s = 0; s < MAX_SLOTS_PER_DAY_TPL; s++) {
         const cell = ws.getRow(row).getCell(layout.slot1 + s);
-        const argb = cell.style?.fill?.fgColor?.argb;
+        const fill = cell.style?.fill;
+        const argb =
+          fill && fill.type === 'pattern' ? fill.fgColor?.argb : undefined;
         if (argb) slotColors.push(argb.toUpperCase());
       }
       if (slotColors.length === 0) continue;
