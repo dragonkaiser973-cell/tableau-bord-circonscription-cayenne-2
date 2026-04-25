@@ -27,6 +27,15 @@ const PERIODE_CATEGORIES: { key: CategoryKey; defaultRows: number }[] = [
   { key: 'organisation', defaultRows: 7 },
 ];
 
+const SCHOOL_GRADIENTS = [
+  'from-sky-500 to-cyan-500',
+  'from-rose-400 to-pink-500',
+  'from-violet-500 to-fuchsia-500',
+  'from-amber-400 to-orange-500',
+  'from-emerald-400 to-teal-500',
+  'from-indigo-500 to-blue-500',
+];
+
 const STORAGE_KEY = 'repartition-108h:v1';
 const spring = { type: 'spring' as const, stiffness: 320, damping: 28 };
 
@@ -317,37 +326,45 @@ function SchoolTabs({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {items.map((p) => {
+      <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-white/50 mr-1">
+        École
+      </span>
+      {items.map((p, i) => {
         const isActive = p.id === activeId;
+        const gradient = SCHOOL_GRADIENTS[i % SCHOOL_GRADIENTS.length];
         const label = p.ecole.trim() || 'Nouvelle école';
+        const sublabel = p.type === 'maternelle' ? 'Maternelle' : 'Élémentaire';
         return (
           <motion.div
             key={p.id}
             layout
-            className={`relative inline-flex items-center gap-1 rounded-full pl-3.5 pr-1 py-1 text-[13px] font-semibold transition-all border ${
+            className={`group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-semibold tracking-wide transition-all duration-200 cursor-pointer active:scale-95 ${
               isActive
-                ? 'bg-white text-primary-700 border-white shadow-[0_8px_20px_-8px_rgba(0,0,0,0.3)]'
-                : 'bg-white/10 backdrop-blur-md text-white/90 border-white/20 hover:bg-white/20'
+                ? `bg-gradient-to-r ${gradient} text-white border-transparent shadow-lg shadow-black/20`
+                : 'bg-white/5 border-white/15 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/30'
             }`}
+            onClick={() => onSelect(p.id)}
           >
-            <button onClick={() => onSelect(p.id)} className="py-1 inline-flex items-center gap-1.5">
-              <span className="truncate max-w-[220px]">{label}</span>
-              <span
-                className={`text-[10px] uppercase tracking-wide font-medium ${
-                  isActive ? 'text-primary-700/60' : 'text-white/60'
-                }`}
-              >
-                {p.type === 'maternelle' ? 'Mat.' : 'Élé.'}
-              </span>
-            </button>
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isActive ? 'bg-white' : `bg-gradient-to-r ${gradient}`
+              }`}
+            />
+            <span className="truncate max-w-[240px]">{label}</span>
+            <span className={`font-normal ${isActive ? 'text-white/90' : 'text-white/50'}`}>
+              · {sublabel}
+            </span>
             {items.length > 1 && (
               <button
-                onClick={() => onRemove(p.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(p.id);
+                }}
                 aria-label="Supprimer cette école"
-                className={`w-6 h-6 inline-flex items-center justify-center rounded-full transition-colors ${
+                className={`-mr-1 ml-0.5 w-5 h-5 inline-flex items-center justify-center rounded-full transition-colors ${
                   isActive
-                    ? 'hover:bg-rose-100 text-slate-400 hover:text-rose-600'
-                    : 'hover:bg-white/20 text-white/70 hover:text-white'
+                    ? 'text-white/80 hover:text-white hover:bg-white/20'
+                    : 'text-white/50 hover:text-white hover:bg-white/15'
                 }`}
               >
                 <XIcon />
@@ -358,7 +375,7 @@ function SchoolTabs({
       })}
       <button
         onClick={onAdd}
-        className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/25 border-dashed px-3 py-1.5 text-[13px] font-semibold transition-all"
+        className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-dashed border-white/25 text-[11px] font-semibold tracking-wide text-white/70 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all duration-200 cursor-pointer active:scale-95"
       >
         <PlusIcon />
         Ajouter une école
