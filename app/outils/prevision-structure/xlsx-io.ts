@@ -224,6 +224,20 @@ export async function exportToXlsx(previsions: Prevision[]) {
     if (p.ecole) ws.name = safeSheetName(p.ecole);
     injectPrevisionExcelJS(ws, p);
 
+    // Strip broken defined names so Excel doesn't display a "named range repair"
+    // warning when opening the file. We drop any name with #REF! or an external
+    // workbook reference like [1]Sheet.
+    try {
+      const dnObj = (wb as unknown as { definedNames?: { model: { name: string; ranges: string[] }[] } }).definedNames;
+      if (dnObj && Array.isArray(dnObj.model)) {
+        dnObj.model = dnObj.model.filter((n) =>
+          n.ranges.every((r) => !/#REF|\[\d+\]/.test(r)),
+        );
+      }
+    } catch {
+      /* noop */
+    }
+
     const out = await wb.xlsx.writeBuffer();
     const blob = new Blob([out], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

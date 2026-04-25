@@ -146,7 +146,8 @@ export default function PrevisionStructurePage() {
 
   const onExport = async () => {
     try {
-      await exportToXlsx(previsions);
+      const target = active ? [active] : previsions;
+      await exportToXlsx(target);
       setToast('Export généré.');
     } catch {
       setToast("L'export a échoué.");
