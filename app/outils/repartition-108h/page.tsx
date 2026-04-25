@@ -226,19 +226,28 @@ export default function Repartition108hPage() {
             />
             <TopBtn onClick={() => fileRef.current?.click()} icon={<UploadIcon />} label="Importer .xlsx" />
             <TopBtn onClick={onExport} icon={<DownloadIcon />} label="Exporter .xlsx" primary />
-            <TopBtn onClick={onAddSchool} icon={<PlusIcon />} label="Ajouter une école" />
-            <TopBtn
-              onClick={onRemoveSchool}
-              icon={<TrashIcon />}
-              label={items.length > 1 ? 'Supprimer cette école' : 'Réinitialiser'}
-            />
           </div>
         }
-      />
+      >
+        <SchoolTabs
+          items={items}
+          activeId={activeId}
+          onSelect={setActiveId}
+          onAdd={onAddSchool}
+          onRemove={(id) => {
+            if (items.length <= 1) {
+              onRemoveSchool();
+              return;
+            }
+            setItems((prev) => prev.filter((p) => p.id !== id));
+            const remain = items.filter((p) => p.id !== id);
+            if (remain.length && id === activeId) setActiveId(remain[0].id);
+            setToast('École supprimée.');
+          }}
+        />
+      </AuroraHeader>
 
       <main className="mx-auto w-full max-w-[1720px] px-4 md:px-6 pb-16 -mt-4 relative z-10">
-        <SchoolTabs items={items} activeId={activeId} onSelect={setActiveId} />
-
         <IdentityBlock
           item={active}
           onChange={(patch) =>
@@ -297,30 +306,63 @@ function SchoolTabs({
   items,
   activeId,
   onSelect,
+  onAdd,
+  onRemove,
 }: {
   items: Repartition108h[];
   activeId: string;
   onSelect: (id: string) => void;
+  onAdd: () => void;
+  onRemove: (id: string) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-4">
-      {items.map((p) => (
-        <button
-          key={p.id}
-          onClick={() => onSelect(p.id)}
-          className={`group inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-medium transition border ${
-            p.id === activeId
-              ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-              : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
-          }`}
-        >
-          <SchoolDotIcon />
-          <span className="truncate max-w-[220px]">{p.ecole.trim() || 'École sans nom'}</span>
-          <span className={`text-[10px] uppercase tracking-wide ${p.id === activeId ? 'text-white/60' : 'text-slate-400'}`}>
-            {p.type === 'maternelle' ? 'Mat.' : 'Élé.'}
-          </span>
-        </button>
-      ))}
+    <div className="flex flex-wrap items-center gap-2">
+      {items.map((p) => {
+        const isActive = p.id === activeId;
+        const label = p.ecole.trim() || 'Nouvelle école';
+        return (
+          <motion.div
+            key={p.id}
+            layout
+            className={`relative inline-flex items-center gap-1 rounded-full pl-3.5 pr-1 py-1 text-[13px] font-semibold transition-all border ${
+              isActive
+                ? 'bg-white text-primary-700 border-white shadow-[0_8px_20px_-8px_rgba(0,0,0,0.3)]'
+                : 'bg-white/10 backdrop-blur-md text-white/90 border-white/20 hover:bg-white/20'
+            }`}
+          >
+            <button onClick={() => onSelect(p.id)} className="py-1 inline-flex items-center gap-1.5">
+              <span className="truncate max-w-[220px]">{label}</span>
+              <span
+                className={`text-[10px] uppercase tracking-wide font-medium ${
+                  isActive ? 'text-primary-700/60' : 'text-white/60'
+                }`}
+              >
+                {p.type === 'maternelle' ? 'Mat.' : 'Élé.'}
+              </span>
+            </button>
+            {items.length > 1 && (
+              <button
+                onClick={() => onRemove(p.id)}
+                aria-label="Supprimer cette école"
+                className={`w-6 h-6 inline-flex items-center justify-center rounded-full transition-colors ${
+                  isActive
+                    ? 'hover:bg-rose-100 text-slate-400 hover:text-rose-600'
+                    : 'hover:bg-white/20 text-white/70 hover:text-white'
+                }`}
+              >
+                <XIcon />
+              </button>
+            )}
+          </motion.div>
+        );
+      })}
+      <button
+        onClick={onAdd}
+        className="inline-flex items-center gap-1.5 rounded-full bg-white/10 backdrop-blur-md text-white hover:bg-white/20 border border-white/25 border-dashed px-3 py-1.5 text-[13px] font-semibold transition-all"
+      >
+        <PlusIcon />
+        Ajouter une école
+      </button>
     </div>
   );
 }
@@ -999,10 +1041,11 @@ function CalIcon() {
   );
 }
 
-function SchoolDotIcon() {
+function XIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <circle cx="12" cy="12" r="6" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   );
 }
