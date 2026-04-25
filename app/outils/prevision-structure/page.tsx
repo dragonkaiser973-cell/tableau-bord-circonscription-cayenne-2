@@ -144,9 +144,9 @@ export default function PrevisionStructurePage() {
     }
   };
 
-  const onExport = () => {
+  const onExport = async () => {
     try {
-      exportToXlsx(previsions);
+      await exportToXlsx(previsions);
       setToast('Export généré.');
     } catch {
       setToast("L'export a échoué.");

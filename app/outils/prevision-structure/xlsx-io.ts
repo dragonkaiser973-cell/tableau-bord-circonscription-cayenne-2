@@ -1,5 +1,9 @@
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { NIVEAUX, NiveauKey, MAX_CLASSES, Prevision, makeEmptyPrevision } from './types';
+
+const TEMPLATE_URL = '/templates/prevision-structure-template.xlsx';
+const TEMPLATE_MAX_CLASSES = 34;
 
 const TEMPLATE_ROW_BY_NIVEAU: Record<NiveauKey, number> = {
   TPS: 4,
@@ -94,24 +98,29 @@ function readExtendedSheet(ws: XLSX.WorkSheet, sheetName: string): Prevision | n
  * Each school is in its own sheet.
  */
 function readTemplateSheet(ws: XLSX.WorkSheet, sheetName: string): Prevision {
-  const ecoleCell = ws[cellRef(0, 1)];
+  const ecoleC2 = ws[cellRef(2, 2)];
+  const ecoleA1 = ws[cellRef(0, 1)];
   const nbClassesCell = ws[cellRef(2, 3)];
   const nbClasses = Math.max(1, Math.min(MAX_CLASSES, Math.round(numeric(nbClassesCell?.v))));
-  const rawName =
-    typeof ecoleCell?.v === 'string' && ecoleCell.v.trim().length > 0
-      ? ecoleCell.v.trim()
-      : sheetName;
+  const fromC2 = typeof ecoleC2?.v === 'string' ? ecoleC2.v.trim() : '';
+  const fromA1 = typeof ecoleA1?.v === 'string' ? ecoleA1.v.trim() : '';
+  const rawName = fromC2 || fromA1 || sheetName;
 
   const p = makeEmptyPrevision(crypto.randomUUID());
   p.ecole = rawName;
   p.nbClasses = nbClasses || 1;
+
+  const auteurCell = ws[cellRef(7, 2)];
+  if (typeof auteurCell?.v === 'string' && auteurCell.v.trim()) {
+    p.auteur = auteurCell.v.trim();
+  }
 
   for (const n of NIVEAUX) {
     const row = TEMPLATE_ROW_BY_NIVEAU[n.key];
     const effCell = ws[cellRef(3, row)];
     p.effectifs[n.key] = numeric(effCell?.v);
 
-    for (let c = 0; c < Math.min(15, nbClasses); c++) {
+    for (let c = 0; c < Math.min(34, nbClasses); c++) {
       const col = 6 + c;
       const cell = ws[cellRef(col, row)];
       p.repartition[n.key][c] = numeric(cell?.v);
@@ -120,89 +129,96 @@ function readTemplateSheet(ws: XLSX.WorkSheet, sheetName: string): Prevision {
   return p;
 }
 
+function isEmptyPrevision(p: Prevision): boolean {
+  for (const n of NIVEAUX) if ((p.effectifs[n.key] || 0) > 0) return false;
+  return !p.ecole || /^(EEPU NOM ECOLE|ECOLE\s*\d+)$/i.test(p.ecole);
+}
+
 export async function importFromTemplate(file: File): Promise<Prevision[]> {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array' });
   const previsions: Prevision[] = [];
 
   for (const sheetName of wb.SheetNames) {
-    if (/^AIDE$/i.test(sheetName)) continue;
+    if (/^(AIDE|Exemple)$/i.test(sheetName)) continue;
     const ws = wb.Sheets[sheetName];
     if (!ws) continue;
 
     const extended = readExtendedSheet(ws, sheetName);
-    previsions.push(extended ?? readTemplateSheet(ws, sheetName));
+    const p = extended ?? readTemplateSheet(ws, sheetName);
+    if (extended || !isEmptyPrevision(p)) previsions.push(p);
   }
 
   if (previsions.length === 0) throw new Error('Aucune feuille exploitable.');
   return previsions;
 }
 
+function colLetter(col1: number): string {
+  let n = col1;
+  let s = '';
+  while (n > 0) {
+    const m = (n - 1) % 26;
+    s = String.fromCharCode(65 + m) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
+function injectPrevisionExcelJS(ws: ExcelJS.Worksheet, p: Prevision) {
+  if (p.ecole) ws.getCell('C2').value = p.ecole;
+  if (p.auteur) ws.getCell('H2').value = p.auteur;
+  ws.getCell('C3').value = p.nbClasses;
+
+  for (const n of NIVEAUX) {
+    const row = TEMPLATE_ROW_BY_NIVEAU[n.key];
+    ws.getCell(`C${row}`).value = n.label;
+    ws.getCell(`D${row}`).value = p.effectifs[n.key] || 0;
+    const rep = p.repartition[n.key] || [];
+    const maxCols = Math.min(TEMPLATE_MAX_CLASSES, p.nbClasses);
+    for (let c = 0; c < maxCols; c++) {
+      const ref = `${colLetter(7 + c)}${row}`;
+      ws.getCell(ref).value = rep[c] || 0;
+    }
+  }
+}
+
+function triggerDownload(blob: Blob, fname: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fname;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 /**
- * Export as an extended .xlsx — 35 class columns.
- * Not identical to the circo template but readable by any spreadsheet.
+ * Export into a copy of the official circo template, preserving merges, column widths,
+ * formulas (reste per niveau, totaux, moyennes, écart-type), fills, borders and fonts.
+ * Up to 15 schools (template has 15 pre-built sheets) with up to 34 classes each.
  */
-export function exportToXlsx(previsions: Prevision[]) {
-  const wb = XLSX.utils.book_new();
+export async function exportToXlsx(previsions: Prevision[]) {
+  const res = await fetch(TEMPLATE_URL);
+  if (!res.ok) throw new Error('Template Excel introuvable (public/templates/).');
+  const buf = await res.arrayBuffer();
 
-  for (const p of previsions) {
-    const header: (string | number)[][] = [];
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(buf);
 
-    header.push([`Prévision de structure ${p.anneeN1} — ${p.ecole || 'École'}`]);
-    header.push([`Auteur : ${p.auteur || '—'}`, `Année n : ${p.anneeN}`, `Nb classes : ${p.nbClasses}`]);
-    header.push([]);
+  const schoolSheets = wb.worksheets.filter(
+    (ws) => ws.name === 'EEPU NOM ECOLE' || /^ECOLE\s*\d+$/i.test(ws.name),
+  );
+  const limit = Math.min(previsions.length, schoolSheets.length);
 
-    const row1: (string | number)[] = ['Niveau', 'Effectif', 'Répartis', 'Reste'];
-    for (let c = 0; c < p.nbClasses; c++) row1.push(`Classe ${c + 1}`);
-    header.push(row1);
-
-    for (const n of NIVEAUX) {
-      const eff = p.effectifs[n.key] || 0;
-      const row = p.repartition[n.key] || [];
-      const reparti = row.slice(0, p.nbClasses).reduce((s, v) => s + (v || 0), 0);
-      const line: (string | number)[] = [n.label, eff, reparti, eff - reparti];
-      for (let c = 0; c < p.nbClasses; c++) line.push(row[c] || 0);
-      header.push(line);
-    }
-
-    header.push([]);
-    const totaux: (string | number)[] = ['Total classe', '', '', ''];
-    const niveaux: (string | number)[] = ['Nb niveaux', '', '', ''];
-    for (let c = 0; c < p.nbClasses; c++) {
-      let tot = 0;
-      let nn = 0;
-      for (const n of NIVEAUX) {
-        const v = p.repartition[n.key][c] || 0;
-        if (v > 0) {
-          tot += v;
-          nn += 1;
-        }
-      }
-      totaux.push(tot);
-      niveaux.push(nn);
-    }
-    header.push(totaux);
-    header.push(niveaux);
-
-    header.push([]);
-    header.push(['Commentaires positifs']);
-    header.push([p.commPositifs || '']);
-    header.push(['Commentaires négatifs']);
-    header.push([p.commNegatifs || '']);
-
-    const ws = XLSX.utils.aoa_to_sheet(header);
-    ws['!cols'] = [
-      { wch: 14 },
-      { wch: 10 },
-      { wch: 10 },
-      { wch: 8 },
-      ...Array.from({ length: p.nbClasses }, () => ({ wch: 9 })),
-    ];
-
-    const safeName = (p.ecole || 'Ecole').slice(0, 28).replace(/[\[\]\*\/\\\?:]/g, '_');
-    XLSX.utils.book_append_sheet(wb, ws, safeName || `Ecole`);
+  for (let i = 0; i < limit; i++) {
+    injectPrevisionExcelJS(schoolSheets[i], previsions[i]);
   }
 
+  const out = await wb.xlsx.writeBuffer();
+  const blob = new Blob([out], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
   const fname = `previsions_structure_${new Date().toISOString().slice(0, 10)}.xlsx`;
-  XLSX.writeFile(wb, fname);
+  triggerDownload(blob, fname);
 }
