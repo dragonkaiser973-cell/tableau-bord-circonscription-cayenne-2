@@ -285,10 +285,14 @@ function injectPeriode(
     if (!range || range[1] < range[0]) continue;
     const list = byCat[cat.key].sort((a, b) => a.date.localeCompare(b.date));
 
+    // Col H is merged across the whole category block (e.g. H3:H9 for Concertation).
+    // Write the period total only on the master cell (top of the range).
+    const totalHours = list.reduce((s, r) => s + (r.hours || 0), 0);
+    writeHoursCell(ws, range[0], totalHours);
+
     for (let i = 0; i < list.length && range[0] + i <= range[1]; i++) {
       const row = range[0] + i;
       const r = list[i];
-      writeHoursCell(ws, row, r.hours);
       writeDateCell(ws, row, r.date);
       const objetCell = ws.getCell(row, 10);
       const themeCell = ws.getCell(row, 11);
@@ -298,9 +302,8 @@ function injectPeriode(
       themeCell.value = r.theme || null;
     }
 
-    // Clear extra rows below the data so previous template formulas don't show #NAME?.
+    // Clear extra rows below the data (date + objet + theme). H stays on the master cell.
     for (let row = range[0] + list.length; row <= range[1]; row++) {
-      writeHoursCell(ws, row, 0);
       writeDateCell(ws, row, '');
       const objetCell = ws.getCell(row, 10);
       const themeCell = ws.getCell(row, 11);
