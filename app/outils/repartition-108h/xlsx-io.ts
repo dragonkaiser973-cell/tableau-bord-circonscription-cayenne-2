@@ -181,36 +181,133 @@ function injectCalcul(ws: ExcelJS.Worksheet, p: Repartition108h) {
   }
 }
 
-function injectPeriode(ws: ExcelJS.Worksheet, events: PeriodeEvent[], note: string) {
-  // Group events by category
-  const byCat: Record<CategoryKey, PeriodeEvent[]> = CATEGORIES.reduce(
-    (acc, c) => ({ ...acc, [c.key]: [] as PeriodeEvent[] }),
-    {} as Record<CategoryKey, PeriodeEvent[]>,
+type PeriodeRow = {
+  category: CategoryKey;
+  date: string; // YYYY-MM-DD
+  hours: number; // 0 if unknown (manual event without calendar match)
+  objet: string;
+  theme: string;
+};
+
+function buildPeriodeRows(
+  selections: Repartition108h['selections'],
+  events: PeriodeEvent[],
+  bounds: { start: string; end: string },
+  hoursPerSlot: number,
+): PeriodeRow[] {
+  // 1. Calendar selections falling within the period bounds → auto rows.
+  const rows: PeriodeRow[] = [];
+  for (const [dKey, sel] of Object.entries(selections)) {
+    if (!sel || !sel.slots) continue;
+    if (dKey < bounds.start || dKey > bounds.end) continue;
+    rows.push({
+      category: sel.category,
+      date: dKey,
+      hours: sel.slots * hoursPerSlot,
+      objet: '',
+      theme: '',
+    });
+  }
+
+  // 2. Overlay manual events: match by category + date and copy objet/theme.
+  //    Manual events without a matching calendar row are appended (hours=0).
+  const matched = new Set<number>();
+  for (const ev of events) {
+    if (!ev) continue;
+    let foundIdx = -1;
+    if (ev.date) {
+      foundIdx = rows.findIndex(
+        (r, i) => !matched.has(i) && r.category === ev.category && r.date === ev.date,
+      );
+    }
+    if (foundIdx >= 0) {
+      rows[foundIdx].objet = ev.objet || '';
+      rows[foundIdx].theme = ev.theme || '';
+      matched.add(foundIdx);
+    } else if ((ev.objet && ev.objet.trim()) || (ev.theme && ev.theme.trim()) || ev.date) {
+      rows.push({
+        category: ev.category,
+        date: ev.date || '',
+        hours: 0,
+        objet: ev.objet || '',
+        theme: ev.theme || '',
+      });
+    }
+  }
+
+  // 3. Sort each category by date, then return.
+  rows.sort((a, b) => {
+    if (a.category !== b.category) return 0; // grouping is done at write time
+    return a.date.localeCompare(b.date);
+  });
+  return rows;
+}
+
+function writeDateCell(ws: ExcelJS.Worksheet, row: number, dateIso: string) {
+  const cell = ws.getCell(row, 9);
+  cell.style = JSON.parse(JSON.stringify(cell.style || {}));
+  if (!dateIso) {
+    cell.value = null;
+    return;
+  }
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateIso);
+  const dt = m
+    ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0)
+    : new Date(dateIso);
+  cell.value = dt;
+  cell.numFmt = 'dd/mm/yyyy';
+}
+
+function writeHoursCell(ws: ExcelJS.Worksheet, row: number, hours: number) {
+  const cell = ws.getCell(row, 8);
+  cell.style = JSON.parse(JSON.stringify(cell.style || {}));
+  cell.value = hours > 0 ? hours / 24 : null;
+  if (!cell.numFmt) cell.numFmt = '[h]"h"mm';
+}
+
+function injectPeriode(
+  ws: ExcelJS.Worksheet,
+  events: PeriodeEvent[],
+  note: string,
+  selections: Repartition108h['selections'],
+  bounds: { start: string; end: string },
+  hoursPerSlot: number,
+) {
+  const allRows = buildPeriodeRows(selections, events, bounds, hoursPerSlot);
+  const byCat: Record<CategoryKey, PeriodeRow[]> = CATEGORIES.reduce(
+    (acc, c) => ({ ...acc, [c.key]: [] as PeriodeRow[] }),
+    {} as Record<CategoryKey, PeriodeRow[]>,
   );
-  for (const ev of events) byCat[ev.category]?.push(ev);
+  for (const r of allRows) byCat[r.category]?.push(r);
 
   for (const cat of CATEGORIES) {
     const range = ROW_RANGE_BY_CATEGORY[cat.key];
     if (!range || range[1] < range[0]) continue;
-    const list = byCat[cat.key];
+    const list = byCat[cat.key].sort((a, b) => a.date.localeCompare(b.date));
+
     for (let i = 0; i < list.length && range[0] + i <= range[1]; i++) {
       const row = range[0] + i;
-      const ev = list[i];
-      // I = date (col 9), J = objet (col 10), K = theme (col 11)
-      if (ev.date) {
-        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ev.date);
-        // Build a local Date at noon to avoid TZ rollback when Excel stores as serial.
-        const dt = m
-          ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0)
-          : new Date(ev.date);
-        ws.getCell(row, 9).value = dt;
-        ws.getCell(row, 9).numFmt = 'dd/mm/yyyy';
-      } else {
-        ws.getCell(row, 9).value = null;
-      }
-      ws.getCell(row, 10).value = ev.objet || null;
-      ws.getCell(row, 11).value = ev.theme || null;
-      // Drop H formula (NbColorSameAs is a macro that won't run); leave previous value
+      const r = list[i];
+      writeHoursCell(ws, row, r.hours);
+      writeDateCell(ws, row, r.date);
+      const objetCell = ws.getCell(row, 10);
+      const themeCell = ws.getCell(row, 11);
+      objetCell.style = JSON.parse(JSON.stringify(objetCell.style || {}));
+      themeCell.style = JSON.parse(JSON.stringify(themeCell.style || {}));
+      objetCell.value = r.objet || null;
+      themeCell.value = r.theme || null;
+    }
+
+    // Clear extra rows below the data so previous template formulas don't show #NAME?.
+    for (let row = range[0] + list.length; row <= range[1]; row++) {
+      writeHoursCell(ws, row, 0);
+      writeDateCell(ws, row, '');
+      const objetCell = ws.getCell(row, 10);
+      const themeCell = ws.getCell(row, 11);
+      objetCell.style = JSON.parse(JSON.stringify(objetCell.style || {}));
+      themeCell.style = JSON.parse(JSON.stringify(themeCell.style || {}));
+      objetCell.value = null;
+      themeCell.value = null;
     }
   }
 
@@ -239,10 +336,19 @@ export async function exportRepartition(p: Repartition108h) {
     calc.name = safeSheetName(`108H ${p.ecole}`);
   }
 
+  const hoursPerSlot = p.type === 'maternelle' ? 0.5 : 1;
   for (let per = 1; per <= 5; per++) {
     const ws = wb.getWorksheet(`PERIODE ${per}`);
     if (!ws) continue;
-    injectPeriode(ws, p.periodes[per as 1 | 2 | 3 | 4 | 5] || [], p.notes[per as 1 | 2 | 3 | 4 | 5] || '');
+    const periodeKey = per as 1 | 2 | 3 | 4 | 5;
+    injectPeriode(
+      ws,
+      p.periodes[periodeKey] || [],
+      p.notes[periodeKey] || '',
+      p.selections,
+      p.periodeBounds[periodeKey],
+      hoursPerSlot,
+    );
   }
 
   const out = await wb.xlsx.writeBuffer();
