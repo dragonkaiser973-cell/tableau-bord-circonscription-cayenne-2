@@ -88,17 +88,16 @@ function setSlotColor(ws: ExcelJS.Worksheet, row: number, col: number, argb: str
   };
 }
 
+// CALCUL column V (top-left of merged V{row}:Y{row}) – row by category in the legend.
+const CALCUL_ROW_BY_CATEGORY: Record<CategoryKey, number> = {
+  concertation: 6,
+  'conseil-ecole': 7,
+  'reunion-parents': 8,
+  apc: 9,
+  organisation: 10,
+};
+
 function injectCalendar(ws: ExcelJS.Worksheet, p: Repartition108h) {
-  // Clear all slot cells (rows 15..45, cols 5..80) to remove any residual color from template
-  for (let r = 15; r <= 45; r++) {
-    for (const m of Object.values(MONTH_COLS)) {
-      for (let s = 0; s < 5; s++) {
-        // skip — we only color what user has, leave rest as-is from template
-        void m;
-        void s;
-      }
-    }
-  }
   // Color slots according to selections
   for (const [dKey, sel] of Object.entries(p.selections)) {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dKey);
@@ -113,6 +112,32 @@ function injectCalendar(ws: ExcelJS.Worksheet, p: Repartition108h) {
     for (let s = 0; s < slots; s++) {
       setSlotColor(ws, row, layout.slot1 + s, argb);
     }
+  }
+}
+
+function injectCalcul(ws: ExcelJS.Worksheet, p: Repartition108h) {
+  const hoursPerSlot = p.type === 'maternelle' ? 0.5 : 1;
+  const hoursByCategory: Record<CategoryKey, number> = {
+    concertation: 0,
+    'conseil-ecole': 0,
+    'reunion-parents': 0,
+    apc: 0,
+    organisation: 0,
+  };
+  for (const sel of Object.values(p.selections)) {
+    if (!sel || !sel.slots) continue;
+    hoursByCategory[sel.category] =
+      (hoursByCategory[sel.category] || 0) + sel.slots * hoursPerSlot;
+  }
+  for (const cat of CATEGORIES) {
+    const row = CALCUL_ROW_BY_CATEGORY[cat.key];
+    const cell = ws.getCell(`V${row}`);
+    // Detach the style so we don't mutate a shared template style.
+    cell.style = JSON.parse(JSON.stringify(cell.style || {}));
+    // Replace the macro formula by a static value in days (1h = 1/24).
+    cell.value = hoursByCategory[cat.key] / 24;
+    // Preserve the [h]"h"mm format from the template if missing.
+    if (!cell.numFmt) cell.numFmt = '[h]"h"mm';
   }
 }
 
@@ -167,6 +192,7 @@ export async function exportRepartition(p: Repartition108h) {
   const calc = wb.getWorksheet('CALCUL 108H');
   if (!calc) throw new Error('Feuille CALCUL 108H absente du template.');
   injectCalendar(calc, p);
+  injectCalcul(calc, p);
 
   if (p.ecole.trim()) {
     calc.name = safeSheetName(`108H ${p.ecole}`);
