@@ -535,51 +535,160 @@ function CategoryPalette({
   item: Repartition108h;
   stats: ReturnType<typeof computeStats>;
 }) {
+  const fmt = (h: number) => h.toFixed(item.type === 'maternelle' ? 1 : 0);
+
   return (
-    <div className="rounded-3xl bg-white border border-slate-200 p-4 md:p-5 shadow-sm flex flex-wrap gap-3 items-center">
-      <span className="text-[11px] uppercase tracking-wider text-slate-500 mr-1">Catégorie active :</span>
-      {CATEGORIES.map((c) => (
-        <button
-          key={c.key}
-          onClick={() => onSelect(c.key)}
-          className={`group inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-medium transition border ${
-            c.key === active ? 'border-slate-900 shadow-sm scale-[1.02]' : 'border-slate-200 hover:border-slate-300'
-          }`}
-          style={{ backgroundColor: c.color, color: c.textColor }}
-        >
-          <span
-            className={`inline-block w-2.5 h-2.5 rounded-full ring-2 ${
-              c.key === active ? 'ring-slate-900' : 'ring-white/60'
-            }`}
-            style={{ backgroundColor: c.textColor }}
-          />
-          {c.label}
-          <span className="ml-1 text-[11px] tabular-nums opacity-80">
-            {stats.hoursByCategory[c.key].toFixed(item.type === 'maternelle' ? 1 : 0)}h
-          </span>
-        </button>
-      ))}
-      <div className="ml-auto flex items-center gap-3 text-sm">
-        <div className="rounded-lg bg-slate-100 px-3 py-1 text-slate-700">
-          <span className="text-[11px] uppercase tracking-wider mr-1">Total</span>
-          <span className="tabular-nums font-semibold">{stats.totalHours.toFixed(item.type === 'maternelle' ? 1 : 0)}h</span>
-          <span className="text-slate-400 mx-1">/</span>
-          <span className="tabular-nums">{TOTAL_HOURS}h</span>
-        </div>
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 220, damping: 24 }}
+      className="relative rounded-3xl border border-slate-200 bg-white p-5 md:p-6 shadow-[0_1px_0_rgba(15,23,42,0.02),0_24px_50px_-32px_rgba(15,90,120,0.18)] overflow-hidden"
+    >
+      {/* Subtle aurora glow */}
+      <div className="absolute inset-0 opacity-70 pointer-events-none" aria-hidden>
         <div
-          className={`rounded-lg px-3 py-1 ${
-            stats.remaining < 0 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-50 text-emerald-700'
-          }`}
-        >
-          <span className="text-[11px] uppercase tracking-wider mr-1">
-            {stats.remaining < 0 ? 'Excédent' : 'Reste'}
+          className="absolute -top-32 -left-20 w-[420px] h-[420px] rounded-full"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(157,195,230,0.18) 0%, transparent 60%)',
+          }}
+        />
+        <div
+          className="absolute -bottom-32 -right-20 w-[420px] h-[420px] rounded-full"
+          style={{
+            background:
+              'radial-gradient(circle, rgba(197,224,180,0.20) 0%, transparent 60%)',
+          }}
+        />
+      </div>
+      {/* Inner highlight */}
+      <div
+        className="pointer-events-none absolute inset-0 rounded-3xl"
+        style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85)' }}
+      />
+
+      <div className="relative flex flex-wrap items-center gap-3">
+        <div className="inline-flex items-center gap-2 mr-1">
+          <span className="relative flex h-2 w-2" aria-hidden>
+            <span className="absolute inset-0 rounded-full bg-[#45b8a0] animate-ping opacity-60" />
+            <span className="relative h-2 w-2 rounded-full bg-[#45b8a0]" />
           </span>
-          <span className="tabular-nums font-semibold">
-            {Math.abs(stats.remaining).toFixed(item.type === 'maternelle' ? 1 : 0)}h
+          <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-slate-500">
+            Catégorie active
           </span>
+        </div>
+
+        {CATEGORIES.map((c) => (
+          <CategoryChip
+            key={c.key}
+            category={c}
+            active={c.key === active}
+            hours={fmt(stats.hoursByCategory[c.key])}
+            onClick={() => onSelect(c.key)}
+          />
+        ))}
+
+        <div className="ml-auto flex items-center gap-2">
+          <HourPill
+            label="Total"
+            value={`${fmt(stats.totalHours)}/${TOTAL_HOURS}`}
+            gradient="from-[#1e5a78] to-[#45b8a0]"
+          />
+          <HourPill
+            label={stats.remaining < 0 ? 'Excédent' : stats.remaining === 0 ? 'Atteint' : 'Reste'}
+            value={fmt(Math.abs(stats.remaining))}
+            gradient={
+              stats.remaining < 0
+                ? 'from-rose-500 to-pink-500'
+                : stats.remaining === 0
+                ? 'from-emerald-400 to-teal-500'
+                : 'from-amber-400 to-orange-500'
+            }
+          />
         </div>
       </div>
-    </div>
+    </motion.div>
+  );
+}
+
+function CategoryChip({
+  category,
+  active,
+  hours,
+  onClick,
+}: {
+  category: (typeof CATEGORIES)[number];
+  active: boolean;
+  hours: string;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+      className={`group relative inline-flex items-center gap-2 rounded-2xl pl-1.5 pr-3 py-1.5 text-sm font-semibold border transition-[border-color,background-color,box-shadow] duration-200 ${
+        active
+          ? 'border-white/40'
+          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:shadow-sm'
+      }`}
+      style={
+        active
+          ? {
+              backgroundColor: category.color,
+              color: category.textColor,
+              boxShadow: `0 10px 28px -8px ${category.color}, inset 0 1px 0 rgba(255,255,255,0.45)`,
+            }
+          : undefined
+      }
+    >
+      <span
+        className="relative flex items-center justify-center w-7 h-7 rounded-xl text-[10px] font-bold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+        style={
+          active
+            ? { backgroundColor: 'rgba(255,255,255,0.28)', color: category.textColor }
+            : { backgroundColor: category.color, color: category.textColor }
+        }
+      >
+        {hours}
+        {active && (
+          <motion.span
+            layoutId="cat-active-ring"
+            className="absolute inset-0 rounded-xl ring-2 ring-white/70"
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+          />
+        )}
+      </span>
+      <span className="tracking-tight">{category.label}</span>
+    </motion.button>
+  );
+}
+
+function HourPill({
+  label,
+  value,
+  gradient,
+}: {
+  label: string;
+  value: string;
+  gradient: string;
+}) {
+  return (
+    <motion.div
+      whileHover={{ y: -2, scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 20 }}
+      className="relative inline-flex items-center gap-2.5 px-3 py-1.5 rounded-2xl border border-slate-200 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] overflow-hidden"
+    >
+      <div
+        className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-[11px] tabular-nums shadow-[0_8px_18px_-6px_rgba(15,90,120,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]`}
+      >
+        {value}
+      </div>
+      <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500 pr-1">
+        {label}
+      </span>
+    </motion.div>
   );
 }
 
