@@ -14,21 +14,25 @@ const TEMPLATE_BY_TYPE: Record<EcoleType, string> = {
   maternelle: '/templates/108h-maternelle.xlsx',
 };
 
-// Calendar layout: month index (0=Jan..11=Dec) -> { slot1Col, numCol, dayLabelCol } (1-indexed columns).
-// Row 14 = headers, rows 15..45 = days 1..31.
-const MONTH_COLS: Record<number, { dayLabel: number; num: number; slot1: number }> = {
-  8: { dayLabel: 2, num: 4, slot1: 5 },    // Septembre
-  9: { dayLabel: 10, num: 11, slot1: 12 }, // Octobre
-  10: { dayLabel: 17, num: 18, slot1: 19 }, // Novembre
-  11: { dayLabel: 24, num: 25, slot1: 26 }, // Décembre
-  0: { dayLabel: 32, num: 33, slot1: 34 },  // Janvier
-  1: { dayLabel: 39, num: 40, slot1: 41 },  // Février
-  2: { dayLabel: 46, num: 47, slot1: 48 },  // Mars
-  3: { dayLabel: 53, num: 54, slot1: 55 },  // Avril
-  4: { dayLabel: 60, num: 61, slot1: 62 },  // Mai
-  5: { dayLabel: 67, num: 68, slot1: 69 },  // Juin
-  6: { dayLabel: 74, num: 75, slot1: 76 },  // Juillet
+// Calendar layout per month (0=Jan..11=Dec). Row 14 = headers, rows 15..45 = days 1..31.
+// Each month block: dayLabel | num | vacances | slot1 | slot2 | slot3 | slot4
+// The vacances column is purple-filled by the template on Guyane school-holiday days
+// and is reserved — only the 4 slot columns are user-colorable.
+const MONTH_COLS: Record<number, { dayLabel: number; num: number; vacances: number; slot1: number }> = {
+  8:  { dayLabel: 2,  num: 4,  vacances: 5,  slot1: 6  },  // Septembre
+  9:  { dayLabel: 10, num: 11, vacances: 12, slot1: 13 },  // Octobre
+  10: { dayLabel: 17, num: 18, vacances: 19, slot1: 20 },  // Novembre
+  11: { dayLabel: 24, num: 25, vacances: 26, slot1: 27 },  // Décembre
+  0:  { dayLabel: 32, num: 33, vacances: 34, slot1: 35 },  // Janvier
+  1:  { dayLabel: 39, num: 40, vacances: 41, slot1: 42 },  // Février
+  2:  { dayLabel: 46, num: 47, vacances: 48, slot1: 49 },  // Mars
+  3:  { dayLabel: 53, num: 54, vacances: 55, slot1: 56 },  // Avril
+  4:  { dayLabel: 60, num: 61, vacances: 62, slot1: 63 },  // Mai
+  5:  { dayLabel: 67, num: 68, vacances: 69, slot1: 70 },  // Juin
+  6:  { dayLabel: 74, num: 75, vacances: 76, slot1: 77 },  // Juillet
 };
+
+const MAX_SLOTS_PER_DAY_TPL = 4;
 
 const ROW_RANGE_BY_CATEGORY: Record<CategoryKey, [number, number]> = {
   concertation: [3, 9],
@@ -108,7 +112,7 @@ function injectCalendar(ws: ExcelJS.Worksheet, p: Repartition108h) {
     if (!layout) continue;
     const row = 14 + day;
     const argb = ARGB_BY_CATEGORY[sel.category];
-    const slots = Math.max(1, Math.min(5, sel.slots || 1));
+    const slots = Math.max(1, Math.min(MAX_SLOTS_PER_DAY_TPL, sel.slots || 1));
     for (let s = 0; s < slots; s++) {
       setSlotColor(ws, row, layout.slot1 + s, argb);
     }
@@ -266,9 +270,9 @@ function readCalendar(ws: ExcelJS.Worksheet): Record<string, { category: Categor
     const monthIdx0 = Number(mIdxStr);
     for (let day = 1; day <= 31; day++) {
       const row = 14 + day;
-      // Per-day: count colored slots and detect their category (assume 1 cat/day)
+      // Per-day: count colored slots (4 user slots) and detect their category (1 cat/day)
       const slotColors: string[] = [];
-      for (let s = 0; s < 5; s++) {
+      for (let s = 0; s < MAX_SLOTS_PER_DAY_TPL; s++) {
         const cell = ws.getRow(row).getCell(layout.slot1 + s);
         const argb = cell.style?.fill?.fgColor?.argb;
         if (argb) slotColors.push(argb.toUpperCase());

@@ -68,7 +68,13 @@ function loadFromStorage(): Repartition108h[] | null {
       safe.ecole = p.ecole ?? '';
       safe.auteur = p.auteur ?? '';
       safe.type = p.type === 'maternelle' ? 'maternelle' : 'elementaire';
-      safe.selections = p.selections && typeof p.selections === 'object' ? p.selections : {};
+      const rawSel = p.selections && typeof p.selections === 'object' ? p.selections : {};
+      safe.selections = {};
+      for (const [dKey, sel] of Object.entries(rawSel)) {
+        if (!sel || typeof sel !== 'object') continue;
+        const slots = Math.max(1, Math.min(MAX_SLOTS_PER_DAY, Number(sel.slots) || 1));
+        safe.selections[dKey] = { category: sel.category, slots };
+      }
       for (const k of PERIODES) {
         safe.periodes[k] = Array.isArray(p.periodes?.[k]) ? p.periodes[k] : [];
         safe.notes[k] = typeof p.notes?.[k] === 'string' ? p.notes[k] : '';

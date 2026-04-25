@@ -34,7 +34,9 @@ export const HOURS_PER_SLOT: Record<EcoleType, number> = {
 };
 
 export const TOTAL_HOURS = 108;
-export const MAX_SLOTS_PER_DAY = 5;
+// 4 slots per day (the first cell after the date number is reserved for the
+// Guyane school-holiday marker, coloured in purple in the template).
+export const MAX_SLOTS_PER_DAY = 4;
 
 export type DayKey = string;
 
