@@ -85,6 +85,11 @@ export function computeStats(p: Prevision) {
   let cycle2 = 0;
   let cycle3 = 0;
 
+  const classesByNiveau: Record<NiveauKey, number> = NIVEAUX.reduce(
+    (acc, n) => ({ ...acc, [n.key]: 0 }),
+    {} as Record<NiveauKey, number>,
+  );
+
   for (const n of NIVEAUX) {
     const eff = p.effectifs[n.key] || 0;
     totalEffectif += eff;
@@ -100,6 +105,7 @@ export function computeStats(p: Prevision) {
       if (v > 0) {
         perClasse[c] += v;
         niveauxParClasse[c] += 1;
+        classesByNiveau[n.key] += 1;
       }
       sumRow += v;
     }
@@ -164,6 +170,7 @@ export function computeStats(p: Prevision) {
     triples,
     autres,
     classesNonVides: classesRemplies.length,
+    classesByNiveau,
     repPlusViolations,
   };
 }

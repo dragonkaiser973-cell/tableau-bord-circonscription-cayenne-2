@@ -217,6 +217,8 @@ export default function PrevisionStructurePage() {
 
           <Synthese p={active} stats={stats} />
 
+          <NiveauxBreakdown stats={stats} />
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6 print:grid-cols-2 print:gap-3 print:mt-4">
             <CommentCard
               tone="positive"
@@ -411,7 +413,12 @@ function IdentityBlock({
   onChange: (patch: Partial<Prevision>) => void;
 }) {
   return (
-    <section className="bg-white rounded-3xl border border-slate-200 shadow-[0_1px_0_rgba(15,23,42,0.02),0_24px_48px_-24px_rgba(30,90,120,0.22)] p-6 mt-6 print:shadow-none print:border-slate-300 print:rounded-none print:p-4 print:mt-0">
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 220, damping: 24 }}
+      className="bg-white rounded-3xl border border-slate-200 shadow-[0_1px_0_rgba(15,23,42,0.02),0_24px_48px_-24px_rgba(30,90,120,0.22)] hover:shadow-[0_1px_0_rgba(15,23,42,0.04),0_32px_60px_-24px_rgba(30,90,120,0.30)] hover:border-slate-300 transition-[box-shadow,border-color] duration-300 p-6 mt-6 print:shadow-none print:border-slate-300 print:rounded-none print:p-4 print:mt-0"
+    >
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         <FieldText
           label="École"
@@ -485,7 +492,7 @@ function IdentityBlock({
           </span>
         </button>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -850,8 +857,14 @@ function Synthese({
   p: Prevision;
   stats: ReturnType<typeof computeStats>;
 }) {
+  void p;
   return (
-    <section className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4 print:mt-4 print:gap-3">
+    <motion.section
+      initial="hidden"
+      animate="visible"
+      variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
+      className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4 print:mt-4 print:gap-3"
+    >
       <StatCard
         label="Effectif total"
         value={stats.totalEffectif}
@@ -877,7 +890,7 @@ function Synthese({
         gradient="from-violet-500 to-fuchsia-500"
         hint={`simples · doubles · triples${stats.autres ? ` · ${stats.autres} autre(s)` : ''}`}
       />
-    </section>
+    </motion.section>
   );
 }
 
@@ -903,15 +916,24 @@ function StatCard({
       ? 'ring-2 ring-amber-200'
       : '';
   return (
-    <div
-      className={`relative bg-white rounded-2xl border border-slate-200 p-4 shadow-[0_1px_0_rgba(15,23,42,0.02),0_16px_32px_-16px_rgba(30,90,120,0.2)] print:shadow-none print:rounded-lg ${toneRing}`}
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: 10 },
+        visible: { opacity: 1, y: 0 },
+      }}
+      whileHover={{ y: -3 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+      className={`relative bg-white rounded-2xl border border-slate-200 p-4 shadow-[0_1px_0_rgba(15,23,42,0.02),0_16px_32px_-16px_rgba(30,90,120,0.2)] hover:shadow-[0_1px_0_rgba(15,23,42,0.04),0_28px_56px_-24px_rgba(30,90,120,0.32)] hover:border-[#45b8a0]/30 transition-[box-shadow,border-color] duration-300 print:shadow-none print:rounded-lg ${toneRing} overflow-hidden group`}
     >
+      <div className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${gradient} opacity-70 group-hover:opacity-100 transition-opacity print:hidden`} />
       <div className="flex items-start gap-3">
-        <div
+        <motion.div
+          whileHover={{ rotate: -4, scale: 1.06 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 18 }}
           className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-lg tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_4px_12px_-2px_rgba(0,0,0,0.2)]`}
         >
           <span className="text-[13px] leading-none px-1">{value}</span>
-        </div>
+        </motion.div>
         <div className="min-w-0">
           <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-600 leading-tight">
             {label}
@@ -919,7 +941,104 @@ function StatCard({
           <div className="text-[11px] text-slate-500 mt-1 leading-snug">{hint}</div>
         </div>
       </div>
-    </div>
+    </motion.div>
+  );
+}
+
+function NiveauxBreakdown({ stats }: { stats: ReturnType<typeof computeStats> }) {
+  const items = NIVEAUX.filter((n) => stats.classesByNiveau[n.key] > 0);
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 220, damping: 24 }}
+      className="relative mt-6 rounded-3xl border border-slate-200 bg-white p-5 md:p-6 shadow-[0_1px_0_rgba(15,23,42,0.02),0_24px_50px_-32px_rgba(15,90,120,0.18)] overflow-hidden print:shadow-none print:rounded-lg"
+    >
+      <div className="absolute inset-0 opacity-60 pointer-events-none print:hidden" aria-hidden>
+        <div
+          className="absolute -top-32 -right-20 w-[420px] h-[420px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(157,195,230,0.18) 0%, transparent 60%)' }}
+        />
+        <div
+          className="absolute -bottom-32 -left-20 w-[420px] h-[420px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(197,224,180,0.20) 0%, transparent 60%)' }}
+        />
+      </div>
+      <div className="relative">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="relative flex h-2 w-2" aria-hidden>
+            <span className="absolute inset-0 rounded-full bg-[#45b8a0] animate-ping opacity-60" />
+            <span className="relative h-2 w-2 rounded-full bg-[#45b8a0]" />
+          </span>
+          <span className="text-[10px] font-bold tracking-[0.22em] uppercase text-slate-500">
+            Décompte par niveau
+          </span>
+          <span className="text-[11px] text-slate-400 ml-auto">
+            {items.length === 0 ? 'Aucun niveau réparti' : `${items.reduce((s, n) => s + stats.classesByNiveau[n.key], 0)} occurrence${items.length > 1 ? 's' : ''} sur ${items.length} niveau${items.length > 1 ? 'x' : ''}`}
+          </span>
+        </div>
+
+        {items.length === 0 ? (
+          <p className="text-sm text-slate-400">
+            Saisis des élèves dans la grille pour voir le décompte des classes par niveau.
+          </p>
+        ) : (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+            className="flex flex-wrap gap-2.5"
+          >
+            {items.map((n) => (
+              <NiveauChip
+                key={n.key}
+                label={n.label}
+                count={stats.classesByNiveau[n.key]}
+                cycle={n.cycle}
+              />
+            ))}
+          </motion.div>
+        )}
+      </div>
+    </motion.section>
+  );
+}
+
+function NiveauChip({
+  label,
+  count,
+  cycle,
+}: {
+  label: string;
+  count: number;
+  cycle: 0 | 1 | 2 | 3;
+}) {
+  const palette =
+    cycle === 1
+      ? { gradient: 'from-amber-400 to-orange-500', dot: 'bg-amber-400', text: 'text-amber-700', soft: 'bg-amber-50/80' }
+      : cycle === 2
+      ? { gradient: 'from-sky-500 to-cyan-500', dot: 'bg-sky-500', text: 'text-sky-700', soft: 'bg-sky-50/80' }
+      : cycle === 3
+      ? { gradient: 'from-emerald-400 to-teal-500', dot: 'bg-emerald-500', text: 'text-emerald-700', soft: 'bg-emerald-50/80' }
+      : { gradient: 'from-slate-400 to-slate-500', dot: 'bg-slate-400', text: 'text-slate-700', soft: 'bg-slate-50' };
+  return (
+    <motion.span
+      variants={{
+        hidden: { opacity: 0, y: 6 },
+        visible: { opacity: 1, y: 0 },
+      }}
+      whileHover={{ y: -2 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+      className={`group inline-flex items-center gap-2 rounded-2xl border border-slate-200 ${palette.soft} pl-1.5 pr-3 py-1.5 text-sm font-semibold ${palette.text} shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] transition-shadow hover:shadow-[0_8px_22px_-10px_rgba(15,90,120,0.30)]`}
+    >
+      <span
+        className={`inline-flex items-center justify-center w-7 h-7 rounded-xl bg-gradient-to-br ${palette.gradient} text-white text-[12px] font-bold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_10px_-3px_rgba(15,90,120,0.35)]`}
+      >
+        {count}
+      </span>
+      <span className="tracking-tight">{label}</span>
+      <span className={`w-1.5 h-1.5 rounded-full ${palette.dot}`} aria-hidden />
+    </motion.span>
   );
 }
 
@@ -941,8 +1060,10 @@ function CommentCard({
       ? { bar: 'bg-emerald-500', head: 'text-emerald-700', ring: 'focus-within:ring-emerald-300' }
       : { bar: 'bg-rose-500', head: 'text-rose-700', ring: 'focus-within:ring-rose-300' };
   return (
-    <div
-      className={`relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_1px_0_rgba(15,23,42,0.02),0_16px_32px_-16px_rgba(30,90,120,0.15)] transition-all focus-within:ring-2 ${accent.ring} print:shadow-none print:rounded-lg`}
+    <motion.div
+      whileHover={{ y: -2 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+      className={`relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_1px_0_rgba(15,23,42,0.02),0_16px_32px_-16px_rgba(30,90,120,0.15)] hover:shadow-[0_1px_0_rgba(15,23,42,0.04),0_28px_56px_-24px_rgba(30,90,120,0.30)] hover:border-slate-300 transition-[box-shadow,border-color] focus-within:ring-2 ${accent.ring} print:shadow-none print:rounded-lg`}
     >
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${accent.bar}`} />
       <div className="p-4 pl-5">
@@ -955,7 +1076,7 @@ function CommentCard({
           className="mt-2 w-full resize-y bg-transparent border-0 text-sm text-slate-800 leading-relaxed outline-none placeholder:text-slate-300 print:resize-none"
         />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
