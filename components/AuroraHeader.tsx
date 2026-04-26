@@ -97,10 +97,10 @@ export default function AuroraHeader({
       )}
 
       {/* Content */}
-      <div className={`relative ${padding} px-6`}>
+      <div className={`relative ${padding} px-4 md:px-6 pl-16 md:pl-6`}>
         <div className="container mx-auto max-w-7xl">
           {/* Top row — back link + optional action */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6 md:mb-8">
             <Link
               href={backHref}
               className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium transition-colors group"
@@ -119,9 +119,10 @@ export default function AuroraHeader({
                 <path d="M19 12H5" />
                 <path d="M12 19l-7-7 7-7" />
               </svg>
-              {backLabel}
+              <span className="hidden sm:inline">{backLabel}</span>
+              <span className="sm:hidden">Retour</span>
             </Link>
-            {action && <div className="flex items-center gap-2">{action}</div>}
+            {action && <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">{action}</div>}
           </div>
 
           {/* Kicker pill */}

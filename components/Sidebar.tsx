@@ -143,7 +143,7 @@ export default function Sidebar() {
       {/* Mobile toggle */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-white rounded-dock shadow-dock flex items-center justify-center text-zen-text-secondary hover:text-zen-text transition-colors"
+        className="lg:hidden fixed top-3 left-3 z-50 w-11 h-11 bg-white/95 backdrop-blur-md rounded-2xl shadow-[0_8px_24px_-6px_rgba(15,23,42,0.18),0_2px_8px_-2px_rgba(15,23,42,0.12)] border border-white/60 flex items-center justify-center text-slate-700 hover:text-slate-900 active:scale-95 transition-all"
         aria-label="Menu"
       >
         {isMobileOpen ? <CloseIcon /> : <MenuIcon />}
