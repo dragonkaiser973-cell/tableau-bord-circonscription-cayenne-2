@@ -173,14 +173,25 @@ function injectPrevisionExcelJS(ws: ExcelJS.Worksheet, p: Prevision) {
   for (const n of NIVEAUX) {
     const row = TEMPLATE_ROW_BY_NIVEAU[n.key];
     ws.getCell(`C${row}`).value = n.label;
-    ws.getCell(`D${row}`).value = p.effectifs[n.key] || 0;
+    const eff = p.effectifs[n.key] || 0;
+    ws.getCell(`D${row}`).value = eff > 0 ? eff : null;
     const rep = p.repartition[n.key] || [];
     const maxCols = Math.min(TEMPLATE_MAX_CLASSES, p.nbClasses);
     for (let c = 0; c < maxCols; c++) {
       const ref = `${colLetter(7 + c)}${row}`;
-      ws.getCell(ref).value = rep[c] || 0;
+      const v = rep[c] || 0;
+      ws.getCell(ref).value = v > 0 ? v : null;
     }
   }
+
+  // Replace the moyenne locale formulas (which referenced the missing defined
+  // names moyloc1/2/3) with explicit OFFSET expressions wrapped in IFERROR so
+  // the cells display "" while the user hasn't filled the zone bounds.
+  const moyenneFormula = (anchorCol: 'B' | 'D' | 'G') =>
+    `IFERROR(IF(SUM(OFFSET(G21,0,${anchorCol}28-1,1,${anchorCol}30+1-${anchorCol}28))=0,"",AVERAGE(OFFSET(G21,0,${anchorCol}28-1,1,${anchorCol}30+1-${anchorCol}28))),"")`;
+  ws.getCell('C26').value = { formula: moyenneFormula('B') } as ExcelJS.CellFormulaValue;
+  ws.getCell('E26').value = { formula: moyenneFormula('D') } as ExcelJS.CellFormulaValue;
+  ws.getCell('H26').value = { formula: moyenneFormula('G') } as ExcelJS.CellFormulaValue;
 }
 
 function triggerDownload(blob: Blob, fname: string) {
