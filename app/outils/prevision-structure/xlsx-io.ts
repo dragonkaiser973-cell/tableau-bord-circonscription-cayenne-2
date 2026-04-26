@@ -168,6 +168,10 @@ function colLetter(col1: number): string {
 function injectPrevisionExcelJS(ws: ExcelJS.Worksheet, p: Prevision) {
   if (p.ecole) ws.getCell('C2').value = p.ecole;
   if (p.auteur) ws.getCell('H2').value = p.auteur;
+  // Année scolaire en cellule AM2 (label "année:" en AL2). On préfère anneeN1
+  // (l'année à laquelle la prévision se rapporte), sinon anneeN.
+  const anneeLabel = (p.anneeN1 || p.anneeN || '').trim();
+  if (anneeLabel) ws.getCell('AM2').value = anneeLabel;
   ws.getCell('C3').value = p.nbClasses;
 
   // Force a uniform visible style on every class header (G3..AN3) so we don't
@@ -231,10 +235,9 @@ function injectPrevisionExcelJS(ws: ExcelJS.Worksheet, p: Prevision) {
   ws.getCell('I18').value = simples;
   ws.getCell('AE18').value = doubles;
   ws.getCell('AH18').value = triples;
-  // AK18 = autres types (4+ niveaux) + classes vides (nbClasses - simples - doubles - triples - autres>=4).
-  // We mirror the template formula intent (C3 - simples - doubles - triples) which
-  // also catches classes with 0 levels filled.
-  ws.getCell('AK18').value = nb - simples - doubles - triples;
+  // AK18 = uniquement les classes ayant 4 niveaux ou plus. Les classes vides
+  // (0 niveau) ne sont pas comptées comme "autres".
+  ws.getCell('AK18').value = autres;
 
   // The template ships buggy conditional-formatting rules on G3, H3, I3 and
   // J3:AN3 (formulas like "C3<4" with relative refs). For cells past column J,
