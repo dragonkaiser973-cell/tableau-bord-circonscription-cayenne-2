@@ -170,6 +170,22 @@ function injectPrevisionExcelJS(ws: ExcelJS.Worksheet, p: Prevision) {
   if (p.auteur) ws.getCell('H2').value = p.auteur;
   ws.getCell('C3').value = p.nbClasses;
 
+  // Force a uniform visible style on every class header (G3..AN3) so we don't
+  // depend on the theme color resolution which has caused some cells to render
+  // invisibly in the user's Excel.
+  for (let c = 0; c < TEMPLATE_MAX_CLASSES; c++) {
+    const cell = ws.getCell(`${colLetter(7 + c)}3`);
+    cell.style = JSON.parse(JSON.stringify(cell.style || {}));
+    cell.font = {
+      name: 'Aptos Narrow',
+      family: 2,
+      size: 10,
+      bold: false,
+      color: { argb: 'FF000000' },
+    };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', shrinkToFit: true };
+  }
+
   for (const n of NIVEAUX) {
     const row = TEMPLATE_ROW_BY_NIVEAU[n.key];
     ws.getCell(`C${row}`).value = n.label;
