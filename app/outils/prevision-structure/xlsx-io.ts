@@ -216,21 +216,29 @@ function injectPrevisionExcelJS(ws: ExcelJS.Worksheet, p: Prevision) {
   // Profils des classes (I18 simples, AE18 doubles, AH18 triples, AK18 autres).
   // The template formulas use COUNTIF(PlageProfils, N) which depends on the
   // PlageProfils defined name we strip on export — replace with direct values.
+  // En même temps, on régénère les intitulés dynamiques de la ligne 20
+  // (CP, CE1/CE2, …) en fonction des niveaux réellement présents.
   let simples = 0;
   let doubles = 0;
   let triples = 0;
   let autres = 0;
   const nb = Math.max(0, Math.min(TEMPLATE_MAX_CLASSES, p.nbClasses));
-  for (let c = 0; c < nb; c++) {
-    let count = 0;
+  for (let c = 0; c < TEMPLATE_MAX_CLASSES; c++) {
+    const labels: string[] = [];
     for (const n of NIVEAUX) {
       const v = p.repartition[n.key]?.[c] || 0;
-      if (v > 0) count++;
+      if (v > 0) labels.push(n.label);
     }
-    if (count === 1) simples++;
-    else if (count === 2) doubles++;
-    else if (count === 3) triples++;
-    else if (count >= 4) autres++;
+    if (c < nb) {
+      const count = labels.length;
+      if (count === 1) simples++;
+      else if (count === 2) doubles++;
+      else if (count === 3) triples++;
+      else if (count >= 4) autres++;
+    }
+    const labelCell = ws.getCell(`${colLetter(7 + c)}20`);
+    labelCell.style = JSON.parse(JSON.stringify(labelCell.style || {}));
+    labelCell.value = c < nb && labels.length > 0 ? labels.join('/') : null;
   }
   ws.getCell('I18').value = simples;
   ws.getCell('AE18').value = doubles;
