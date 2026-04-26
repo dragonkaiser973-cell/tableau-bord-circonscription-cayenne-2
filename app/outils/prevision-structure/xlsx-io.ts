@@ -235,6 +235,22 @@ function injectPrevisionExcelJS(ws: ExcelJS.Worksheet, p: Prevision) {
   // We mirror the template formula intent (C3 - simples - doubles - triples) which
   // also catches classes with 0 levels filled.
   ws.getCell('AK18').value = nb - simples - doubles - triples;
+
+  // The template ships buggy conditional-formatting rules on G3, H3, I3 and
+  // J3:AN3 (formulas like "C3<4" with relative refs). For cells past column J,
+  // the relative reference shifts to F3, G3… and applies a white-on-white style
+  // (dxfId 11) to random class headers (e.g. M3 = "Classe 7"). We strip these
+  // 4 rules; the others (E4:E14 highlights, G20:AN20 cycle colouring, AJ4:AJ14)
+  // are left untouched.
+  const wsCf = ws as unknown as {
+    conditionalFormattings?: { ref?: string }[];
+  };
+  if (Array.isArray(wsCf.conditionalFormattings)) {
+    const buggy = new Set(['G3', 'H3', 'I3', 'J3:AN3']);
+    wsCf.conditionalFormattings = wsCf.conditionalFormattings.filter(
+      (cf) => !buggy.has(String(cf.ref || '')),
+    );
+  }
 }
 
 function triggerDownload(blob: Blob, fname: string) {
