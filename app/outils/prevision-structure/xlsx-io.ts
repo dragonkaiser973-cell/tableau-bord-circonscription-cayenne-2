@@ -208,6 +208,33 @@ function injectPrevisionExcelJS(ws: ExcelJS.Worksheet, p: Prevision) {
   ws.getCell('C26').value = { formula: moyenneFormula('B') } as ExcelJS.CellFormulaValue;
   ws.getCell('E26').value = { formula: moyenneFormula('D') } as ExcelJS.CellFormulaValue;
   ws.getCell('H26').value = { formula: moyenneFormula('G') } as ExcelJS.CellFormulaValue;
+
+  // Profils des classes (I18 simples, AE18 doubles, AH18 triples, AK18 autres).
+  // The template formulas use COUNTIF(PlageProfils, N) which depends on the
+  // PlageProfils defined name we strip on export — replace with direct values.
+  let simples = 0;
+  let doubles = 0;
+  let triples = 0;
+  let autres = 0;
+  const nb = Math.max(0, Math.min(TEMPLATE_MAX_CLASSES, p.nbClasses));
+  for (let c = 0; c < nb; c++) {
+    let count = 0;
+    for (const n of NIVEAUX) {
+      const v = p.repartition[n.key]?.[c] || 0;
+      if (v > 0) count++;
+    }
+    if (count === 1) simples++;
+    else if (count === 2) doubles++;
+    else if (count === 3) triples++;
+    else if (count >= 4) autres++;
+  }
+  ws.getCell('I18').value = simples;
+  ws.getCell('AE18').value = doubles;
+  ws.getCell('AH18').value = triples;
+  // AK18 = autres types (4+ niveaux) + classes vides (nbClasses - simples - doubles - triples - autres>=4).
+  // We mirror the template formula intent (C3 - simples - doubles - triples) which
+  // also catches classes with 0 levels filled.
+  ws.getCell('AK18').value = nb - simples - doubles - triples;
 }
 
 function triggerDownload(blob: Blob, fname: string) {
