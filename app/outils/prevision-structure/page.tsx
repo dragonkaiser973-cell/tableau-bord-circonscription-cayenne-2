@@ -217,7 +217,7 @@ export default function PrevisionStructurePage() {
 
           <Synthese p={active} stats={stats} />
 
-          <NiveauxBreakdown stats={stats} />
+          <NiveauxBreakdown p={active} stats={stats} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6 print:grid-cols-2 print:gap-3 print:mt-4">
             <CommentCard
@@ -945,8 +945,31 @@ function StatCard({
   );
 }
 
-function NiveauxBreakdown({ stats }: { stats: ReturnType<typeof computeStats> }) {
-  const items = NIVEAUX.filter((n) => stats.classesByNiveau[n.key] > 0);
+function NiveauxBreakdown({
+  p,
+  stats,
+}: {
+  p: Prevision;
+  stats: ReturnType<typeof computeStats>;
+}) {
+  // Group classes by their niveau combination (sorted by NIVEAUX order).
+  const groups = new Map<string, { key: string; niveaux: NiveauKey[]; count: number }>();
+  for (let c = 0; c < p.nbClasses; c++) {
+    const present = NIVEAUX.filter((n) => (p.repartition[n.key]?.[c] || 0) > 0);
+    if (present.length === 0) continue;
+    const key = present.map((n) => n.key).join('+');
+    const existing = groups.get(key);
+    if (existing) existing.count += 1;
+    else groups.set(key, { key, niveaux: present.map((n) => n.key), count: 1 });
+  }
+  const sorted = Array.from(groups.values()).sort((a, b) => {
+    if (a.niveaux.length !== b.niveaux.length) return a.niveaux.length - b.niveaux.length;
+    return NIVEAUX.findIndex((n) => n.key === a.niveaux[0]) -
+      NIVEAUX.findIndex((n) => n.key === b.niveaux[0]);
+  });
+  const single = sorted.filter((g) => g.niveaux.length === 1);
+  const multi = sorted.filter((g) => g.niveaux.length > 1);
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
@@ -964,8 +987,8 @@ function NiveauxBreakdown({ stats }: { stats: ReturnType<typeof computeStats> })
           style={{ background: 'radial-gradient(circle, rgba(197,224,180,0.20) 0%, transparent 60%)' }}
         />
       </div>
-      <div className="relative">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="relative space-y-5">
+        <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2" aria-hidden>
             <span className="absolute inset-0 rounded-full bg-[#45b8a0] animate-ping opacity-60" />
             <span className="relative h-2 w-2 rounded-full bg-[#45b8a0]" />
@@ -974,33 +997,104 @@ function NiveauxBreakdown({ stats }: { stats: ReturnType<typeof computeStats> })
             Décompte par niveau
           </span>
           <span className="text-[11px] text-slate-400 ml-auto">
-            {items.length === 0 ? 'Aucun niveau réparti' : `${items.reduce((s, n) => s + stats.classesByNiveau[n.key], 0)} occurrence${items.length > 1 ? 's' : ''} sur ${items.length} niveau${items.length > 1 ? 'x' : ''}`}
+            {sorted.length === 0
+              ? 'Aucun niveau réparti'
+              : `${sorted.reduce((s, g) => s + g.count, 0)} classe${sorted.reduce((s, g) => s + g.count, 0) > 1 ? 's' : ''} réparti${sorted.reduce((s, g) => s + g.count, 0) > 1 ? 'es' : 'e'}`}
           </span>
         </div>
 
-        {items.length === 0 ? (
+        {sorted.length === 0 ? (
           <p className="text-sm text-slate-400">
             Saisis des élèves dans la grille pour voir le décompte des classes par niveau.
           </p>
         ) : (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
-            className="flex flex-wrap gap-2.5"
-          >
-            {items.map((n) => (
-              <NiveauChip
-                key={n.key}
-                label={n.label}
-                count={stats.classesByNiveau[n.key]}
-                cycle={n.cycle}
+          <>
+            {single.length > 0 && (
+              <BreakdownGroup
+                label={`Simples (${single.reduce((s, g) => s + g.count, 0)})`}
+                groups={single}
               />
-            ))}
-          </motion.div>
+            )}
+            {multi.length > 0 && (
+              <BreakdownGroup
+                label={`Multi-niveaux (${multi.reduce((s, g) => s + g.count, 0)})`}
+                groups={multi}
+                multi
+              />
+            )}
+            {/* Total cumul par niveau (pour les multi : un niveau peut apparaître dans plusieurs combinaisons) */}
+            <div className="pt-2 border-t border-dashed border-slate-200">
+              <div className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400 mb-2">
+                Cumul par niveau
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {NIVEAUX.filter((n) => stats.classesByNiveau[n.key] > 0).map((n) => (
+                  <span
+                    key={n.key}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 border border-slate-200 px-2.5 py-1 text-[12px] text-slate-700"
+                  >
+                    <span
+                      className={`w-1.5 h-3 rounded-full ${
+                        n.cycle === 1
+                          ? 'bg-amber-400'
+                          : n.cycle === 2
+                          ? 'bg-sky-500'
+                          : n.cycle === 3
+                          ? 'bg-emerald-500'
+                          : 'bg-slate-400'
+                      }`}
+                    />
+                    <span className="font-semibold tabular-nums">{stats.classesByNiveau[n.key]}</span>
+                    <span>{n.label}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </motion.section>
+  );
+}
+
+function BreakdownGroup({
+  label,
+  groups,
+  multi,
+}: {
+  label: string;
+  groups: { key: string; niveaux: NiveauKey[]; count: number }[];
+  multi?: boolean;
+}) {
+  return (
+    <div>
+      <div className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-400 mb-2">
+        {label}
+      </div>
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+        className="flex flex-wrap gap-2.5"
+      >
+        {groups.map((g) => {
+          const labels = g.niveaux.map(
+            (k) => NIVEAUX.find((n) => n.key === k)?.label || k,
+          );
+          // The chip uses the cycle of the first niveau in the combination.
+          const cycle = (NIVEAUX.find((n) => n.key === g.niveaux[0])?.cycle || 0) as 0 | 1 | 2 | 3;
+          return (
+            <NiveauChip
+              key={g.key}
+              label={labels.join('/')}
+              count={g.count}
+              cycle={cycle}
+              accent={multi ? 'multi' : 'single'}
+            />
+          );
+        })}
+      </motion.div>
+    </div>
   );
 }
 
@@ -1008,10 +1102,12 @@ function NiveauChip({
   label,
   count,
   cycle,
+  accent = 'single',
 }: {
   label: string;
   count: number;
   cycle: 0 | 1 | 2 | 3;
+  accent?: 'single' | 'multi';
 }) {
   const palette =
     cycle === 1
@@ -1021,6 +1117,11 @@ function NiveauChip({
       : cycle === 3
       ? { gradient: 'from-emerald-400 to-teal-500', dot: 'bg-emerald-500', text: 'text-emerald-700', soft: 'bg-emerald-50/80' }
       : { gradient: 'from-slate-400 to-slate-500', dot: 'bg-slate-400', text: 'text-slate-700', soft: 'bg-slate-50' };
+  // For multi-level chips, override the dashed border + softer background to differentiate visually.
+  const multiOverride =
+    accent === 'multi'
+      ? 'border-dashed border-violet-300/70 bg-gradient-to-r from-white via-violet-50/60 to-white text-violet-700'
+      : `border-slate-200 ${palette.soft} ${palette.text}`;
   return (
     <motion.span
       variants={{
@@ -1029,15 +1130,19 @@ function NiveauChip({
       }}
       whileHover={{ y: -2 }}
       transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-      className={`group inline-flex items-center gap-2 rounded-2xl border border-slate-200 ${palette.soft} pl-1.5 pr-3 py-1.5 text-sm font-semibold ${palette.text} shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] transition-shadow hover:shadow-[0_8px_22px_-10px_rgba(15,90,120,0.30)]`}
+      className={`group inline-flex items-center gap-2 rounded-2xl border ${multiOverride} pl-1.5 pr-3 py-1.5 text-sm font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] transition-shadow hover:shadow-[0_8px_22px_-10px_rgba(15,90,120,0.30)]`}
     >
       <span
-        className={`inline-flex items-center justify-center w-7 h-7 rounded-xl bg-gradient-to-br ${palette.gradient} text-white text-[12px] font-bold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_10px_-3px_rgba(15,90,120,0.35)]`}
+        className={`inline-flex items-center justify-center w-7 h-7 rounded-xl bg-gradient-to-br ${
+          accent === 'multi' ? 'from-violet-500 to-fuchsia-500' : palette.gradient
+        } text-white text-[12px] font-bold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_10px_-3px_rgba(15,90,120,0.35)]`}
       >
         {count}
       </span>
       <span className="tracking-tight">{label}</span>
-      <span className={`w-1.5 h-1.5 rounded-full ${palette.dot}`} aria-hidden />
+      {accent === 'single' && (
+        <span className={`w-1.5 h-1.5 rounded-full ${palette.dot}`} aria-hidden />
+      )}
     </motion.span>
   );
 }
