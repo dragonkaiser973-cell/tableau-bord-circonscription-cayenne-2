@@ -20,6 +20,11 @@ module.exports = {
           800: '#17495f',
           900: '#0f3847',
         },
+        accent: {
+          DEFAULT: '#45b8a0',
+          light: '#7dd3c0',
+          dark: '#2e9e87',
+        },
         zen: {
           'bg': '#F7F8FA',
           'border': '#E5E7EB',
@@ -28,12 +33,19 @@ module.exports = {
           'text-muted': '#9CA3AF',
           'accent': '#111827',
         },
+        cycle: {
+          1: '#fbbf24',
+          2: '#38bdf8',
+          3: '#22c55e',
+        },
         success: { DEFAULT: '#196b24', light: '#22c55e' },
         warning: { DEFAULT: '#e97132' },
         info: { DEFAULT: '#156082' },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
+        mono: ['"Geist Mono"', 'Menlo', 'monospace'],
       },
       letterSpacing: {
         'tightest': '-0.05em',

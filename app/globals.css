@@ -7,6 +7,94 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════
+   DESIGN SYSTEM TOKENS — Cayenne 2
+   Source de vérité partagée avec les bundles claude.ai/design.
+   ═══════════════════════════════════════════════ */
+:root {
+  /* Signature teal-mint */
+  --color-accent: #45b8a0;
+  --color-accent-light: #7dd3c0;
+  --color-accent-dark: #2e9e87;
+
+  /* Primary scale (deep teal → cyan) */
+  --color-primary-50: #e6f3f7;
+  --color-primary-100: #cce7ef;
+  --color-primary-200: #99cfe0;
+  --color-primary-300: #66b7d0;
+  --color-primary-400: #339fc1;
+  --color-primary-500: #2d8ba8;
+  --color-primary-600: #1e7a95;
+  --color-primary-700: #1e5a78;
+  --color-primary-800: #17495f;
+  --color-primary-900: #0f3847;
+
+  /* Hero gradient */
+  --gradient-hero: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-500), var(--color-accent));
+  --gradient-text-accent: linear-gradient(90deg, #e0f7f0, #a5f3ee, #bae6fd);
+
+  /* Surfaces */
+  --color-bg-page: #F7F8FA;
+  --color-bg-card: #ffffff;
+  --color-border: #E5E7EB;
+
+  /* Zen text scale */
+  --color-text-1: #0a0a0a;
+  --color-text-2: #6B7280;
+  --color-text-3: #9CA3AF;
+  --color-text-inv: #ffffff;
+
+  /* Semantic status */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #f43f5e;
+  --color-info: #0ea5e9;
+
+  /* Cycle scolaire */
+  --color-cycle-1: #fbbf24;
+  --color-cycle-2: #38bdf8;
+  --color-cycle-3: #22c55e;
+
+  /* Shadows */
+  --shadow-card: 0 1px 0 rgba(15, 23, 42, 0.02), 0 24px 50px -32px rgba(15, 90, 120, 0.18);
+  --shadow-card-hover: 0 1px 0 rgba(15, 23, 42, 0.04), 0 32px 60px -24px rgba(30, 90, 120, 0.28);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-dock: 0 2px 16px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --shadow-stat-box: 0 4px 12px -2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+  /* Radius */
+  --radius-card: 32px;
+  --radius-card-sm: 16px;
+  --radius-btn: 100px;
+  --radius-chip: 9999px;
+  --radius-xl: 12px;
+  --radius-lg: 8px;
+
+  /* Typography */
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'Fira Code', monospace;
+
+  --text-display: clamp(2.5rem, 6vw, 5rem);
+  --text-h1: clamp(1.8rem, 3.5vw, 3.2rem);
+  --text-h2: 1.5rem;
+  --text-h3: 1.125rem;
+  --text-body-lg: 1.125rem;
+  --text-body: 1rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.75rem;
+  --text-kicker: 0.6875rem;
+
+  --tracking-display: -0.04em;
+  --tracking-tight: -0.03em;
+  --tracking-kicker: 0.18em;
+  --tracking-label: 0.12em;
+
+  --leading-display: 0.92;
+  --leading-tight: 1.1;
+  --leading-relaxed: 1.6;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -18,10 +106,10 @@ html {
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-body);
   background: #ffffff;
   min-height: 100vh;
-  color: #0a0a0a;
+  color: var(--color-text-1);
   line-height: 1.6;
 }
 
@@ -37,6 +125,116 @@ h1, h2, h3 {
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
 
 @layer components {
+
+  /* ═══ Sémantique typographique (design system) ═══ */
+  .type-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--text-display);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-display);
+    color: var(--color-text-1);
+  }
+  .type-display-inv {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--text-display);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-display);
+    color: var(--color-text-inv);
+  }
+  .type-h1 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: var(--text-h1);
+    letter-spacing: -0.05em;
+    line-height: var(--leading-tight);
+    color: var(--color-text-1);
+  }
+  .type-h2 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: var(--text-h2);
+    letter-spacing: -0.03em;
+    line-height: var(--leading-tight);
+    color: var(--color-text-1);
+  }
+  .type-h3 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--text-h3);
+    letter-spacing: -0.02em;
+    line-height: var(--leading-tight);
+    color: var(--color-text-1);
+  }
+  .type-body { font-family: var(--font-body); font-size: var(--text-body); line-height: var(--leading-relaxed); color: var(--color-text-1); }
+  .type-body-secondary { font-family: var(--font-body); font-size: var(--text-body); line-height: var(--leading-relaxed); color: var(--color-text-2); }
+  .type-kicker {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: var(--text-kicker);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+    color: var(--color-text-3);
+    line-height: 1;
+  }
+  .type-kicker-inv {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: var(--text-kicker);
+    letter-spacing: var(--tracking-kicker);
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1;
+  }
+  .type-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .type-tabular { font-variant-numeric: tabular-nums; }
+
+  /* ═══ Pulsing accent dot (kickers) ═══ */
+  .dot-pulse {
+    position: relative;
+    display: inline-flex;
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+  }
+  .dot-pulse::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--color-accent);
+    animation: pingAnim 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+    opacity: 0.75;
+  }
+  .dot-pulse::after {
+    content: '';
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    flex-shrink: 0;
+  }
+  @keyframes pingAnim {
+    75%, 100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  /* ═══ Glass (dark backgrounds only) ═══ */
+  .glass {
+    background: rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+  }
+
+  /* ═══ Card base partagée ═══ */
+  .card-base {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
 
   /* ═══ Bouton pilule noir avec glow ═══ */
   .btn-primary-zen {
