@@ -18,6 +18,7 @@ import {
   Filler
 } from 'chart.js';
 
+import PageLoader from '@/components/PageLoader';
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -941,7 +942,7 @@ function EvaluationsPageContent() {
 
 export default function EvaluationsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+    <Suspense fallback={<PageLoader />}>
       <EvaluationsPageContent />
     </Suspense>
   );

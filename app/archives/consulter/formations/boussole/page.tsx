@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import PageLoader from '@/components/PageLoader';
 interface ArchivedSession {
   id: string;
   titre: string;
@@ -138,9 +139,7 @@ function ArchivesBoussoleList() {
 export default function Page() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-        <div className="text-white text-xl">Chargement…</div>
-      </div>
+      <PageLoader />
     }>
       <ArchivesBoussoleList />
     </Suspense>

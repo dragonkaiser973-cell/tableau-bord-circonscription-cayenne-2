@@ -17,6 +17,7 @@ import {
   Legend,
 } from 'chart.js';
 
+import PageLoader from '@/components/PageLoader';
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const COULEURS = ['#2c5f75', '#e97132', '#196b24', '#9c36b5', '#c0392b', '#1a7599', '#f39c12', '#27ae60'];
@@ -374,12 +375,7 @@ export default function QuestionnairesAdminPage() {
 
   if (!isAdmin || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement...</p>
-        </div>
-      </div>
+      <PageLoader />
     );
   }
 

@@ -8,6 +8,7 @@ import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 
+import PageLoader from '@/components/PageLoader';
 interface Enseignant {
   id: number;
   ecole_nom: string;
@@ -386,12 +387,7 @@ if (structuresRes.ok) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl text-white">Chargement des enseignants...</p>
-        </div>
-      </div>
+      <PageLoader />
     );
   }
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AuroraHeader from '@/components/AuroraHeader';
 
+import PageLoader from '@/components/PageLoader';
 export default function CartePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -100,12 +101,7 @@ export default function CartePage() {
 
   if (!isAuthenticated || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement...</p>
-        </div>
-      </div>
+      <PageLoader />
     );
   }
 

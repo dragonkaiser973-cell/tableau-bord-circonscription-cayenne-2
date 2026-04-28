@@ -8,6 +8,7 @@ import { Bar, Pie } from 'react-chartjs-2';
 import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
 
+import PageLoader from '@/components/PageLoader';
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
 
 interface StatsEcole {
@@ -565,7 +566,7 @@ function StatistiquesPageContent() {
 
 export default function StatistiquesPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+    <Suspense fallback={<PageLoader />}>
       <StatistiquesPageContent />
     </Suspense>
   );

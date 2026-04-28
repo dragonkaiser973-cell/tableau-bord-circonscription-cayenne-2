@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+import PageLoader from '@/components/PageLoader';
 interface EcoleIdentite {
   uai: string;
   secteur: string;
@@ -367,7 +368,7 @@ function EcolesArchivePageContent() {
 
 export default function EcolesArchivePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+    <Suspense fallback={<PageLoader />}>
       <EcolesArchivePageContent />
     </Suspense>
   );

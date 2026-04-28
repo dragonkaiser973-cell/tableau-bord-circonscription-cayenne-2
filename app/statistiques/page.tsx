@@ -9,6 +9,7 @@ import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 
+import PageLoader from '@/components/PageLoader';
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
 
 interface StatsEcole {
@@ -218,12 +219,7 @@ export default function StatistiquesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-        <div className="text-center text-white">
-          <div className="w-12 h-12 rounded-full border-4 border-white/30 border-t-white animate-spin mx-auto mb-4" />
-          <p className="text-lg font-medium">Chargement des statistiques...</p>
-        </div>
-      </div>
+      <PageLoader />
     );
   }
 

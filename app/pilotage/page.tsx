@@ -8,6 +8,7 @@ import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFElement, PDFExportOptions } from '@/lib/pdfExport';
 
+import PageLoader from '@/components/PageLoader';
 export default function PilotagePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -241,12 +242,7 @@ export default function PilotagePage() {
 
   if (!isAuthenticated || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement...</p>
-        </div>
-      </div>
+      <PageLoader />
     );
   }
 

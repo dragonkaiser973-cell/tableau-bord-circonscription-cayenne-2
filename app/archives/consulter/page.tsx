@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import AuroraHeader from '@/components/AuroraHeader';
 
+import PageLoader from '@/components/PageLoader';
 function ConsulterArchiveContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [archive, setArchive] = useState<any>(null);
@@ -39,12 +40,7 @@ function ConsulterArchiveContent() {
 
   if (!isAuthenticated || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement de l'archive...</p>
-        </div>
-      </div>
+      <PageLoader />
     );
   }
 
@@ -297,12 +293,7 @@ function ConsulterArchiveContent() {
 export default function ConsulterArchivePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement...</p>
-        </div>
-      </div>
+      <PageLoader />
     }>
       <ConsulterArchiveContent />
     </Suspense>

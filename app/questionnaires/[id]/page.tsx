@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import AuroraHeader from '@/components/AuroraHeader';
 
+import PageLoader from '@/components/PageLoader';
 const SMILEYS = ['😞', '😕', '😐', '😊', '😄'];
 
 function genSessionId() {
@@ -116,12 +117,7 @@ export default function RepondreQuestionnairePage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-      <div className="text-center text-white">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-white/30 border-t-white animate-spin" />
-        <p className="text-xl">Chargement...</p>
-      </div>
-    </div>
+    <PageLoader />
   );
 
   if (erreur) return (

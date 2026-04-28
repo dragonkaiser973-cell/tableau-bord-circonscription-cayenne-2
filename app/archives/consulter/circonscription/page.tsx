@@ -7,6 +7,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 import { Bar, Pie } from 'react-chartjs-2';
 import StatPill from '@/components/StatPill';
 
+import PageLoader from '@/components/PageLoader';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 function CirconscriptionArchiveContent() {
@@ -186,12 +187,7 @@ function CirconscriptionArchiveContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement de l'archive...</p>
-        </div>
-      </div>
+      <PageLoader />
     );
   }
 
@@ -514,12 +510,7 @@ function CirconscriptionArchiveContent() {
 export default function CirconscriptionArchivePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-[#45b8a0]">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement...</p>
-        </div>
-      </div>
+      <PageLoader />
     }>
       <CirconscriptionArchiveContent />
     </Suspense>

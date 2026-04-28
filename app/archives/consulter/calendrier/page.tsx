@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+import PageLoader from '@/components/PageLoader';
 interface Evenement {
   id: string;
   titre: string;
@@ -465,7 +466,7 @@ function CalendrierPageContent() {
 
 export default function CalendrierPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white">Chargement...</div></div>}>
+    <Suspense fallback={<PageLoader />}>
       <CalendrierPageContent />
     </Suspense>
   );

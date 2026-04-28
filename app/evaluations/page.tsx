@@ -20,6 +20,7 @@ import {
   Filler
 } from 'chart.js';
 
+import PageLoader from '@/components/PageLoader';
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -569,12 +570,7 @@ export default function EvaluationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl text-white">Chargement des données...</p>
-        </div>
-      </div>
+      <PageLoader />
     );
   }
 

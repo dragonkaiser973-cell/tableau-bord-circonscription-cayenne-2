@@ -7,6 +7,7 @@ import { calculerEchelonComplet } from '@/lib/echelons';
 import { exportTableToPDF } from '@/lib/pdfExport';
 import StatPill from '@/components/StatPill';
 
+import PageLoader from '@/components/PageLoader';
 interface Enseignant {
   id: number;
   ecole_nom: string;
@@ -178,12 +179,7 @@ function EnseignantsArchivesContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement des enseignants archivés...</p>
-        </div>
-      </div>
+      <PageLoader />
     );
   }
 
@@ -541,12 +537,7 @@ function EnseignantsArchivesContent() {
 export default function EnseignantsArchivesPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="text-6xl mb-4">⏳</div>
-          <p className="text-xl">Chargement...</p>
-        </div>
-      </div>
+      <PageLoader />
     }>
       <EnseignantsArchivesContent />
     </Suspense>
