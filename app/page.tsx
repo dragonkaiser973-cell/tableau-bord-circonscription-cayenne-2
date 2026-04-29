@@ -482,8 +482,13 @@ export default function HomePage() {
 function TabPreview({ index, tabs }: { index: number; tabs: { title: string; desc: string }[] }) {
   const bgPhoto = (
     <>
-      <img src="/zeedoo-rio-branco-4569465.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
-      <div className="absolute inset-0 bg-white/20" />
+      <img
+        src="/guyane-fleuve-foret-hero.jpg"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover"
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent" />
     </>
   );
 
