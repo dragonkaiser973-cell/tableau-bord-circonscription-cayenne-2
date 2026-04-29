@@ -885,32 +885,140 @@ function TabPreview({
   }
 
   if (index === 13) {
+    const mapPins = [
+      { x: 20, y: 32, t: 'EEPU', c: '#0ea5e9', n: 'Cayenne' },
+      { x: 28, y: 28, t: 'EEPU', c: '#0ea5e9' },
+      { x: 24, y: 38, t: 'EMPU', c: '#f43f5e' },
+      { x: 32, y: 36, t: 'EEPR', c: '#a855f7' },
+      { x: 42, y: 30, t: 'EEPU', c: '#0ea5e9', n: 'Rémire' },
+      { x: 48, y: 40, t: 'EMPU', c: '#f43f5e' },
+      { x: 52, y: 32, t: 'EEPU', c: '#0ea5e9' },
+      { x: 58, y: 50, t: 'EEPU', c: '#0ea5e9', n: 'Matoury' },
+      { x: 62, y: 58, t: 'EMPU', c: '#f43f5e' },
+      { x: 66, y: 46, t: 'EEPR', c: '#a855f7' },
+      { x: 72, y: 64, t: 'GS',   c: '#f59e0b' },
+      { x: 76, y: 54, t: 'EEPU', c: '#0ea5e9' },
+      { x: 84, y: 70, t: 'GS',   c: '#f59e0b', n: 'Roura' },
+      { x: 80, y: 82, t: 'EEPU', c: '#0ea5e9' },
+      { x: 88, y: 78, t: 'GS',   c: '#f59e0b' },
+      { x: 60, y: 78, t: 'EEPR', c: '#a855f7' },
+      { x: 70, y: 84, t: 'EMPU', c: '#f43f5e' },
+      { x: 50, y: 70, t: 'EEPU', c: '#0ea5e9' },
+    ];
     return wrapper(
       <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
-        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">18 écoles · Cayenne 2 — Roura</p>
-        <div className="relative aspect-[4/3] bg-gradient-to-br from-emerald-50 via-white to-sky-50 rounded-xl border border-white/40 overflow-hidden">
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 150" fill="none" preserveAspectRatio="none">
-            <path d="M0 80 Q40 60 70 75 T140 70 T200 90" stroke="#7dd3fc" strokeWidth="3" fill="none" opacity="0.6" />
-            <path d="M0 110 Q50 95 90 105 T170 100 T200 115" stroke="#7dd3fc" strokeWidth="2" fill="none" opacity="0.4" />
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest">Carte interactive · 18 écoles</p>
+          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#1e5a78] bg-white/60 px-1.5 py-0.5 rounded-full border border-white/40">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inset-0 rounded-full bg-[#45b8a0] animate-ping opacity-75" />
+              <span className="relative h-1.5 w-1.5 rounded-full bg-[#45b8a0]" />
+            </span>
+            LIVE
+          </span>
+        </div>
+
+        <div className="relative aspect-[4/3] rounded-xl border border-white/50 overflow-hidden bg-gradient-to-br from-sky-100 via-sky-50 to-emerald-50 shadow-inner">
+          {/* Ocean texture */}
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 75" preserveAspectRatio="xMidYMid slice" fill="none">
+            <defs>
+              <pattern id="oceanDots" width="3" height="3" patternUnits="userSpaceOnUse">
+                <circle cx="1.5" cy="1.5" r="0.3" fill="#7dd3fc" opacity="0.4" />
+              </pattern>
+              <linearGradient id="landGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#bbf7d0" />
+                <stop offset="100%" stopColor="#86efac" />
+              </linearGradient>
+            </defs>
+            <rect width="100" height="75" fill="url(#oceanDots)" opacity="0.35" />
+            {/* Coastline / land mass shape (Cayenne 2 zone abstraction) */}
+            <path
+              d="M 0 35 Q 8 30 14 28 Q 24 26 30 28 Q 38 30 44 28 L 56 32 Q 68 36 76 44 Q 88 56 96 70 L 100 75 L 0 75 Z"
+              fill="url(#landGrad)"
+              stroke="#86efac"
+              strokeWidth="0.5"
+              opacity="0.92"
+            />
+            {/* Rivers — Mahury / Cayenne / Approuague style */}
+            <path d="M 28 28 Q 38 42 50 56 Q 60 66 72 74" stroke="#38bdf8" strokeWidth="0.9" fill="none" opacity="0.75" strokeLinecap="round" />
+            <path d="M 60 32 Q 72 50 88 70" stroke="#38bdf8" strokeWidth="0.7" fill="none" opacity="0.6" strokeLinecap="round" />
+            {/* Forest texture dots */}
+            {Array.from({ length: 32 }).map((_, i) => {
+              const seedX = (i * 17) % 90 + 6;
+              const seedY = ((i * 31) % 35) + 38;
+              return <circle key={i} cx={seedX} cy={seedY} r="0.5" fill="#22c55e" opacity="0.25" />;
+            })}
+            {/* Grid overlay */}
+            <g stroke="rgba(15,90,120,0.08)" strokeWidth="0.2">
+              {[20, 40, 60, 80].map((v) => <line key={`h${v}`} x1="0" y1={v * 0.75} x2="100" y2={v * 0.75} />)}
+              {[20, 40, 60, 80].map((v) => <line key={`v${v}`} x1={v} y1="0" x2={v} y2="75" />)}
+            </g>
           </svg>
-          {[
-            { x: '15%', y: '30%', c: 'bg-emerald-500' },
-            { x: '35%', y: '20%', c: 'bg-sky-500' },
-            { x: '55%', y: '45%', c: 'bg-amber-500' },
-            { x: '70%', y: '30%', c: 'bg-rose-500' },
-            { x: '45%', y: '70%', c: 'bg-violet-500' },
-            { x: '80%', y: '65%', c: 'bg-emerald-500' },
-            { x: '25%', y: '60%', c: 'bg-sky-500' },
-          ].map((p, i) => (
-            <span key={i} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: p.x, top: p.y }}>
-              <span className={`block w-3 h-3 rounded-full ${p.c} ring-2 ring-white shadow-md`} />
+
+          {/* Zone labels */}
+          {mapPins.filter((p) => p.n).map((p, i) => (
+            <span
+              key={`lbl-${i}`}
+              className="absolute text-[8px] font-bold text-zen-text/75 tracking-wide pointer-events-none"
+              style={{ left: `${p.x + 3}%`, top: `${p.y - 4}%` }}
+            >
+              {p.n}
             </span>
           ))}
+
+          {/* Pins */}
+          {mapPins.map((p, i) => (
+            <span
+              key={i}
+              className="absolute -translate-x-1/2 -translate-y-full"
+              style={{ left: `${p.x}%`, top: `${p.y}%` }}
+              title={p.t}
+            >
+              <svg width="14" height="18" viewBox="0 0 14 18" fill="none" className="drop-shadow-md">
+                <path d="M7 0C3.13 0 0 3.13 0 7c0 5.25 7 11 7 11s7-5.75 7-11c0-3.87-3.13-7-7-7z" fill={p.c} stroke="#ffffff" strokeWidth="1.2" />
+                <circle cx="7" cy="7" r="2.6" fill="#ffffff" />
+              </svg>
+            </span>
+          ))}
+
+          {/* Compass rose */}
+          <svg className="absolute top-1.5 right-1.5 w-7 h-7 drop-shadow-sm" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" fill="rgba(255,255,255,0.85)" stroke="rgba(15,90,120,0.4)" strokeWidth="0.8" />
+            <path d="M12 3 L13.5 11 L12 12 L10.5 11 Z" fill="#1e5a78" />
+            <path d="M12 21 L13.5 13 L12 12 L10.5 13 Z" fill="#94a3b8" />
+            <text x="12" y="6.5" textAnchor="middle" fontSize="3" fill="#1e5a78" fontWeight="bold">N</text>
+          </svg>
+
+          {/* Scale bar */}
+          <div className="absolute bottom-1.5 left-1.5 flex items-end gap-0.5">
+            <div className="text-[8px] font-bold text-zen-text/70 mr-1 tabular-nums">0</div>
+            <div className="flex">
+              <div className="w-4 h-1 bg-zen-text/70 border border-white" />
+              <div className="w-4 h-1 bg-white border border-zen-text/70" />
+              <div className="w-4 h-1 bg-zen-text/70 border border-white" />
+            </div>
+            <div className="text-[8px] font-bold text-zen-text/70 ml-1 tabular-nums">5 km</div>
+          </div>
+
+          {/* Mini info chip */}
+          <div className="absolute bottom-1.5 right-1.5 bg-white/85 backdrop-blur-sm rounded-md px-1.5 py-0.5 text-[8px] font-bold text-zen-text border border-white/60 shadow-sm">
+            CAYENNE 2 · ROURA
+          </div>
         </div>
-        <div className="flex items-center justify-between mt-2.5 text-[10px] text-zen-text-muted">
-          <span>12 publiques</span>
-          <span>3 privées</span>
-          <span>3 GS</span>
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2.5 text-[10px]">
+          {[
+            { l: 'EEPU · 12', c: '#0ea5e9' },
+            { l: 'EMPU · 4', c: '#f43f5e' },
+            { l: 'EEPR · 3', c: '#a855f7' },
+            { l: 'GS · 3', c: '#f59e0b' },
+          ].map((it, i) => (
+            <span key={i} className="inline-flex items-center gap-1 text-zen-text-secondary font-medium">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: it.c }} />
+              {it.l}
+            </span>
+          ))}
         </div>
       </div>,
     );
