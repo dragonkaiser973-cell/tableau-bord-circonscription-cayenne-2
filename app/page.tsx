@@ -28,6 +28,28 @@ export default function HomePage() {
   const [showBoxRight, setShowBoxRight] = useState(false);
   const [showBoxLeftContent, setShowBoxLeftContent] = useState(false);
 
+  // CTA idle attention — réveil après 5 s d'inactivité tant que l'utilisateur n'a pas cliqué
+  const [ctaIdle, setCtaIdle] = useState(false);
+  useEffect(() => {
+    if (heroShrunk) {
+      setCtaIdle(false);
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const reset = () => {
+      setCtaIdle(false);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setCtaIdle(true), 5000);
+    };
+    const events: (keyof WindowEventMap)[] = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    reset();
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, reset));
+    };
+  }, [heroShrunk]);
+
   const handleEnter = () => {
     if (heroShrunk) return;
     setHeroShrunk(true);
@@ -237,9 +259,19 @@ export default function HomePage() {
             transition={{ ...spring, delay: 0.55 }}
             className="flex items-center gap-4"
           >
-            <button onClick={handleEnter} className="bg-white text-zen-text font-medium rounded-full px-8 py-3.5 text-[15px] backdrop-blur-md border border-white/30 transition-all duration-300 hover:shadow-lg hover:shadow-white/20 hover:-translate-y-0.5">
-              Accéder au tableau de bord
-            </button>
+            <span className={`relative inline-flex group ${ctaIdle ? 'cta-idle' : ''}`}>
+              <span aria-hidden className="absolute inset-0 rounded-full bg-[#45b8a0] animate-cta-ring pointer-events-none group-hover:opacity-0 transition-opacity duration-300" />
+              <span aria-hidden className="absolute inset-0 rounded-full bg-[#45b8a0] animate-cta-ring pointer-events-none group-hover:opacity-0 transition-opacity duration-300" style={{ animationDelay: '1.2s' }} />
+              <button
+                onClick={handleEnter}
+                className="cta-button relative z-10 inline-flex items-center gap-2 bg-white text-zen-text font-medium rounded-full pl-8 pr-7 py-3.5 text-[15px] backdrop-blur-md border border-white/30 transition-all duration-300 hover:shadow-[0_8px_24px_rgba(69,184,160,0.4),0_0_0_4px_rgba(69,184,160,0.15)] hover:-translate-y-0.5"
+              >
+                Accéder au tableau de bord
+                <span aria-hidden className="cta-chevron transition-transform duration-300 group-hover:translate-x-1 text-zen-text/70">
+                  →
+                </span>
+              </button>
+            </span>
             <Link href="/ecoles" className="backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full px-6 py-3.5 text-[15px] font-medium transition-all duration-300 hover:bg-white/20 hover:-translate-y-0.5">
               Explorer
             </Link>

@@ -386,6 +386,38 @@ h1, h2, h3 {
 }
 .animate-aurora-pulse { animation: auroraPulse 2.4s ease-out infinite; }
 
+/* ═══ CTA aurora ring — diffusing teal ring around primary CTA ═══ */
+@keyframes ctaAuroraRing {
+  0%   { transform: scale(0.96); opacity: 0.55; }
+  70%  { opacity: 0; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+.animate-cta-ring {
+  animation: ctaAuroraRing 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Idle wake-up — kicks in after a few seconds of inactivity */
+@keyframes ctaIdleBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+.cta-idle .cta-button {
+  animation: ctaIdleBreathe 1.8s ease-in-out infinite;
+  box-shadow: 0 0 0 4px rgba(69, 184, 160, 0.18),
+              0 12px 32px rgba(69, 184, 160, 0.45);
+}
+.cta-idle .animate-cta-ring {
+  animation-duration: 1.6s;
+  opacity: 1;
+}
+@keyframes ctaChevronNudge {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(4px); }
+}
+.cta-idle .cta-chevron {
+  animation: ctaChevronNudge 1.4s ease-in-out infinite;
+}
+
 /* ═══ Spotlight card — radial follows cursor via CSS vars ═══ */
 .spotlight-card {
   position: relative;
