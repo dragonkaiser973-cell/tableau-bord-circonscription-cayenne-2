@@ -514,6 +514,32 @@ function TabPreview({
     </div>
   );
 
+  if (index === 1) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Équipe de circonscription</p>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { r: 'IEN', n: 'Mme Lautric' },
+            { r: 'Secrétaire', n: 'Mme Pigree' },
+            { r: 'CPAIEN', n: 'Mme Hernandez' },
+            { r: 'CPC EPS', n: 'M. Pierre' },
+          ].map((p, i) => (
+            <div key={i} className="bg-white/40 rounded-xl p-2.5 border border-white/30">
+              <p className="text-[9px] text-zen-text-muted font-bold tracking-widest uppercase">{p.r}</p>
+              <p className="text-[12px] font-semibold text-zen-text mt-0.5">{p.n}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between text-[10px] text-zen-text-muted">
+          <span>18 écoles</span>
+          <span>5 122 élèves</span>
+          <span>360 enseignants</span>
+        </div>
+      </div>,
+    );
+  }
+
   if (index === 0) {
     return wrapper(
       <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
@@ -615,6 +641,337 @@ function TabPreview({
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (index === 5) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Questionnaires en cours</p>
+        <div className="space-y-2.5">
+          {[
+            { t: "Boussole d'état d'esprit", r: 74, c: 'from-emerald-400 to-teal-500' },
+            { t: 'Plan formation 2026', r: 52, c: 'from-sky-400 to-blue-500' },
+            { t: "Bilan d'année", r: 91, c: 'from-amber-400 to-orange-500' },
+          ].map((q, i) => (
+            <div key={i} className="bg-white/40 rounded-xl p-2.5 border border-white/30">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[12px] font-semibold text-zen-text">{q.t}</p>
+                <span className="text-[10px] font-bold text-zen-text-secondary tabular-nums">{q.r}%</span>
+              </div>
+              <div className="h-1.5 bg-white/40 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${q.r}%` }}
+                  transition={{ type: 'spring', stiffness: 60, damping: 15, delay: i * 0.1 }}
+                  className={`h-full bg-gradient-to-r ${q.c} rounded-full`}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>,
+    );
+  }
+
+  if (index === 6) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">CE1 A — Cayenne Nord</p>
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {[
+            { l: 'Maîtrisé', v: 14, c: 'text-emerald-700 bg-emerald-100' },
+            { l: 'Fragile', v: 6, c: 'text-amber-700 bg-amber-100' },
+            { l: 'Soutien', v: 3, c: 'text-rose-700 bg-rose-100' },
+          ].map((s, i) => (
+            <div key={i} className={`rounded-lg p-2 text-center ${s.c}`}>
+              <p className="text-[20px] font-bold tabular-nums leading-none">{s.v}</p>
+              <p className="text-[9px] font-semibold uppercase tracking-wide mt-1">{s.l}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-1.5">Domaines</p>
+        {[
+          { l: 'Compréhension orale', v: 82 },
+          { l: 'Lire à haute voix', v: 68 },
+          { l: 'Calcul mental', v: 71 },
+        ].map((d, i) => (
+          <div key={i} className="flex items-center gap-2 text-[11px] mb-1">
+            <span className="text-zen-text flex-1">{d.l}</span>
+            <span className="font-bold tabular-nums text-zen-text-secondary">{d.v}%</span>
+          </div>
+        ))}
+      </div>,
+    );
+  }
+
+  if (index === 7) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Guide d&apos;utilisation</p>
+        <ol className="space-y-2">
+          {[
+            'Importer les évaluations CSV',
+            'Filtrer par école et niveau',
+            'Analyser les domaines fragiles',
+            'Exporter le rapport PDF',
+          ].map((s, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary-600 to-[#45b8a0] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 shadow-sm tabular-nums">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span className="text-[12px] text-zen-text leading-snug pt-0.5">{s}</span>
+            </li>
+          ))}
+        </ol>
+      </div>,
+    );
+  }
+
+  if (index === 8) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Prochaines formations</p>
+        <div className="space-y-2.5">
+          {[
+            { d: '12', m: 'sep', t: "Boussole d'état d'esprit", p: 42, c: 'bg-emerald-100 text-emerald-700' },
+            { d: '08', m: 'oct', t: 'Lecture-écriture cycle 2', p: 28, c: 'bg-sky-100 text-sky-700' },
+            { d: '15', m: 'nov', t: 'Mathématiques différenciation', p: 34, c: 'bg-amber-100 text-amber-700' },
+          ].map((f, i) => (
+            <div key={i} className="flex items-center gap-3 bg-white/40 rounded-xl p-2.5 border border-white/30">
+              <div className={`w-12 text-center rounded-lg py-1 ${f.c}`}>
+                <p className="text-[14px] font-bold leading-none tabular-nums">{f.d}</p>
+                <p className="text-[9px] font-bold uppercase tracking-wide mt-0.5">{f.m}</p>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-zen-text truncate">{f.t}</p>
+                <p className="text-[10px] text-zen-text-muted">{f.p} inscrits</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>,
+    );
+  }
+
+  if (index === 9) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">État des imports</p>
+        <div className="space-y-2.5">
+          {[
+            { t: 'Évaluations CP — Français', s: '12 542 lignes', ok: true },
+            { t: 'Évaluations CP — Maths', s: '12 318 lignes', ok: true },
+            { t: 'Effectifs 2026-2027', s: 'En attente', ok: false },
+          ].map((d, i) => (
+            <div key={i} className="flex items-center gap-3 bg-white/40 rounded-xl p-2.5 border border-white/30">
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  d.ok ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                }`}
+              >
+                {d.ok ? (
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v5M12 16h0" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-zen-text truncate">{d.t}</p>
+                <p className="text-[10px] text-zen-text-muted">{d.s}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>,
+    );
+  }
+
+  if (index === 10) {
+    const events = new Set([3, 12, 17, 24]);
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest">Septembre 2026</p>
+          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wide">4 évts</span>
+        </div>
+        <div className="grid grid-cols-7 gap-1 text-center">
+          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+            <span key={i} className="text-[9px] font-bold text-zen-text-muted">
+              {d}
+            </span>
+          ))}
+          {Array.from({ length: 30 }, (_, i) => {
+            const day = i + 1;
+            const today = day === 17;
+            const evt = events.has(day);
+            return (
+              <div
+                key={day}
+                className={`aspect-square flex items-center justify-center text-[10px] font-medium rounded-md ${
+                  today
+                    ? 'bg-zen-text text-white shadow-md'
+                    : evt
+                    ? 'bg-emerald-100 text-emerald-700 font-bold'
+                    : 'text-zen-text/80'
+                }`}
+              >
+                {day}
+              </div>
+            );
+          })}
+        </div>
+      </div>,
+    );
+  }
+
+  if (index === 11) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Archives par année scolaire</p>
+        <div className="space-y-1.5">
+          {[
+            { y: '2025-2026', n: 'En cours', a: false },
+            { y: '2024-2025', n: '5 122 élèves', a: true },
+            { y: '2023-2024', n: '5 087 élèves', a: true },
+            { y: '2022-2023', n: '4 973 élèves', a: true },
+          ].map((r, i) => (
+            <div key={i} className="flex items-center gap-3 bg-white/40 rounded-xl px-3 py-2 border border-white/30">
+              <div className="w-1 h-9 rounded-full bg-gradient-to-b from-primary-500 to-[#45b8a0]" />
+              <div className="flex-1">
+                <p className="text-[12px] font-bold text-zen-text tabular-nums">{r.y}</p>
+                <p className="text-[10px] text-zen-text-muted">{r.n}</p>
+              </div>
+              {r.a && (
+                <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wide">archivé</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>,
+    );
+  }
+
+  if (index === 12) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Indicateurs clés 2026</p>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { k: 'Réussite CP', v: '74%', d: '+3.2' },
+            { k: 'Inclusion', v: '68%', d: '+1.8' },
+            { k: 'Vie scolaire', v: '82%', d: '−0.5' },
+            { k: 'Climat', v: '88%', d: '+5.1' },
+          ].map((k, i) => {
+            const trend = k.d.startsWith('+') ? 'text-emerald-600' : 'text-rose-600';
+            return (
+              <div key={i} className="bg-white/40 rounded-xl p-2.5 border border-white/30">
+                <p className="text-[9px] font-semibold text-zen-text-muted uppercase tracking-widest">{k.k}</p>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <p className="text-[20px] font-bold text-zen-text tabular-nums leading-none">{k.v}</p>
+                  <span className={`text-[10px] font-bold ${trend} tabular-nums`}>{k.d}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>,
+    );
+  }
+
+  if (index === 13) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">18 écoles · Cayenne 2 — Roura</p>
+        <div className="relative aspect-[4/3] bg-gradient-to-br from-emerald-50 via-white to-sky-50 rounded-xl border border-white/40 overflow-hidden">
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 150" fill="none" preserveAspectRatio="none">
+            <path d="M0 80 Q40 60 70 75 T140 70 T200 90" stroke="#7dd3fc" strokeWidth="3" fill="none" opacity="0.6" />
+            <path d="M0 110 Q50 95 90 105 T170 100 T200 115" stroke="#7dd3fc" strokeWidth="2" fill="none" opacity="0.4" />
+          </svg>
+          {[
+            { x: '15%', y: '30%', c: 'bg-emerald-500' },
+            { x: '35%', y: '20%', c: 'bg-sky-500' },
+            { x: '55%', y: '45%', c: 'bg-amber-500' },
+            { x: '70%', y: '30%', c: 'bg-rose-500' },
+            { x: '45%', y: '70%', c: 'bg-violet-500' },
+            { x: '80%', y: '65%', c: 'bg-emerald-500' },
+            { x: '25%', y: '60%', c: 'bg-sky-500' },
+          ].map((p, i) => (
+            <span key={i} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: p.x, top: p.y }}>
+              <span className={`block w-3 h-3 rounded-full ${p.c} ring-2 ring-white shadow-md`} />
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center justify-between mt-2.5 text-[10px] text-zen-text-muted">
+          <span>12 publiques</span>
+          <span>3 privées</span>
+          <span>3 GS</span>
+        </div>
+      </div>,
+    );
+  }
+
+  if (index === 14) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Console administration</p>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          {[
+            { l: 'Utilisateurs', v: '48' },
+            { l: 'Sessions', v: '12' },
+            { l: 'Imports', v: '5' },
+            { l: 'Logs 24 h', v: '1.2 k' },
+          ].map((s, i) => (
+            <div key={i} className="bg-white/40 rounded-xl p-2.5 border border-white/30">
+              <p className="text-[9px] font-bold text-zen-text-muted uppercase tracking-widest">{s.l}</p>
+              <p className="text-[18px] font-bold text-zen-text tabular-nums mt-0.5 leading-none">{s.v}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-1.5">Actions rapides</p>
+        <div className="flex flex-wrap gap-1.5">
+          {['Année scolaire', 'Annuaire', 'Plan formation', 'Sauvegarde'].map((a, i) => (
+            <span key={i} className="text-[10px] bg-white/50 px-2.5 py-1 rounded-full border border-white/40 text-zen-text-secondary font-medium">
+              {a}
+            </span>
+          ))}
+        </div>
+      </div>,
+    );
+  }
+
+  if (index === 15) {
+    return wrapper(
+      <div className="relative z-10 bg-white/60 backdrop-blur-xl rounded-[24px] shadow-glass p-5 w-full max-w-md border border-white/30">
+        <p className="text-[10px] font-semibold text-zen-text-muted uppercase tracking-widest mb-3">Bibliothèque de questionnaires</p>
+        <div className="space-y-2">
+          {[
+            { t: 'Boussole — début formation', q: 24, s: 'En cours', c: 'bg-emerald-100 text-emerald-700' },
+            { t: 'Boussole — fin formation', q: 24, s: 'Brouillon', c: 'bg-slate-100 text-slate-600' },
+            { t: 'Bilan annuel directeurs', q: 18, s: 'Publié', c: 'bg-sky-100 text-sky-700' },
+            { t: 'Plan formation 2027', q: 12, s: 'Brouillon', c: 'bg-slate-100 text-slate-600' },
+          ].map((q, i) => (
+            <div key={i} className="flex items-center gap-3 bg-white/40 rounded-xl p-2.5 border border-white/30">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-[#45b8a0] flex items-center justify-center flex-shrink-0">
+                <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-zen-text truncate">{q.t}</p>
+                <p className="text-[10px] text-zen-text-muted tabular-nums">{q.q} questions</p>
+              </div>
+              <span className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${q.c}`}>{q.s}</span>
+            </div>
+          ))}
+        </div>
+      </div>,
     );
   }
 
