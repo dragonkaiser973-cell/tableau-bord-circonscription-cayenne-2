@@ -104,27 +104,27 @@ export default function HomePage() {
 
   // Tabs — public pages (visible par tous)
   const publicTabs = [
-    { label: 'Écoles', title: 'Écoles', desc: 'Consultez les informations et les statistiques de chaque école de la circonscription Cayenne 2 Roura.', btn: 'Voir les écoles', href: '/ecoles' },
-    { label: 'Circonscription', title: 'Circonscription', desc: 'Présentation de la circonscription Cayenne 2 Roura, son organisation et ses missions.', btn: 'Découvrir', href: '/circonscription' },
-    { label: 'Évaluations', title: 'Évaluations', desc: 'Pilotez la réussite avec des données précises. Résultats des évaluations nationales CP, CE1 et analyses.', btn: 'Voir les résultats', href: '/evaluations' },
-    { label: 'Enseignants', title: 'Enseignants', desc: 'Recherche et parcours des enseignants de la circonscription. Annuaire complet et informations.', btn: 'Consulter', href: '/enseignants' },
-    { label: 'Statistiques', title: 'Statistiques', desc: 'Tableaux de bord et analyses statistiques détaillées de la circonscription.', btn: 'Explorer', href: '/statistiques' },
-    { label: 'Questionnaires', title: 'Questionnaires', desc: 'Répondez aux questionnaires de la circonscription et consultez les résultats.', btn: 'Accéder', href: '/questionnaires' },
-    { label: 'Analyse classe', title: 'Analyse classe', desc: 'Outil d\'analyse des résultats par classe pour un suivi pédagogique détaillé.', btn: 'Analyser', href: '/analyse-classe' },
-    { label: 'Guide', title: 'Guide d\'utilisation', desc: 'Guide complet pour prendre en main le tableau de bord et ses fonctionnalités.', btn: 'Lire le guide', href: '/aide-analyse-classe' },
+    { label: 'Écoles', title: 'Écoles', desc: 'Consultez les informations et les statistiques de chaque école de la circonscription Cayenne 2 Roura.', btn: 'Voir les écoles', href: '/ecoles', image: '/tab-ecoles.jpg' },
+    { label: 'Circonscription', title: 'Circonscription', desc: 'Présentation de la circonscription Cayenne 2 Roura, son organisation et ses missions.', btn: 'Découvrir', href: '/circonscription', image: '/tab-circonscription.jpg' },
+    { label: 'Évaluations', title: 'Évaluations', desc: 'Pilotez la réussite avec des données précises. Résultats des évaluations nationales CP, CE1 et analyses.', btn: 'Voir les résultats', href: '/evaluations', image: '/tab-evaluations.jpg' },
+    { label: 'Enseignants', title: 'Enseignants', desc: 'Recherche et parcours des enseignants de la circonscription. Annuaire complet et informations.', btn: 'Consulter', href: '/enseignants', image: '/tab-enseignants.jpg' },
+    { label: 'Statistiques', title: 'Statistiques', desc: 'Tableaux de bord et analyses statistiques détaillées de la circonscription.', btn: 'Explorer', href: '/statistiques', image: '/tab-statistiques.jpg' },
+    { label: 'Questionnaires', title: 'Questionnaires', desc: 'Répondez aux questionnaires de la circonscription et consultez les résultats.', btn: 'Accéder', href: '/questionnaires', image: '/tab-questionnaires.jpg' },
+    { label: 'Analyse classe', title: 'Analyse classe', desc: 'Outil d\'analyse des résultats par classe pour un suivi pédagogique détaillé.', btn: 'Analyser', href: '/analyse-classe', image: '/tab-analyse-classe.jpg' },
+    { label: 'Guide', title: 'Guide d\'utilisation', desc: 'Guide complet pour prendre en main le tableau de bord et ses fonctionnalités.', btn: 'Lire le guide', href: '/aide-analyse-classe', image: '/tab-guide.jpg' },
   ];
 
   // Tabs supplémentaires — visibles uniquement pour les utilisateurs connectés
   const authTabs = [
-    { label: 'Formations', title: 'Formations', desc: 'Outils interactifs pour vos temps de formation (boussole d\'état d\'esprit, etc.).', btn: 'Accéder', href: '/formations' },
-    { label: 'Données', title: 'Données', desc: 'Gestion et import des données de la circonscription.', btn: 'Gérer', href: '/donnees' },
-    { label: 'Calendrier', title: 'Calendrier', desc: 'Calendrier des événements et réunions de la circonscription.', btn: 'Consulter', href: '/calendrier' },
-    { label: 'Archives', title: 'Archives', desc: 'Accédez aux archives des années précédentes.', btn: 'Consulter', href: '/archives' },
-    { label: 'Pilotage', title: 'Pilotage', desc: 'Tableaux de bord de pilotage pour le suivi de la circonscription.', btn: 'Piloter', href: '/pilotage' },
-    { label: 'Carte', title: 'Carte', desc: 'Carte interactive des écoles de la circonscription.', btn: 'Voir la carte', href: '/carte' },
+    { label: 'Formations', title: 'Formations', desc: 'Outils interactifs pour vos temps de formation (boussole d\'état d\'esprit, etc.).', btn: 'Accéder', href: '/formations', image: '/tab-formations.jpg' },
+    { label: 'Données', title: 'Données', desc: 'Gestion et import des données de la circonscription.', btn: 'Gérer', href: '/donnees', image: '/tab-donnees.jpg' },
+    { label: 'Calendrier', title: 'Calendrier', desc: 'Calendrier des événements et réunions de la circonscription.', btn: 'Consulter', href: '/calendrier', image: '/tab-calendrier.jpg' },
+    { label: 'Archives', title: 'Archives', desc: 'Accédez aux archives des années précédentes.', btn: 'Consulter', href: '/archives', image: '/tab-archives.jpg' },
+    { label: 'Pilotage', title: 'Pilotage', desc: 'Tableaux de bord de pilotage pour le suivi de la circonscription.', btn: 'Piloter', href: '/pilotage', image: '/tab-pilotage.jpg' },
+    { label: 'Carte', title: 'Carte', desc: 'Carte interactive des écoles de la circonscription.', btn: 'Voir la carte', href: '/carte', image: '/tab-carte.jpg' },
     ...(userRole === 'admin' ? [
-      { label: 'Administration', title: 'Administration', desc: 'Gestion des utilisateurs et paramètres du tableau de bord.', btn: 'Administrer', href: '/admin' },
-      { label: 'Gérer questionnaires', title: 'Gérer les questionnaires', desc: 'Création, modification et suivi des questionnaires de la circonscription.', btn: 'Gérer', href: '/questionnaires/admin' },
+      { label: 'Administration', title: 'Administration', desc: 'Gestion des utilisateurs et paramètres du tableau de bord.', btn: 'Administrer', href: '/admin', image: '/tab-administration.jpg' },
+      { label: 'Gérer questionnaires', title: 'Gérer les questionnaires', desc: 'Création, modification et suivi des questionnaires de la circonscription.', btn: 'Gérer', href: '/questionnaires/admin', image: '/tab-gerer-questionnaires.jpg' },
     ] : []),
   ];
 
@@ -479,23 +479,38 @@ export default function HomePage() {
    TAB PREVIEW — Glass mockup in the right box
    ═══════════════════════════════════════════════════════════════ */
 
-function TabPreview({ index, tabs }: { index: number; tabs: { title: string; desc: string }[] }) {
+function TabPreview({
+  index,
+  tabs,
+}: {
+  index: number;
+  tabs: { title: string; desc: string; image?: string }[];
+}) {
+  const activeImage = tabs[index]?.image || '/guyane-fleuve-foret-hero.jpg';
+
   const bgPhoto = (
     <>
-      <img
-        src="/guyane-fleuve-foret-hero.jpg"
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-        aria-hidden="true"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent" />
+      <AnimatePresence initial={false}>
+        <motion.img
+          key={activeImage}
+          src={activeImage}
+          alt=""
+          aria-hidden="true"
+          initial={{ opacity: 0, scale: 1.06 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.02 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      </AnimatePresence>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent pointer-events-none" />
     </>
   );
 
   const wrapper = (children: React.ReactNode) => (
     <div className="relative h-full p-6 sm:p-8 flex items-center justify-center overflow-hidden rounded-[32px]">
       {bgPhoto}
-      {children}
+      <div className="relative z-10 w-full h-full flex items-center justify-center">{children}</div>
     </div>
   );
 
