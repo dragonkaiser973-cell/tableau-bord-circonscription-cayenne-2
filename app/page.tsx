@@ -331,10 +331,10 @@ export default function HomePage() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
-                  initial={{ opacity: 0, y: 12 }}
+                  initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ type: 'tween', duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ type: 'tween', duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-tightest text-zen-text mb-3 leading-tight">
                     {tabs[activeTab].title}
@@ -363,10 +363,10 @@ export default function HomePage() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, scale: 0.97 }}
+                initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.99 }}
-                transition={{ type: 'tween', duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ type: 'tween', duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="h-full"
               >
                 <TabPreview index={activeTab} tabs={tabs} />
@@ -496,10 +496,10 @@ function TabPreview({
           src={activeImage}
           alt=""
           aria-hidden="true"
-          initial={{ opacity: 0, scale: 1.04 }}
+          initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 1.01 }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, scale: 1.015 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="absolute inset-0 w-full h-full object-cover"
         />
       </AnimatePresence>
