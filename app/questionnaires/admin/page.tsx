@@ -101,6 +101,7 @@ export default function QuestionnairesAdminPage() {
   // Résultats
   const [resultats, setResultats] = useState<any>(null);
   const [loadingResultats, setLoadingResultats] = useState(false);
+  const [filtreRepondant, setFiltreRepondant] = useState<string>('all');
 
   // Export PDF
   const [showExportModal, setShowExportModal] = useState(false);
@@ -164,6 +165,7 @@ export default function QuestionnairesAdminPage() {
     setSelectedId(id);
     setVue('resultats');
     setLoadingResultats(true);
+    setFiltreRepondant('all');
     const [qRes, rRes] = await Promise.all([
       fetch(`/api/questionnaires?id=${id}`, { headers: { 'Authorization': `Bearer ${token()}` } }),
       fetch(`/api/questionnaires/soumissions?questionnaire_id=${id}`, { headers: { 'Authorization': `Bearer ${token()}` } })
@@ -222,6 +224,108 @@ export default function QuestionnairesAdminPage() {
     });
     setMessage({ type: 'success', text: 'Questionnaire supprimé' });
     chargerQuestionnaires();
+  };
+
+  const dupliquer = async (id: string) => {
+    if (!confirm('Créer une copie de ce questionnaire ?')) return;
+    const res = await fetch(`/api/questionnaires?action=duplicate&id=${id}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token()}` }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setMessage({ type: 'success', text: 'Questionnaire dupliqué (en brouillon)' });
+      chargerQuestionnaires();
+    } else {
+      setMessage({ type: 'error', text: data.error || 'Erreur lors de la duplication' });
+    }
+  };
+
+  const supprimerSoumission = async (soumissionId: string) => {
+    if (!confirm('Supprimer cette réponse ?')) return;
+    const res = await fetch(`/api/questionnaires/soumissions?id=${soumissionId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token()}` }
+    });
+    if (res.ok && selectedId) {
+      setMessage({ type: 'success', text: 'Réponse supprimée' });
+      ouvrirResultats(selectedId);
+    } else {
+      setMessage({ type: 'error', text: 'Erreur lors de la suppression' });
+    }
+  };
+
+  const supprimerToutesReponses = async () => {
+    if (!selectedId) return;
+    if (!confirm('Supprimer TOUTES les réponses de ce questionnaire ? Cette action est irréversible.')) return;
+    const res = await fetch(`/api/questionnaires/soumissions?questionnaire_id=${selectedId}&all=true`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token()}` }
+    });
+    if (res.ok) {
+      setMessage({ type: 'success', text: 'Toutes les réponses ont été supprimées' });
+      ouvrirResultats(selectedId);
+      chargerQuestionnaires();
+    } else {
+      setMessage({ type: 'error', text: 'Erreur lors de la suppression' });
+    }
+  };
+
+  const exporterJSON = () => {
+    if (!resultats) return;
+    const q = resultats.questionnaire;
+    const questions = q.questions || [];
+    const repondants = resultats.soumissions.map((s: any) => {
+      const reponsesParQ: Record<string, any> = {};
+      questions.forEach((qu: any) => {
+        const rep = resultats.reponses.find((r: any) => r.soumission_id === s.id && r.question_id === qu.id);
+        let valeur: any = null;
+        if (rep) {
+          try { valeur = JSON.parse(rep.valeur); } catch { valeur = rep.valeur; }
+        }
+        reponsesParQ[qu.libelle] = valeur;
+      });
+      return {
+        id: s.id,
+        nom: s.repondant_nom || 'Anonyme',
+        date: s.created_at,
+        reponses: reponsesParQ
+      };
+    });
+    const payload = {
+      questionnaire: {
+        id: q.id,
+        titre: q.titre,
+        description: q.description,
+        statut: q.statut,
+        date_debut: q.date_debut,
+        date_fin: q.date_fin,
+        created_at: q.created_at
+      },
+      questions: questions.map((qu: any) => ({
+        id: qu.id,
+        ordre: qu.ordre,
+        type: qu.type,
+        libelle: qu.libelle,
+        aide: qu.aide,
+        obligatoire: qu.obligatoire,
+        options: qu.options,
+        config: qu.config
+      })),
+      nb_repondants: repondants.length,
+      repondants,
+      exporte_le: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `questionnaire-${q.titre?.replace(/\s+/g, '-').toLowerCase() || 'export'}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setMessage({ type: 'success', text: 'Export JSON téléchargé' });
   };
 
   const ajouterQuestion = () => setQuestions([...questions, questionVide()]);
@@ -292,7 +396,13 @@ export default function QuestionnairesAdminPage() {
   // ── Calcul des résultats ────────────────────────────────────────
   const calculerResultats = (question: any) => {
     if (!resultats) return null;
-    const reponsesQuestion = resultats.reponses.filter((r: any) => r.question_id === question.id);
+    // Filtrer par répondant si demandé
+    const soumissionsActives = filtreRepondant === 'all'
+      ? resultats.soumissions
+      : resultats.soumissions.filter((s: any) => s.id === filtreRepondant);
+    const idsActifs = new Set(soumissionsActives.map((s: any) => s.id));
+    const reponsesQuestion = resultats.reponses
+      .filter((r: any) => r.question_id === question.id && idsActifs.has(r.soumission_id));
     const valeurs = reponsesQuestion.map((r: any) => {
       try { return JSON.parse(r.valeur); } catch { return r.valeur; }
     });
@@ -498,6 +608,9 @@ export default function QuestionnairesAdminPage() {
                         )}
                         <button onClick={() => ouvrirModification(q.id)} className="bg-primary-100 text-primary-700 px-3 py-1.5 rounded-lg text-sm hover:bg-primary-200 transition-colors">
                           ✏️ Modifier
+                        </button>
+                        <button onClick={() => dupliquer(q.id)} className="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-sm hover:bg-purple-200 transition-colors" title="Dupliquer">
+                          📋 Dupliquer
                         </button>
                         <button onClick={() => supprimer(q.id)} className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-sm hover:bg-red-200 transition-colors">
                           🗑️
@@ -748,17 +861,60 @@ export default function QuestionnairesAdminPage() {
               <div className="space-y-6">
                 {/* Stats globales */}
                 <div id="section-stats-globales" className="card" style={{ maxWidth: '900px', margin: '0 auto 1.5rem' }}>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <h2 className="text-xl font-bold text-gray-800">{resultats.questionnaire.titre}</h2>
                     {resultats.soumissions.length > 0 && (
-                      <button
-                        onClick={ouvrirExport}
-                        className="bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center gap-2"
-                      >
-                        📥 Exporter PDF
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={ouvrirExport}
+                          className="bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center gap-2"
+                        >
+                          📥 Exporter PDF
+                        </button>
+                        <button
+                          onClick={exporterJSON}
+                          className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                          title="Export JSON pour analyse IA"
+                        >
+                          🧠 Export JSON (IA)
+                        </button>
+                        <button
+                          onClick={supprimerToutesReponses}
+                          className="bg-red-100 text-red-700 px-4 py-2 rounded-lg font-semibold hover:bg-red-200 transition-colors flex items-center gap-2"
+                          title="Supprimer toutes les réponses"
+                        >
+                          🗑️ Vider les réponses
+                        </button>
+                      </div>
                     )}
                   </div>
+
+                  {/* Filtre par répondant */}
+                  {resultats.soumissions.length > 1 && (
+                    <div className="mb-4 flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                      <label className="text-sm font-semibold text-gray-700 whitespace-nowrap">Filtrer :</label>
+                      <select
+                        value={filtreRepondant}
+                        onChange={e => setFiltreRepondant(e.target.value)}
+                        className="input-field flex-1"
+                      >
+                        <option value="all">Tous les répondants ({resultats.soumissions.length})</option>
+                        {resultats.soumissions.map((s: any, i: number) => (
+                          <option key={s.id} value={s.id}>
+                            {s.repondant_nom || `Anonyme #${i + 1}`} — {new Date(s.created_at).toLocaleString('fr-FR')}
+                          </option>
+                        ))}
+                      </select>
+                      {filtreRepondant !== 'all' && (
+                        <button
+                          onClick={() => setFiltreRepondant('all')}
+                          className="text-sm text-gray-500 hover:text-gray-800 underline whitespace-nowrap"
+                        >
+                          Tout afficher
+                        </button>
+                      )}
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="bg-primary-50 rounded-xl p-4 text-center">
                       <div className="text-3xl font-bold text-primary-600">{resultats.soumissions.length}</div>
@@ -1231,6 +1387,7 @@ export default function QuestionnairesAdminPage() {
                             <th>#</th>
                             <th>Nom</th>
                             <th>Date</th>
+                            <th className="text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1239,6 +1396,22 @@ export default function QuestionnairesAdminPage() {
                               <td>{i + 1}</td>
                               <td>{s.repondant_nom || <span className="text-gray-400 italic">Anonyme</span>}</td>
                               <td className="text-sm text-gray-500">{new Date(s.created_at).toLocaleString('fr-FR')}</td>
+                              <td className="text-right">
+                                <button
+                                  onClick={() => setFiltreRepondant(s.id)}
+                                  className="text-blue-600 hover:text-blue-800 px-2"
+                                  title="Voir uniquement ce répondant"
+                                >
+                                  🔍
+                                </button>
+                                <button
+                                  onClick={() => supprimerSoumission(s.id)}
+                                  className="text-red-500 hover:text-red-700 px-2"
+                                  title="Supprimer cette réponse"
+                                >
+                                  🗑️
+                                </button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>

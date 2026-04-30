@@ -61,16 +61,61 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(questionnairesAvecNb);
 }
 
-// POST — Créer un questionnaire (admin)
+// POST — Créer un questionnaire (admin) ou dupliquer (?action=duplicate&id=...)
 export async function POST(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const action = searchParams.get('action');
+  const username = request.headers.get('x-username') || 'admin';
+
+  // ── Duplication ──
+  if (action === 'duplicate') {
+    const sourceId = searchParams.get('id');
+    if (!sourceId) return NextResponse.json({ error: 'ID source requis' }, { status: 400 });
+
+    const { data: source, error: errSrc } = await supabase
+      .from('questionnaires').select('*').eq('id', sourceId).single();
+    if (errSrc || !source) return NextResponse.json({ error: 'Questionnaire source introuvable' }, { status: 404 });
+
+    const { data: srcQuestions } = await supabase
+      .from('questions').select('*').eq('questionnaire_id', sourceId).order('ordre');
+
+    const { data: clone, error: errClone } = await supabase
+      .from('questionnaires')
+      .insert({
+        titre: `${source.titre} (copie)`,
+        description: source.description,
+        statut: 'brouillon',
+        date_debut: source.date_debut,
+        date_fin: source.date_fin,
+        created_by: username,
+        updated_at: new Date().toISOString()
+      })
+      .select().single();
+    if (errClone) return NextResponse.json({ error: errClone.message }, { status: 500 });
+
+    if (srcQuestions && srcQuestions.length > 0) {
+      const questionsAInserer = srcQuestions.map((q: any, idx: number) => ({
+        questionnaire_id: clone.id,
+        ordre: idx,
+        type: q.type,
+        libelle: q.libelle,
+        aide: q.aide,
+        obligatoire: q.obligatoire,
+        options: q.options,
+        config: q.config
+      }));
+      await supabase.from('questions').insert(questionsAInserer);
+    }
+
+    return NextResponse.json({ success: true, id: clone.id });
+  }
+
   const body = await request.json();
   const { titre, description, statut, date_debut, date_fin, questions } = body;
 
   if (!titre) {
     return NextResponse.json({ error: 'Titre requis' }, { status: 400 });
   }
-
-  const username = request.headers.get('x-username') || 'admin';
 
   // Créer le questionnaire
   const { data: questionnaire, error } = await supabase

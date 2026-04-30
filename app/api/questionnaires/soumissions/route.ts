@@ -105,3 +105,32 @@ export async function GET(request: NextRequest) {
     reponses: reponses || []
   });
 }
+
+// DELETE — Supprimer une soumission précise (?id=...) ou toutes (?questionnaire_id=...&all=true)
+export async function DELETE(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  const questionnaire_id = searchParams.get('questionnaire_id');
+  const all = searchParams.get('all') === 'true';
+
+  if (id) {
+    await supabase.from('reponses').delete().eq('soumission_id', id);
+    const { error } = await supabase.from('soumissions').delete().eq('id', id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  }
+
+  if (questionnaire_id && all) {
+    const { data: soumissions } = await supabase
+      .from('soumissions').select('id').eq('questionnaire_id', questionnaire_id);
+    const ids = (soumissions || []).map(s => s.id);
+    if (ids.length > 0) {
+      await supabase.from('reponses').delete().in('soumission_id', ids);
+      const { error } = await supabase.from('soumissions').delete().in('id', ids);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, deleted: ids.length });
+  }
+
+  return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 });
+}

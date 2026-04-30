@@ -74,9 +74,12 @@ export async function middleware(request: NextRequest) {
     // /api/questionnaires/soumissions reste toujours public
     const isQuestionnairesExact = pathname === '/api/questionnaires' &&
       ['POST', 'PUT', 'DELETE'].includes(request.method);
+    // DELETE sur /api/questionnaires/soumissions = suppression admin, pas une soumission publique
+    const isSoumissionsDelete = pathname === '/api/questionnaires/soumissions' &&
+      request.method === 'DELETE';
     const isEnseignantsWrite = pathname === '/api/enseignants' &&
       ['PUT', 'DELETE'].includes(request.method);
-    if (!isQuestionnairesExact && !isEnseignantsWrite) {
+    if (!isQuestionnairesExact && !isSoumissionsDelete && !isEnseignantsWrite) {
       return NextResponse.next();
     }
     // Pour /api/questionnaires ou /api/enseignants en écriture → continuer vers vérification token
