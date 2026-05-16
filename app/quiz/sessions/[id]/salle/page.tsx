@@ -281,9 +281,36 @@ export default function SalleQuizPage() {
                 <div className="text-6xl mb-4">🏁</div>
                 <h2 className="text-3xl font-bold mb-2">Session terminée</h2>
                 <p className="text-slate-400 mb-6">Merci à tous les participants !</p>
-                <Link href="/quiz" className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold transition-all">
-                  Retour à la liste
-                </Link>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={async () => {
+                      const token = localStorage.getItem('authToken');
+                      try {
+                        const res = await fetch(`/api/quiz/sessions/${id}/export`, {
+                          headers: { 'Authorization': `Bearer ${token}` },
+                        });
+                        if (!res.ok) return;
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        const cd = res.headers.get('Content-Disposition') || '';
+                        const m = cd.match(/filename="([^"]+)"/);
+                        a.download = m?.[1] || `quiz_${session.pin}.csv`;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                      } catch { /* ignore */ }
+                    }}
+                    className="bg-white/10 hover:bg-white/15 border border-white/20 text-white px-5 py-3 rounded-xl font-semibold transition-all"
+                  >
+                    📥 Télécharger les résultats (CSV)
+                  </button>
+                  <Link href="/quiz" className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-semibold transition-all">
+                    Retour à la liste
+                  </Link>
+                </div>
               </div>
             </div>
           )}

@@ -128,6 +128,27 @@ export default function QuizListePage() {
     }
   };
 
+  const dupliquer = async (quiz: Quiz) => {
+    setError(null);
+    try {
+      const res = await fetch(`/api/quiz/quizzes/${quiz.id}/duplicate`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+      });
+      if (res.ok) {
+        const copie = await res.json();
+        // Recharge la liste puis va sur l'éditeur de la copie
+        await loadAll();
+        router.push(`/quiz/${copie.id}/edit`);
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Erreur duplication');
+      }
+    } catch {
+      setError('Erreur de connexion');
+    }
+  };
+
   const supprimer = async (quiz: Quiz) => {
     if (!confirm(`Supprimer le quiz « ${quiz.titre} » ?`)) return;
     try {
@@ -159,22 +180,30 @@ export default function QuizListePage() {
         backHref="/"
         backLabel="Retour à l'accueil"
         action={
-          <button
-            onClick={() => {
-              setFormTitre('');
-              setFormDescription('');
-              setFormRythme('manuel');
-              setError(null);
-              setShowCreateModal(true);
-            }}
-            className="inline-flex items-center gap-2 bg-gradient-to-br from-amber-300 to-orange-400 text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Nouveau quiz
-          </button>
+          <>
+            <Link
+              href="/quiz/historique"
+              className="inline-flex items-center gap-2 bg-white/15 backdrop-blur border border-white/30 text-white px-4 py-2.5 rounded-full font-semibold text-sm hover:bg-white/25 transition-all"
+            >
+              📚 Historique
+            </Link>
+            <button
+              onClick={() => {
+                setFormTitre('');
+                setFormDescription('');
+                setFormRythme('manuel');
+                setError(null);
+                setShowCreateModal(true);
+              }}
+              className="inline-flex items-center gap-2 bg-gradient-to-br from-amber-300 to-orange-400 text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:-translate-y-0.5 hover:shadow-xl transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Nouveau quiz
+            </button>
+          </>
         }
       />
 
@@ -255,10 +284,18 @@ export default function QuizListePage() {
                 <div className="flex gap-2">
                   <Link
                     href={`/quiz/${q.id}/edit`}
-                    className="px-4 py-2.5 rounded-lg text-sm font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all"
+                    className="px-3 py-2.5 rounded-lg text-sm font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all"
+                    title="Éditer"
                   >
-                    ✎ Éditer
+                    ✎
                   </Link>
+                  <button
+                    onClick={() => dupliquer(q)}
+                    className="px-3 py-2.5 rounded-lg text-sm font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all"
+                    title="Dupliquer"
+                  >
+                    ⎘
+                  </button>
                   <button
                     onClick={() => lancerSession(q)}
                     disabled={q.nb_questions === 0}
