@@ -215,9 +215,14 @@ function Rayons() {
   // les très petits écrans. Position : top/left 50 % du parent (= centre du
   // wrapper coupe) avec margin négatif pour centrer le carré sur ce point.
   const TAILLE = 'min(90vmin, 700px)';
+  // La rotation est appliquée sur la div conteneur (dont le centre est garanti
+  // par la taille fixe et le margin négatif) plutôt que sur le <g> SVG, car
+  // `transform-origin: center` sur un <g> SVG utilise le bbox des polygones
+  // (asymétrique : 0..-90 sur Y), ce qui faisait tourner les rayons autour
+  // d'un point décalé et donnait l'effet « faisceau qui se balade ».
   return (
     <div
-      className="absolute pointer-events-none"
+      className="absolute pointer-events-none rayons-rotation"
       style={{
         top: '50%',
         left: '50%',
@@ -225,7 +230,8 @@ function Rayons() {
         height: TAILLE,
         marginTop: `calc(-1 * ${TAILLE} / 2)`,
         marginLeft: `calc(-1 * ${TAILLE} / 2)`,
-        zIndex: 0, // derrière la coupe (zIndex 2) et les étoiles (zIndex 2)
+        zIndex: 0,
+        transformOrigin: 'center center',
       }}
       aria-hidden
     >
@@ -243,7 +249,7 @@ function Rayons() {
             <stop offset="100%" stopColor="rgba(251,191,36,0)" />
           </radialGradient>
         </defs>
-        <g className="rayons-rotation" style={{ transformOrigin: 'center' }}>
+        <g>
           {Array.from({ length: 12 }).map((_, i) => {
             const angle = (i * 360) / 12;
             return (
@@ -256,11 +262,11 @@ function Rayons() {
             );
           })}
         </g>
-        <style>{`
-          .rayons-rotation { animation: tourneRayons 18s linear infinite; }
-          @keyframes tourneRayons { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        `}</style>
       </svg>
+      <style>{`
+        .rayons-rotation { animation: tourneRayons 18s linear infinite; }
+        @keyframes tourneRayons { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
