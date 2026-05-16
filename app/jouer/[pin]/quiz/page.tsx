@@ -3,6 +3,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor,
+  useSensor, useSensors, DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/lib/supabase';
 
 interface ChoixPublic {
@@ -33,6 +42,7 @@ interface StatePayload {
   };
   participant: ParticipantPublic | null;
   a_deja_repondu: boolean;
+  ma_reponse: { est_correct: boolean; points_gagnes: number; choix_id: string | null } | null;
   bonne_reponse_id: string | null;
   ordre_correct: string[] | null;
   question: QuestionPublic | null;
@@ -142,15 +152,6 @@ export default function QuizJoueurPage() {
     }
   }, [state?.question?.id, state?.question?.type, state?.a_deja_repondu, state?.question?.choix]);
 
-  const deplacerItem = (idx: number, dir: -1 | 1) => {
-    setOrdreCourant(prev => {
-      const next = [...prev];
-      const target = idx + dir;
-      if (target < 0 || target >= next.length) return prev;
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return next;
-    });
-  };
 
   const repondre = async (payload: { choix_id?: string; ordre_choisi?: string[] }) => {
     if (!state?.question || !sessionId || !participantId || submitting || state.a_deja_repondu) return;
@@ -188,7 +189,10 @@ export default function QuizJoueurPage() {
     );
   }
 
-  const { session, participant, question, a_deja_repondu, bonne_reponse_id, total_questions } = state;
+  const { session, participant, question, a_deja_repondu, ma_reponse, bonne_reponse_id, total_questions } = state;
+  // Feedback effectif : prend en priorité l'état local (vient de répondre), sinon
+  // reconstruit depuis ma_reponse (si on rafraîchit ou si on arrive après le statut).
+  const feedbackEffectif = feedback ?? (ma_reponse ? { ok: ma_reponse.est_correct, points: ma_reponse.points_gagnes } : null);
   const dureeMs = question ? question.duree_secondes * 1000 : 0;
   const tempsRestantMs = Math.max(0, dureeMs - tickMs);
   const tempsRestantS = Math.ceil(tempsRestantMs / 1000);
@@ -240,19 +244,19 @@ export default function QuizJoueurPage() {
               <p className="text-center text-slate-400 text-sm mb-6">{tempsRestantS}s</p>
 
               {/* Feedback après réponse */}
-              {a_deja_repondu && feedback && (
+              {a_deja_repondu && feedbackEffectif && (
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className={`text-center py-6 rounded-2xl mb-4 ${feedback.ok ? 'bg-emerald-500/20 border border-emerald-400/40' : 'bg-rose-500/20 border border-rose-400/40'}`}
+                  className={`text-center py-6 rounded-2xl mb-4 ${feedbackEffectif.ok ? 'bg-emerald-500/20 border border-emerald-400/40' : 'bg-rose-500/20 border border-rose-400/40'}`}
                 >
-                  <p className="text-3xl mb-1">{feedback.ok ? '✅' : '❌'}</p>
-                  <p className="font-bold text-xl">{feedback.ok ? `+${feedback.points} points` : 'Pas cette fois'}</p>
+                  <p className="text-3xl mb-1">{feedbackEffectif.ok ? '✅' : '❌'}</p>
+                  <p className="font-bold text-xl">{feedbackEffectif.ok ? `+${feedbackEffectif.points} points` : 'Pas cette fois'}</p>
                   <p className="text-sm text-slate-300 mt-1">En attente des autres participants…</p>
                 </motion.div>
               )}
 
-              {a_deja_repondu && !feedback && (
+              {a_deja_repondu && !feedbackEffectif && (
                 <div className="text-center py-6 text-slate-400">Réponse envoyée. En attente…</div>
               )}
 
@@ -276,42 +280,17 @@ export default function QuizJoueurPage() {
                 </div>
               )}
 
-              {/* UI spécifique au classement */}
+              {/* UI spécifique au classement (drag & drop) */}
               {!a_deja_repondu && question.type === 'classement' && (
                 <div className="mt-auto space-y-3">
                   <p className="text-center text-sm text-slate-400 mb-2">
-                    Réordonnez les éléments avec ↑ et ↓
+                    Glissez-déposez pour réordonner
                   </p>
-                  <div className="space-y-2">
-                    {ordreCourant.map((cid, idx) => {
-                      const c = question.choix.find(x => x.id === cid);
-                      if (!c) return null;
-                      const couleur = COULEURS_CHOIX[idx % 4];
-                      return (
-                        <div
-                          key={cid}
-                          className={`bg-gradient-to-br ${couleur.bg} text-white rounded-2xl px-4 py-4 font-bold text-base shadow-xl flex items-center gap-3`}
-                        >
-                          <span className="font-mono text-2xl text-white/80 w-8 text-center">{idx + 1}</span>
-                          <span className="flex-1">{c.libelle}</span>
-                          <div className="flex flex-col gap-1">
-                            <button
-                              onClick={() => deplacerItem(idx, -1)}
-                              disabled={idx === 0 || submitting}
-                              className="bg-black/20 hover:bg-black/30 active:scale-95 disabled:opacity-30 w-10 h-8 rounded-lg flex items-center justify-center text-lg leading-none transition-all"
-                              title="Monter"
-                            >▲</button>
-                            <button
-                              onClick={() => deplacerItem(idx, 1)}
-                              disabled={idx === ordreCourant.length - 1 || submitting}
-                              className="bg-black/20 hover:bg-black/30 active:scale-95 disabled:opacity-30 w-10 h-8 rounded-lg flex items-center justify-center text-lg leading-none transition-all"
-                              title="Descendre"
-                            >▼</button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <ClassementDnd
+                    ordre={ordreCourant}
+                    items={question.choix}
+                    onReorder={setOrdreCourant}
+                  />
                   <button
                     onClick={() => repondre({ ordre_choisi: ordreCourant })}
                     disabled={submitting || tempsRestantMs <= 0}
@@ -331,15 +310,15 @@ export default function QuizJoueurPage() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex flex-col items-center justify-center px-6 py-8 text-center"
             >
-              {feedback ? (
+              {feedbackEffectif ? (
                 <>
-                  <div className={`text-6xl mb-4 ${feedback.ok ? 'animate-bounce' : ''}`}>
-                    {feedback.ok ? '🎉' : '😅'}
+                  <div className={`text-6xl mb-4 ${feedbackEffectif.ok ? 'animate-bounce' : ''}`}>
+                    {feedbackEffectif.ok ? '🎉' : '😅'}
                   </div>
-                  <h2 className={`text-3xl font-black mb-2 ${feedback.ok ? 'text-emerald-300' : 'text-rose-300'}`}>
-                    {feedback.ok ? 'Bonne réponse !' : 'Raté'}
+                  <h2 className={`text-3xl font-black mb-2 ${feedbackEffectif.ok ? 'text-emerald-300' : 'text-rose-300'}`}>
+                    {feedbackEffectif.ok ? 'Bonne réponse !' : 'Raté'}
                   </h2>
-                  {feedback.ok && <p className="text-2xl font-bold mb-2">+{feedback.points} points</p>}
+                  {feedbackEffectif.ok && <p className="text-2xl font-bold mb-2">+{feedbackEffectif.points} points</p>}
                 </>
               ) : (
                 <>
@@ -419,6 +398,80 @@ export default function QuizJoueurPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─────────── Composants drag & drop pour le mode CLASSEMENT ───────────
+
+function ClassementDnd({
+  ordre, items, onReorder,
+}: {
+  ordre: string[];
+  items: ChoixPublic[];
+  onReorder: (next: string[]) => void;
+}) {
+  const sensors = useSensors(
+    // PointerSensor : 1 px de mouvement avant de démarrer le drag (ne bloque pas le scroll)
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    // TouchSensor : démarre après 200 ms d'appui pour ne pas confondre avec un scroll
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = ordre.indexOf(String(active.id));
+    const newIndex = ordre.indexOf(String(over.id));
+    if (oldIndex < 0 || newIndex < 0) return;
+    onReorder(arrayMove(ordre, oldIndex, newIndex));
+  };
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={ordre} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2">
+          {ordre.map((cid, idx) => {
+            const c = items.find(x => x.id === cid);
+            if (!c) return null;
+            return (
+              <SortableItem key={cid} id={cid} index={idx} libelle={c.libelle} />
+            );
+          })}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function SortableItem({
+  id, index, libelle,
+}: {
+  id: string; index: number; libelle: string;
+}) {
+  const couleur = COULEURS_CHOIX[index % 4];
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : 'auto',
+    touchAction: 'none', // évite que le navigateur intercepte le drag tactile
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`bg-gradient-to-br ${couleur.bg} text-white rounded-2xl px-4 py-4 font-bold text-base shadow-xl flex items-center gap-3 cursor-grab active:cursor-grabbing select-none ${
+        isDragging ? 'ring-4 ring-white/40 scale-[1.02]' : ''
+      }`}
+    >
+      <span className="font-mono text-2xl text-white/80 w-8 text-center">{index + 1}</span>
+      <span className="flex-1">{libelle}</span>
+      <span className="text-white/70 text-2xl leading-none" aria-hidden>⋮⋮</span>
     </div>
   );
 }

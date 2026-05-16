@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
+import Trophee from '@/components/quiz/Trophee';
 import { supabase } from '@/lib/supabase';
 
 interface Choix {
@@ -296,7 +297,7 @@ export default function SalleQuizPage() {
                         a.href = url;
                         const cd = res.headers.get('Content-Disposition') || '';
                         const m = cd.match(/filename="([^"]+)"/);
-                        a.download = m?.[1] || `quiz_${session.pin}.csv`;
+                        a.download = m?.[1] || `quiz_${session.pin}.xlsx`;
                         document.body.appendChild(a);
                         a.click();
                         a.remove();
@@ -305,7 +306,7 @@ export default function SalleQuizPage() {
                     }}
                     className="bg-white/10 hover:bg-white/15 border border-white/20 text-white px-5 py-3 rounded-xl font-semibold transition-all"
                   >
-                    📥 Télécharger les résultats (CSV)
+                    📥 Télécharger les résultats (Excel)
                   </button>
                   <Link href="/quiz" className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-semibold transition-all">
                     Retour à la liste
@@ -668,54 +669,117 @@ function Podium({ participants, onClose, transitioning }: { participants: Partic
   const tri = [...participants].sort((a, b) => b.score - a.score);
   const top3 = tri.slice(0, 3);
   const reste = tri.slice(3, 10);
-  const ordrePodium = [top3[1], top3[0], top3[2]].filter(Boolean) as Participant[]; // 2,1,3 visuel
-  const hauteurs = ['h-44', 'h-60', 'h-32'];
-  const couleursMedaille = ['from-slate-300 to-slate-100', 'from-amber-400 to-yellow-200', 'from-orange-500 to-orange-300'];
+  // Ordre visuel : 2ᵉ — 1ᵉʳ — 3ᵉ
+  const ordrePodium = [top3[1], top3[0], top3[2]].filter(Boolean) as Participant[];
+  const hauteurs = ['h-56', 'h-80', 'h-40']; // 2,1,3
+  const couleursMedaille = [
+    'from-slate-300 via-slate-200 to-slate-400',         // argent
+    'from-amber-300 via-yellow-200 to-amber-500',        // or
+    'from-orange-400 via-orange-300 to-orange-600',      // bronze
+  ];
+  const variants: Array<'or' | 'argent' | 'bronze'> = ['argent', 'or', 'bronze'];
+  const tailleTrophees = [110, 150, 95];
   const rangs = [2, 1, 3];
 
-  // Salve de confettis à l'apparition du podium
+  // Salve de confettis renforcée à l'apparition du podium :
+  // - Plusieurs salves sur 4 secondes
+  // - Cannons gauche/droite + souffle central + pluie continue
   useEffect(() => {
-    const lance = (origin: { x: number; y: number }) => {
+    const colors = ['#fbbf24', '#fde047', '#facc15', '#34d399', '#06b6d4', '#ec4899', '#a78bfa'];
+
+    // Pluie continue depuis le haut pendant 4 s
+    const fin = Date.now() + 4000;
+    const pluieIt = setInterval(() => {
+      if (Date.now() > fin) {
+        clearInterval(pluieIt);
+        return;
+      }
       confetti({
-        particleCount: 80,
-        spread: 70,
-        startVelocity: 45,
+        particleCount: 6,
+        startVelocity: 0,
+        ticks: 200,
+        gravity: 0.8,
+        spread: 360,
+        origin: { x: Math.random(), y: 0 },
+        colors,
+        scalar: 0.9,
+        drift: (Math.random() - 0.5) * 0.4,
+      });
+    }, 90);
+
+    // Salves canons gauche/droite échelonnées
+    const lanceCanon = (origin: { x: number; y: number }, angle: number) => {
+      confetti({
+        particleCount: 140,
+        spread: 80,
+        startVelocity: 70,
+        angle,
         origin,
-        colors: ['#34d399', '#06b6d4', '#fbbf24', '#f97316', '#ec4899'],
+        colors,
+        scalar: 1.1,
       });
     };
-    // Premier souffle après l'animation d'entrée
-    const t1 = setTimeout(() => lance({ x: 0.25, y: 0.7 }), 600);
-    const t2 = setTimeout(() => lance({ x: 0.75, y: 0.7 }), 900);
-    const t3 = setTimeout(() => lance({ x: 0.5, y: 0.5 }), 1400);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    const t1 = setTimeout(() => lanceCanon({ x: 0.1, y: 0.85 }, 60), 400);
+    const t2 = setTimeout(() => lanceCanon({ x: 0.9, y: 0.85 }, 120), 700);
+    const t3 = setTimeout(() => {
+      confetti({
+        particleCount: 200,
+        spread: 120,
+        startVelocity: 55,
+        origin: { x: 0.5, y: 0.6 },
+        colors,
+        scalar: 1.2,
+      });
+    }, 1100);
+    const t4 = setTimeout(() => lanceCanon({ x: 0.2, y: 0.9 }, 70), 1800);
+    const t5 = setTimeout(() => lanceCanon({ x: 0.8, y: 0.9 }, 110), 2100);
+
+    return () => {
+      clearInterval(pluieIt);
+      [t1, t2, t3, t4, t5].forEach(clearTimeout);
+    };
   }, []);
 
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="px-8 py-8 max-w-5xl mx-auto"
+      className="px-8 py-10 max-w-7xl mx-auto"
     >
-      <div className="text-center mb-10">
-        <div className="text-sm uppercase tracking-[0.2em] text-emerald-400 mb-2">Quiz terminé</div>
-        <h2 className="text-5xl font-black text-white">🏆 Podium</h2>
+      <div className="text-center mb-12">
+        <div className="text-base uppercase tracking-[0.3em] text-emerald-400 mb-3 font-semibold">Quiz terminé</div>
+        <motion.h2
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, type: 'spring', stiffness: 180, damping: 14 }}
+          className="text-7xl md:text-8xl font-black text-white"
+        >
+          🏆 Podium
+        </motion.h2>
       </div>
 
-      {/* Podium top 3 */}
-      <div className="flex items-end justify-center gap-4 mb-10">
+      {/* Podium top 3 — plus grand, avec coupes SVG */}
+      <div className="flex items-end justify-center gap-6 md:gap-10 mb-12">
         {ordrePodium.map((p, i) => (
           <motion.div
             key={p.id}
-            initial={{ y: 80, opacity: 0 }}
+            initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 + i * 0.2, type: 'spring', stiffness: 200, damping: 18 }}
-            className="flex flex-col items-center w-40"
+            transition={{ delay: 0.4 + i * 0.25, type: 'spring', stiffness: 180, damping: 16 }}
+            className="flex flex-col items-center w-44 md:w-56"
           >
-            <div className="text-4xl mb-2">{['🥈','🥇','🥉'][i]}</div>
-            <p className="text-lg font-bold text-white truncate max-w-full">{p.pseudo}</p>
-            <p className="font-mono text-emerald-300 font-black text-xl mb-2">{p.score}</p>
-            <div className={`w-full ${hauteurs[i]} rounded-t-2xl bg-gradient-to-t ${couleursMedaille[i]} flex items-start justify-center pt-3`}>
-              <span className="text-3xl font-black text-slate-900">{rangs[i]}</span>
+            {/* Coupe SVG avec rebond */}
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.8 + i * 0.25, type: 'spring', stiffness: 220, damping: 12 }}
+              className="mb-3 drop-shadow-[0_8px_20px_rgba(0,0,0,0.5)]"
+            >
+              <Trophee variant={variants[i]} size={tailleTrophees[i]} />
+            </motion.div>
+            <p className="text-xl md:text-2xl font-bold text-white truncate max-w-full">{p.pseudo}</p>
+            <p className="font-mono text-emerald-300 font-black text-2xl md:text-3xl mb-3">{p.score}</p>
+            <div className={`w-full ${hauteurs[i]} rounded-t-3xl bg-gradient-to-t ${couleursMedaille[i]} flex items-start justify-center pt-4 shadow-[inset_0_4px_8px_rgba(255,255,255,0.4),0_-8px_20px_-4px_rgba(0,0,0,0.3)] border-t-2 border-white/40`}>
+              <span className="text-5xl md:text-6xl font-black text-slate-900/80">{rangs[i]}</span>
             </div>
           </motion.div>
         ))}
@@ -723,17 +787,22 @@ function Podium({ participants, onClose, transitioning }: { participants: Partic
 
       {/* Reste du classement */}
       {reste.length > 0 && (
-        <div className="bg-white/5 rounded-2xl border border-white/10 p-4 mb-8">
-          <ol className="space-y-1">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5, duration: 0.5 }}
+          className="bg-white/5 rounded-2xl border border-white/10 p-5 mb-8 max-w-2xl mx-auto"
+        >
+          <ol className="space-y-1.5">
             {reste.map((p, i) => (
-              <li key={p.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5">
-                <span className="w-7 text-sm text-slate-400 text-right">{i + 4}.</span>
-                <span className="flex-1 truncate text-slate-200">{p.pseudo}</span>
-                <span className="font-mono text-emerald-300 font-bold">{p.score}</span>
+              <li key={p.id} className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/5 text-base">
+                <span className="w-8 text-sm text-slate-400 text-right font-mono">{i + 4}.</span>
+                <span className="flex-1 truncate text-slate-200 font-medium">{p.pseudo}</span>
+                <span className="font-mono text-emerald-300 font-bold text-lg">{p.score}</span>
               </li>
             ))}
           </ol>
-        </div>
+        </motion.div>
       )}
 
       <div className="flex justify-center">

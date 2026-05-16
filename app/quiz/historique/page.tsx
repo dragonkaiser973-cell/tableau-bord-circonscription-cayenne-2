@@ -99,7 +99,7 @@ export default function HistoriquePage() {
       a.href = url;
       const cd = res.headers.get('Content-Disposition') || '';
       const m = cd.match(/filename="([^"]+)"/);
-      a.download = m?.[1] || `quiz_${s.pin}.csv`;
+      a.download = m?.[1] || `quiz_${s.pin}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -206,9 +206,9 @@ export default function HistoriquePage() {
                       <button
                         onClick={() => exporter(s)}
                         className="px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-all"
-                        title="Télécharger les résultats en CSV"
+                        title="Télécharger les résultats Excel"
                       >
-                        📥 CSV
+                        📥 Excel
                       </button>
                       <button
                         onClick={() => supprimer(s)}

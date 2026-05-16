@@ -19,6 +19,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   let participant = null;
   let aDejaRepondu = false;
+  let maReponse: { est_correct: boolean; points_gagnes: number; choix_id: string | null } | null = null;
   if (participantId) {
     const { data: p } = await supabase
       .from('quiz_participants')
@@ -35,7 +36,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         .eq('participant_id', participantId)
         .eq('question_id', session.current_question_id)
         .maybeSingle();
-      if (r) aDejaRepondu = true;
+      if (r) {
+        aDejaRepondu = true;
+        maReponse = {
+          est_correct: r.est_correct,
+          points_gagnes: r.points_gagnes,
+          choix_id: r.choix_id,
+        };
+      }
     }
   }
 
@@ -101,6 +109,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     },
     participant,
     a_deja_repondu: aDejaRepondu,
+    ma_reponse: maReponse,
     bonne_reponse_id: bonneReponseId,
     ordre_correct: ordreCorrect,
     question: questionCourante,
