@@ -20,6 +20,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   let participant = null;
   let aDejaRepondu = false;
   let maReponse: { est_correct: boolean; points_gagnes: number; choix_id: string | null } | null = null;
+  let monRang: number | null = null;
+  let nbParticipants = 0;
   if (participantId) {
     const { data: p } = await supabase
       .from('quiz_participants')
@@ -44,6 +46,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           choix_id: r.choix_id,
         };
       }
+    }
+
+    // Calcul du rang du participant — utile pour l'écran victoire en phase podium
+    if (p) {
+      const { data: tous } = await supabase
+        .from('quiz_participants')
+        .select('id, score')
+        .eq('session_id', id)
+        .order('score', { ascending: false })
+        .order('joined_at', { ascending: true });
+      const liste = tous || [];
+      nbParticipants = liste.length;
+      const idx = liste.findIndex(x => x.id === participantId);
+      if (idx >= 0) monRang = idx + 1;
     }
   }
 
@@ -110,6 +126,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     participant,
     a_deja_repondu: aDejaRepondu,
     ma_reponse: maReponse,
+    mon_rang: monRang,
+    nb_participants: nbParticipants,
     bonne_reponse_id: bonneReponseId,
     ordre_correct: ordreCorrect,
     question: questionCourante,

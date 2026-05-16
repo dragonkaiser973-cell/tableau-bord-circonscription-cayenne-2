@@ -13,6 +13,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/lib/supabase';
+import EcranVictoire from '@/components/quiz/EcranVictoire';
 
 interface ChoixPublic {
   id: string;
@@ -43,6 +44,8 @@ interface StatePayload {
   participant: ParticipantPublic | null;
   a_deja_repondu: boolean;
   ma_reponse: { est_correct: boolean; points_gagnes: number; choix_id: string | null } | null;
+  mon_rang: number | null;
+  nb_participants: number;
   bonne_reponse_id: string | null;
   ordre_correct: string[] | null;
   question: QuestionPublic | null;
@@ -189,7 +192,7 @@ export default function QuizJoueurPage() {
     );
   }
 
-  const { session, participant, question, a_deja_repondu, ma_reponse, bonne_reponse_id, total_questions } = state;
+  const { session, participant, question, a_deja_repondu, ma_reponse, mon_rang, nb_participants, bonne_reponse_id, total_questions } = state;
   // Feedback effectif : prend en priorité l'état local (vient de répondre), sinon
   // reconstruit depuis ma_reponse (si on rafraîchit ou si on arrive après le statut).
   const feedbackEffectif = feedback ?? (ma_reponse ? { ok: ma_reponse.est_correct, points: ma_reponse.points_gagnes } : null);
@@ -362,18 +365,39 @@ export default function QuizJoueurPage() {
             </motion.div>
           )}
 
-          {/* PODIUM */}
-          {session.statut === 'podium' && (
+          {/* PODIUM — écran victoire spécial pour le top 3, classement standard pour les autres */}
+          {session.statut === 'podium' && mon_rang && mon_rang <= 3 && participant && (
             <motion.div
-              key="podium" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              key="podium-vic"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <EcranVictoire
+                rang={mon_rang as 1 | 2 | 3}
+                pseudo={participant.pseudo}
+                score={participant.score}
+              />
+            </motion.div>
+          )}
+
+          {session.statut === 'podium' && (!mon_rang || mon_rang > 3) && (
+            <motion.div
+              key="podium"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex flex-col items-center justify-center px-6 py-8 text-center"
             >
-              <div className="text-7xl mb-4">🏆</div>
+              <div className="text-7xl mb-4">🎯</div>
               <h2 className="text-3xl font-black mb-2">Quiz terminé !</h2>
               <p className="text-slate-400 mb-6">Voici votre score final</p>
               <div className="bg-gradient-to-br from-emerald-400/20 to-cyan-500/20 border border-emerald-400/40 rounded-3xl px-10 py-6">
                 <p className="text-sm uppercase tracking-widest text-emerald-300 mb-1">{participant?.pseudo}</p>
                 <p className="font-mono text-white font-black text-5xl">{participant?.score ?? 0}</p>
+                {mon_rang && (
+                  <p className="text-slate-400 text-sm mt-3">
+                    {mon_rang}ᵉ sur {nb_participants}
+                  </p>
+                )}
               </div>
               <p className="mt-8 text-xs text-slate-500">Le classement est affiché à l&apos;écran principal</p>
             </motion.div>
