@@ -205,40 +205,55 @@ export default function EcranVictoire({ rang, pseudo, score }: Props) {
 // ─────────── Sous-composants ───────────
 
 function Rayons() {
-  // 12 rayons coniques dorés qui tournent doucement
+  // 12 rayons coniques dorés qui tournent doucement.
+  // Conteneur de taille fixe carré centré sur la viewport, pour que les rayons
+  // restent dans une zone bornée autour de la coupe (et ne s'étirent pas en
+  // fonction du ratio écran). Pointes tronquées à -48 pour rester dans le viewBox.
   return (
-    <svg
-      className="absolute inset-0 w-full h-full"
-      viewBox="-50 -50 100 100"
-      preserveAspectRatio="xMidYMid slice"
-      style={{ zIndex: 1, mixBlendMode: 'screen' as React.CSSProperties['mixBlendMode'] }}
+    <div
+      className="absolute pointer-events-none"
+      style={{
+        top: '50%',
+        left: '50%',
+        width: 'min(85vmin, 640px)',
+        height: 'min(85vmin, 640px)',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 1,
+      }}
       aria-hidden
     >
-      <defs>
-        <radialGradient id="rayon-fade" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(251,191,36,0.55)" />
-          <stop offset="55%" stopColor="rgba(251,191,36,0.18)" />
-          <stop offset="100%" stopColor="rgba(251,191,36,0)" />
-        </radialGradient>
-      </defs>
-      <g className="rayons-rotation" style={{ transformOrigin: 'center' }}>
-        {Array.from({ length: 12 }).map((_, i) => {
-          const angle = (i * 360) / 12;
-          return (
-            <polygon
-              key={i}
-              points="0,0 -6,-90 6,-90"
-              fill="url(#rayon-fade)"
-              transform={`rotate(${angle})`}
-            />
-          );
-        })}
-      </g>
-      <style>{`
-        .rayons-rotation { animation: tourneRayons 18s linear infinite; }
-        @keyframes tourneRayons { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
-    </svg>
+      <svg
+        viewBox="-50 -50 100 100"
+        width="100%"
+        height="100%"
+        style={{ mixBlendMode: 'screen' as React.CSSProperties['mixBlendMode'], overflow: 'visible' }}
+      >
+        <defs>
+          <radialGradient id="rayon-fade" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(251,191,36,0.55)" />
+            <stop offset="55%" stopColor="rgba(251,191,36,0.18)" />
+            <stop offset="100%" stopColor="rgba(251,191,36,0)" />
+          </radialGradient>
+        </defs>
+        <g className="rayons-rotation" style={{ transformOrigin: 'center' }}>
+          {Array.from({ length: 12 }).map((_, i) => {
+            const angle = (i * 360) / 12;
+            return (
+              <polygon
+                key={i}
+                points="0,0 -4,-48 4,-48"
+                fill="url(#rayon-fade)"
+                transform={`rotate(${angle})`}
+              />
+            );
+          })}
+        </g>
+        <style>{`
+          .rayons-rotation { animation: tourneRayons 18s linear infinite; }
+          @keyframes tourneRayons { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `}</style>
+      </svg>
+    </div>
   );
 }
 
