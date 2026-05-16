@@ -141,10 +141,7 @@ export default function EcranVictoire({ rang, pseudo, score }: Props) {
         }}
       />
 
-      {/* Rayons lumineux tournants (SVG conique animé) */}
-      <Rayons />
-
-      {/* Contenu principal — les étoiles sont rendues dans le wrapper de la coupe */}
+      {/* Contenu principal — les rayons et étoiles sont rendus dans le wrapper de la coupe */}
       <div className="relative flex flex-col items-center px-6 text-center" style={{ zIndex: 2 }}>
         {/* Titre haut */}
         <motion.h1
@@ -157,14 +154,18 @@ export default function EcranVictoire({ rang, pseudo, score }: Props) {
           {txt.titre}
         </motion.h1>
 
-        {/* Coupe géante + étoiles symétriques autour */}
+        {/* Coupe géante + rayons + étoiles, tous ancrés sur ce même wrapper
+            (220×220) pour que rayons et étoiles suivent exactement la coupe
+            quel que soit le re-flow du contenu pendant l'animation. */}
         <div className="relative my-2" style={{ width: 220, height: 220 }}>
+          <Rayons />
           <Etoiles />
           <motion.div
             initial={{ scale: 0, rotate: -30 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.3, type: 'spring', stiffness: 180, damping: 12 }}
-            className="drop-shadow-[0_15px_40px_rgba(0,0,0,0.6)]"
+            className="drop-shadow-[0_15px_40px_rgba(0,0,0,0.6)] relative"
+            style={{ zIndex: 2 }}
           >
             <Trophee variant={VARIANTS_TROPHEE[rang]} size={220} />
           </motion.div>
@@ -206,22 +207,25 @@ export default function EcranVictoire({ rang, pseudo, score }: Props) {
 
 function Rayons() {
   // 12 rayons coniques dorés qui tournent doucement.
-  // Conteneur **carré** (pas étiré au ratio écran) centré sur la viewport,
-  // assez grand pour donner l'effet « rayons longs » comme à l'origine.
-  // Le viewBox est carré et les rayons tournent autour de (0,0) = centre du
-  // viewBox = centre du conteneur = centre de la coupe (car même centrage).
-  // overflow: visible permet aux rayons de dépasser du SVG si nécessaire,
-  // mais comme le conteneur est carré, le résultat reste centré.
+  // Centré sur le wrapper coupe (220×220 px) plutôt que sur la viewport :
+  // ainsi les rayons suivent exactement la coupe quand le contenu se réajuste
+  // pendant les animations d'entrée (plus d'effet « balle qui rebondit »).
+  //
+  // Taille : ~3× la largeur de la coupe = ~660 px, plafonnée à 90vmin pour
+  // les très petits écrans. Position : top/left 50 % du parent (= centre du
+  // wrapper coupe) avec margin négatif pour centrer le carré sur ce point.
+  const TAILLE = 'min(90vmin, 700px)';
   return (
     <div
       className="absolute pointer-events-none"
       style={{
         top: '50%',
         left: '50%',
-        width: 'min(150vmin, 900px)',
-        height: 'min(150vmin, 900px)',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 1,
+        width: TAILLE,
+        height: TAILLE,
+        marginTop: `calc(-1 * ${TAILLE} / 2)`,
+        marginLeft: `calc(-1 * ${TAILLE} / 2)`,
+        zIndex: 0, // derrière la coupe (zIndex 2) et les étoiles (zIndex 2)
       }}
       aria-hidden
     >
