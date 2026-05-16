@@ -37,6 +37,7 @@ const navItems: NavItem[] = [
       { href: '/formations/bilan',        label: 'Bilan',                    icon: <PieChartIcon />, category: 'auth' },
     ],
   },
+  { href: '/quiz', label: 'Quiz live', icon: <TargetIcon />, category: 'auth', requiresAuth: true },
   { href: '/donnees', label: 'Données', icon: <DatabaseIcon />, category: 'auth', requiresAuth: true },
   { href: '/calendrier', label: 'Calendrier', icon: <CalendarIcon />, category: 'auth', requiresAuth: true },
   { href: '/pilotage', label: 'Pilotage', icon: <DashboardIcon />, category: 'auth', requiresAuth: true },
@@ -137,6 +138,7 @@ export default function Sidebar() {
   // Ne pas afficher la sidebar sur la page d'accueil
   if (pathname === '/') return null;
   if (pathname.endsWith('/salle') || pathname.includes('/salle/')) return null;
+  if (pathname === '/jouer' || pathname.startsWith('/jouer/')) return null;
 
   return (
     <>
@@ -493,4 +495,7 @@ function AddressBookIcon() {
 }
 function FilmIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><path d="M7 3v18M17 3v18M3 12h18M3 7.5h4M3 16.5h4M17 7.5h4M17 16.5h4" /></svg>;
+}
+function TargetIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>;
 }

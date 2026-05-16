@@ -19,6 +19,7 @@ const PUBLIC_API_ROUTES = [
   '/api/questionnaires/soumissions',     // soumission publique
   '/api/annuaire',         // lecture publique de l'annuaire circo
   '/api/formations/plan',  // lecture publique du plan de formation
+  '/api/quiz/public',      // accès participants quiz live (via PIN, sans auth)
 ];
 
 // Routes réservées aux admins
