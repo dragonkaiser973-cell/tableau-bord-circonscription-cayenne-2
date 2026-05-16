@@ -60,6 +60,10 @@ export default function SalleQuizPage() {
   const [error, setError] = useState<string | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [tickMs, setTickMs] = useState(0);
+  // Évite les double-déclenchements automatiques en mode auto
+  const autoActionRef = useRef<{ stop: string | null; next: string | null }>({ stop: null, next: null });
+  // Compte à rebours pour la prochaine question en mode auto
+  const [autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null);
 
   const loadSession = useCallback(async () => {
     const token = localStorage.getItem('authToken');
@@ -113,6 +117,53 @@ export default function SalleQuizPage() {
     return () => clearInterval(it);
   }, [session]);
 
+  // Question courante — calculée tôt pour être référençable par les useEffect ci-dessous
+  const questionCourante = session?.questions.find(q => q.id === session.current_question_id) || null;
+
+  // ── MODE AUTO ──────────────────────────────────────────────
+  // 1) Question active : déclenche `stop` quand le timer expire
+  useEffect(() => {
+    if (!session || session.rythme !== 'auto' || session.statut !== 'question_active') return;
+    const qid = session.current_question_id;
+    if (!qid || !questionCourante || !session.question_started_at) return;
+    const dureeMs = questionCourante.duree_secondes * 1000;
+    const startMs = new Date(session.question_started_at).getTime();
+    const remaining = Math.max(0, startMs + dureeMs + 1000 - Date.now()); // +1s pour laisser arriver les dernières réponses
+    const timer = setTimeout(() => {
+      if (autoActionRef.current.stop !== qid) {
+        autoActionRef.current.stop = qid;
+        transition('stop');
+      }
+    }, remaining);
+    return () => clearTimeout(timer);
+  }, [session?.statut, session?.rythme, session?.current_question_id, session?.question_started_at, questionCourante?.duree_secondes]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 2) Résultats question : enchaine sur `next` après 5s
+  useEffect(() => {
+    if (!session || session.rythme !== 'auto' || session.statut !== 'resultats_question') {
+      setAutoNextCountdown(null);
+      return;
+    }
+    const qid = session.current_question_id;
+    if (!qid) return;
+    let count = 5;
+    setAutoNextCountdown(count);
+    const it = setInterval(() => {
+      count -= 1;
+      if (count <= 0) {
+        clearInterval(it);
+        setAutoNextCountdown(null);
+        if (autoActionRef.current.next !== qid) {
+          autoActionRef.current.next = qid;
+          transition('next');
+        }
+      } else {
+        setAutoNextCountdown(count);
+      }
+    }, 1000);
+    return () => clearInterval(it);
+  }, [session?.statut, session?.rythme, session?.current_question_id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const transition = async (action: 'start' | 'stop' | 'next' | 'close') => {
     if (transitioning) return;
     setTransitioning(true);
@@ -138,7 +189,6 @@ export default function SalleQuizPage() {
 
   if (!ready || !session) return null;
 
-  const questionCourante = session.questions.find(q => q.id === session.current_question_id) || null;
   const dureeMs = questionCourante ? questionCourante.duree_secondes * 1000 : 0;
   const tempsRestantMs = Math.max(0, dureeMs - tickMs);
   const tempsRestantS = Math.ceil(tempsRestantMs / 1000);
@@ -210,6 +260,7 @@ export default function SalleQuizPage() {
               estDerniere={session.current_question_index >= session.questions.length - 1}
               onNext={() => transition('next')}
               transitioning={transitioning}
+              autoCountdown={autoNextCountdown}
             />
           )}
 
@@ -465,10 +516,11 @@ function QuestionVue({
 // ─────────── RÉSULTATS QUESTION ───────────
 
 function ResultatsQuestion({
-  question, counts, participants, estDerniere, onNext, transitioning,
+  question, counts, participants, estDerniere, onNext, transitioning, autoCountdown,
 }: {
   question: Question; counts: Record<string, number>; participants: Participant[];
   estDerniere: boolean; onNext: () => void; transitioning: boolean;
+  autoCountdown: number | null;
 }) {
   const totalReponses = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
   const top5 = [...participants].sort((a, b) => b.score - a.score).slice(0, 5);
@@ -564,13 +616,19 @@ function ResultatsQuestion({
         </div>
       </div>
 
-      <div className="flex justify-center mt-8">
+      <div className="flex flex-col items-center gap-3 mt-8">
+        {autoCountdown !== null && (
+          <p className="text-sm text-emerald-300 uppercase tracking-widest font-semibold">
+            ⏱ Auto · {estDerniere ? 'Podium' : 'Question suivante'} dans {autoCountdown}…
+          </p>
+        )}
         <button
           onClick={onNext}
           disabled={transitioning}
           className="bg-gradient-to-br from-emerald-400 to-cyan-500 text-white px-8 py-4 rounded-2xl text-lg font-bold shadow-2xl hover:-translate-y-0.5 transition-all disabled:opacity-40"
         >
           {estDerniere ? '🏆 Voir le podium' : '▶ Question suivante'}
+          {autoCountdown !== null && ' (forcer)'}
         </button>
       </div>
     </motion.div>
