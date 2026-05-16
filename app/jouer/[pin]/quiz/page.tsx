@@ -282,23 +282,29 @@ export default function QuizJoueurPage() {
 
               {/* UI spécifique au classement (drag & drop) */}
               {!a_deja_repondu && question.type === 'classement' && (
-                <div className="mt-auto space-y-3">
-                  <p className="text-center text-sm text-slate-400 mb-2">
-                    Glissez-déposez pour réordonner
-                  </p>
-                  <ClassementDnd
-                    ordre={ordreCourant}
-                    items={question.choix}
-                    onReorder={setOrdreCourant}
-                  />
-                  <button
-                    onClick={() => repondre({ ordre_choisi: ordreCourant })}
-                    disabled={submitting || tempsRestantMs <= 0}
-                    className="w-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-white py-4 rounded-2xl text-lg font-bold shadow-2xl active:scale-95 disabled:opacity-40 transition-all"
-                  >
-                    {submitting ? 'Envoi…' : '✓ Valider mon ordre'}
-                  </button>
-                </div>
+                <>
+                  {/* Items réordonnables — padding-bottom pour ne pas être masqués par le bouton fixé */}
+                  <div className="space-y-3 pb-32">
+                    <p className="text-center text-sm text-slate-400 mb-2">
+                      Glissez-déposez pour réordonner
+                    </p>
+                    <ClassementDnd
+                      ordre={ordreCourant}
+                      items={question.choix}
+                      onReorder={setOrdreCourant}
+                    />
+                  </div>
+                  {/* Bouton « Valider » toujours visible en bas du viewport */}
+                  <div className="fixed bottom-0 left-0 right-0 px-5 pt-8 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent z-20">
+                    <button
+                      onClick={() => repondre({ ordre_choisi: ordreCourant })}
+                      disabled={submitting || tempsRestantMs <= 0}
+                      className="w-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-white py-4 rounded-2xl text-lg font-bold shadow-2xl active:scale-95 disabled:opacity-40 transition-all"
+                    >
+                      {submitting ? 'Envoi…' : '✓ Valider mon ordre'}
+                    </button>
+                  </div>
+                </>
               )}
             </motion.div>
           )}
