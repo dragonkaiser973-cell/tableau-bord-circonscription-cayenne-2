@@ -132,7 +132,7 @@ export default function EcranVictoire({ rang, pseudo, score }: Props) {
   }, [rang]);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-slate-950" style={{ zIndex: 30 }}>
+    <div className="fixed inset-0 flex items-center justify-center overflow-hidden" style={{ zIndex: 30, backgroundColor: '#020617' }}>
       {/* Halo coloré de fond */}
       <div
         className="absolute inset-0"
@@ -144,10 +144,7 @@ export default function EcranVictoire({ rang, pseudo, score }: Props) {
       {/* Rayons lumineux tournants (SVG conique animé) */}
       <Rayons />
 
-      {/* Étoiles décoratives */}
-      <Etoiles />
-
-      {/* Contenu principal */}
+      {/* Contenu principal — les étoiles sont rendues dans le wrapper de la coupe */}
       <div className="relative flex flex-col items-center px-6 text-center" style={{ zIndex: 2 }}>
         {/* Titre haut */}
         <motion.h1
@@ -160,15 +157,18 @@ export default function EcranVictoire({ rang, pseudo, score }: Props) {
           {txt.titre}
         </motion.h1>
 
-        {/* Coupe géante */}
-        <motion.div
-          initial={{ scale: 0, rotate: -30 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ delay: 0.3, type: 'spring', stiffness: 180, damping: 12 }}
-          className="drop-shadow-[0_15px_40px_rgba(0,0,0,0.6)] my-2"
-        >
-          <Trophee variant={VARIANTS_TROPHEE[rang]} size={220} />
-        </motion.div>
+        {/* Coupe géante + étoiles symétriques autour */}
+        <div className="relative my-2" style={{ width: 220, height: 220 }}>
+          <Etoiles />
+          <motion.div
+            initial={{ scale: 0, rotate: -30 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 0.3, type: 'spring', stiffness: 180, damping: 12 }}
+            className="drop-shadow-[0_15px_40px_rgba(0,0,0,0.6)]"
+          >
+            <Trophee variant={VARIANTS_TROPHEE[rang]} size={220} />
+          </motion.div>
+        </div>
 
         {/* Bandeau ruban */}
         <motion.div
@@ -206,26 +206,30 @@ export default function EcranVictoire({ rang, pseudo, score }: Props) {
 
 function Rayons() {
   // 12 rayons coniques dorés qui tournent doucement.
-  // Conteneur de taille fixe carré centré sur la viewport, pour que les rayons
-  // restent dans une zone bornée autour de la coupe (et ne s'étirent pas en
-  // fonction du ratio écran). Pointes tronquées à -48 pour rester dans le viewBox.
+  // Conteneur **carré** (pas étiré au ratio écran) centré sur la viewport,
+  // assez grand pour donner l'effet « rayons longs » comme à l'origine.
+  // Le viewBox est carré et les rayons tournent autour de (0,0) = centre du
+  // viewBox = centre du conteneur = centre de la coupe (car même centrage).
+  // overflow: visible permet aux rayons de dépasser du SVG si nécessaire,
+  // mais comme le conteneur est carré, le résultat reste centré.
   return (
     <div
       className="absolute pointer-events-none"
       style={{
         top: '50%',
         left: '50%',
-        width: 'min(85vmin, 640px)',
-        height: 'min(85vmin, 640px)',
+        width: 'min(150vmin, 900px)',
+        height: 'min(150vmin, 900px)',
         transform: 'translate(-50%, -50%)',
         zIndex: 1,
       }}
       aria-hidden
     >
       <svg
-        viewBox="-50 -50 100 100"
+        viewBox="-100 -100 200 200"
         width="100%"
         height="100%"
+        preserveAspectRatio="xMidYMid meet"
         style={{ mixBlendMode: 'screen' as React.CSSProperties['mixBlendMode'], overflow: 'visible' }}
       >
         <defs>
@@ -241,7 +245,7 @@ function Rayons() {
             return (
               <polygon
                 key={i}
-                points="0,0 -4,-48 4,-48"
+                points="0,0 -6,-90 6,-90"
                 fill="url(#rayon-fade)"
                 transform={`rotate(${angle})`}
               />
@@ -258,44 +262,60 @@ function Rayons() {
 }
 
 function Etoiles() {
-  // 2 étoiles dorées qui flottent à gauche/droite de la coupe
-  const Etoile = ({ x, y, delay }: { x: string; y: string; delay: number }) => (
-    <motion.div
+  // 2 étoiles dorées symétriques, positionnées par rapport au wrapper de la coupe
+  // (220×220 px). Le parent en `relative my-2 w-[220px] h-[220px]` nous sert de
+  // référence : on place chaque étoile en absolute avec un offset miroir.
+  // Pour éviter le bug Framer Motion qui écrase nos transforms, le positionnement
+  // est fait via top/marginTop (numeric) au lieu de transform.
+  const TAILLE = 56; // px
+  const ECART = 14;  // px entre le bord de la coupe (220 px) et l'étoile — petit pour rentrer sur mobile 375 px
+  // Centre vertical de l'étoile aligné sur le centre de la coupe (110 px du haut du wrapper).
+  // Bord gauche horizontal : -ECART - TAILLE
+  // Bord droit horizontal :  220 + ECART
+  const topCentre = 220 / 2 - TAILLE / 2; // 82
+  const leftGauche = -ECART - TAILLE;     // -86
+  const leftDroite = 220 + ECART;         // 250
+
+  const Etoile = ({ left, delay }: { left: number; delay: number }) => (
+    <div
       className="absolute"
-      style={{ left: x, top: y, zIndex: 2 }}
-      initial={{ scale: 0, rotate: -30, opacity: 0 }}
-      animate={{ scale: 1, rotate: 0, opacity: 1 }}
-      transition={{ delay: 0.5 + delay, type: 'spring', stiffness: 200, damping: 14 }}
+      style={{ top: topCentre, left, width: TAILLE, height: TAILLE, zIndex: 2 }}
     >
-      <motion.svg
-        width="56"
-        height="56"
-        viewBox="0 0 100 100"
-        animate={{ y: [0, -8, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        className="drop-shadow-[0_4px_12px_rgba(251,191,36,0.7)]"
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.5 + delay, type: 'spring', stiffness: 200, damping: 14 }}
       >
-        <defs>
-          <linearGradient id="etoile-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#fef3c7" />
-            <stop offset="50%" stopColor="#fbbf24" />
-            <stop offset="100%" stopColor="#b45309" />
-          </linearGradient>
-        </defs>
-        <polygon
-          points="50,8 60,38 92,42 67,62 75,92 50,75 25,92 33,62 8,42 40,38"
-          fill="url(#etoile-grad)"
-          stroke="#78350f"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
-      </motion.svg>
-    </motion.div>
+        <motion.svg
+          width={TAILLE}
+          height={TAILLE}
+          viewBox="0 0 100 100"
+          animate={{ y: [0, -8, 0], rotate: [0, 8, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          className="drop-shadow-[0_4px_12px_rgba(251,191,36,0.7)]"
+        >
+          <defs>
+            <linearGradient id="etoile-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+          </defs>
+          <polygon
+            points="50,8 60,38 92,42 67,62 75,92 50,75 25,92 33,62 8,42 40,38"
+            fill="url(#etoile-grad)"
+            stroke="#78350f"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+        </motion.svg>
+      </motion.div>
+    </div>
   );
   return (
     <>
-      <Etoile x="18%" y="38%" delay={0} />
-      <Etoile x="76%" y="38%" delay={0.15} />
+      <Etoile left={leftGauche} delay={0} />
+      <Etoile left={leftDroite} delay={0.15} />
     </>
   );
 }
