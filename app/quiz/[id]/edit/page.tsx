@@ -544,17 +544,19 @@ function EditeurQuestion({
       </div>
 
       {/* Sauvegarder */}
-      <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-        <span className="text-sm text-slate-500">
-          {saveStatus === 'pending' && 'Enregistrement…'}
-          {saveStatus === 'saved' && '✓ Enregistré'}
-        </span>
+      <div className="flex items-center justify-end pt-4 border-t border-slate-200">
         <button
           onClick={onSave}
           disabled={saveStatus === 'pending'}
-          className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-all disabled:opacity-50"
+          className={`px-6 py-2.5 rounded-lg font-semibold transition-all min-w-[200px] text-white ${
+            saveStatus === 'saved'
+              ? 'bg-emerald-500 scale-105'
+              : 'bg-primary-600 hover:bg-primary-700 disabled:opacity-50'
+          }`}
         >
-          {saveStatus === 'pending' ? 'Enregistrement…' : '💾 Enregistrer'}
+          {saveStatus === 'pending' && '⏳ Enregistrement…'}
+          {saveStatus === 'saved' && '✓ Enregistré !'}
+          {saveStatus === 'idle' && '💾 Enregistrer'}
         </button>
       </div>
     </div>
