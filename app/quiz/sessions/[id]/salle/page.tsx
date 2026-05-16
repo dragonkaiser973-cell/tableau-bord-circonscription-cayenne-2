@@ -346,7 +346,7 @@ function Lobby({
         <p className="text-slate-300 text-lg mb-2">Rendez-vous sur</p>
         <p className="font-mono text-xl text-white mb-5 bg-white/5 px-4 py-2 rounded-lg">{urlJouer}</p>
 
-        <div className="flex items-center gap-6">
+        <div className="flex flex-col xl:flex-row items-center gap-6 xl:gap-10">
           {/* PIN */}
           <div className="bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-400 p-1 rounded-3xl shadow-2xl">
             <div className="bg-slate-900 rounded-3xl px-8 py-6">
@@ -358,10 +358,10 @@ function Lobby({
 
           <div className="text-slate-400 text-sm uppercase tracking-widest font-semibold">ou</div>
 
-          {/* QR code (scan direct) */}
-          <div className="bg-white p-3 rounded-2xl shadow-2xl">
-            <QRCodeSVG value={urlScan} size={160} level="M" />
-            <p className="text-center text-xs text-slate-600 mt-2 font-medium">📱 Scan</p>
+          {/* QR code (scan direct) — grand format pour être visible depuis le fond de la salle */}
+          <div className="bg-white p-5 rounded-3xl shadow-2xl">
+            <QRCodeSVG value={urlScan} size={480} level="M" />
+            <p className="text-center text-base text-slate-700 mt-3 font-semibold">📱 Scan</p>
           </div>
         </div>
 
