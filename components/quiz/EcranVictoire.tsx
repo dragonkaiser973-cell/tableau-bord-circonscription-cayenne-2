@@ -255,7 +255,7 @@ function Rayons() {
             return (
               <polygon
                 key={i}
-                points="0,0 -6,-90 6,-90"
+                points="0,0 -14,-90 14,-90"
                 fill="url(#rayon-fade)"
                 transform={`rotate(${angle})`}
               />
