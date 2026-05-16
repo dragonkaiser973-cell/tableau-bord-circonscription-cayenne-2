@@ -12,6 +12,7 @@ interface ChoixPublic {
 }
 interface QuestionPublic {
   id: string;
+  type: 'qcm' | 'vrai_faux' | 'classement';
   enonce: string;
   duree_secondes: number;
   points_base: number;
@@ -33,6 +34,7 @@ interface StatePayload {
   participant: ParticipantPublic | null;
   a_deja_repondu: boolean;
   bonne_reponse_id: string | null;
+  ordre_correct: string[] | null;
   question: QuestionPublic | null;
   total_questions: number;
 }
@@ -56,6 +58,8 @@ export default function QuizJoueurPage() {
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; points: number } | null>(null);
   const [tickMs, setTickMs] = useState(0);
+  // Pour le mode classement : ordre courant (initialisé sur les choix de la question)
+  const [ordreCourant, setOrdreCourant] = useState<string[]>([]);
 
   // Récupération de session_id et participant_id depuis localStorage
   useEffect(() => {
@@ -131,7 +135,24 @@ export default function QuizJoueurPage() {
     return () => clearInterval(it);
   }, [state]);
 
-  const repondre = async (choixId: string) => {
+  // Initialise l'ordre courant à chaque nouvelle question de classement
+  useEffect(() => {
+    if (state?.question?.type === 'classement' && !state.a_deja_repondu) {
+      setOrdreCourant(state.question.choix.map(c => c.id));
+    }
+  }, [state?.question?.id, state?.question?.type, state?.a_deja_repondu, state?.question?.choix]);
+
+  const deplacerItem = (idx: number, dir: -1 | 1) => {
+    setOrdreCourant(prev => {
+      const next = [...prev];
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
+  };
+
+  const repondre = async (payload: { choix_id?: string; ordre_choisi?: string[] }) => {
     if (!state?.question || !sessionId || !participantId || submitting || state.a_deja_repondu) return;
     setSubmitting(true);
     try {
@@ -141,7 +162,7 @@ export default function QuizJoueurPage() {
         body: JSON.stringify({
           participant_id: participantId,
           question_id: state.question.id,
-          choix_id: choixId,
+          ...payload,
         }),
       });
       if (res.ok) {
@@ -235,15 +256,15 @@ export default function QuizJoueurPage() {
                 <div className="text-center py-6 text-slate-400">Réponse envoyée. En attente…</div>
               )}
 
-              {/* Boutons des choix */}
-              {!a_deja_repondu && (
+              {/* Boutons des choix — QCM / vrai_faux */}
+              {!a_deja_repondu && question.type !== 'classement' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-auto">
                   {question.choix.map((c, idx) => {
                     const couleur = COULEURS_CHOIX[idx % 4];
                     return (
                       <button
                         key={c.id}
-                        onClick={() => repondre(c.id)}
+                        onClick={() => repondre({ choix_id: c.id })}
                         disabled={submitting || tempsRestantMs <= 0}
                         className={`bg-gradient-to-br ${couleur.bg} text-white rounded-2xl px-5 py-7 font-bold text-lg text-left shadow-xl active:scale-95 transition-all disabled:opacity-40 flex items-center gap-4`}
                       >
@@ -252,6 +273,52 @@ export default function QuizJoueurPage() {
                       </button>
                     );
                   })}
+                </div>
+              )}
+
+              {/* UI spécifique au classement */}
+              {!a_deja_repondu && question.type === 'classement' && (
+                <div className="mt-auto space-y-3">
+                  <p className="text-center text-sm text-slate-400 mb-2">
+                    Réordonnez les éléments avec ↑ et ↓
+                  </p>
+                  <div className="space-y-2">
+                    {ordreCourant.map((cid, idx) => {
+                      const c = question.choix.find(x => x.id === cid);
+                      if (!c) return null;
+                      const couleur = COULEURS_CHOIX[idx % 4];
+                      return (
+                        <div
+                          key={cid}
+                          className={`bg-gradient-to-br ${couleur.bg} text-white rounded-2xl px-4 py-4 font-bold text-base shadow-xl flex items-center gap-3`}
+                        >
+                          <span className="font-mono text-2xl text-white/80 w-8 text-center">{idx + 1}</span>
+                          <span className="flex-1">{c.libelle}</span>
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => deplacerItem(idx, -1)}
+                              disabled={idx === 0 || submitting}
+                              className="bg-black/20 hover:bg-black/30 active:scale-95 disabled:opacity-30 w-10 h-8 rounded-lg flex items-center justify-center text-lg leading-none transition-all"
+                              title="Monter"
+                            >▲</button>
+                            <button
+                              onClick={() => deplacerItem(idx, 1)}
+                              disabled={idx === ordreCourant.length - 1 || submitting}
+                              className="bg-black/20 hover:bg-black/30 active:scale-95 disabled:opacity-30 w-10 h-8 rounded-lg flex items-center justify-center text-lg leading-none transition-all"
+                              title="Descendre"
+                            >▼</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={() => repondre({ ordre_choisi: ordreCourant })}
+                    disabled={submitting || tempsRestantMs <= 0}
+                    className="w-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-white py-4 rounded-2xl text-lg font-bold shadow-2xl active:scale-95 disabled:opacity-40 transition-all"
+                  >
+                    {submitting ? 'Envoi…' : '✓ Valider mon ordre'}
+                  </button>
                 </div>
               )}
             </motion.div>
@@ -290,6 +357,22 @@ export default function QuizJoueurPage() {
                     {question.choix.find(c => c.id === bonne_reponse_id)?.libelle}
                   </span>
                 </p>
+              )}
+              {state.ordre_correct && question.type === 'classement' && (
+                <div className="mt-6 w-full max-w-sm mx-auto">
+                  <p className="text-xs uppercase tracking-widest text-slate-500 mb-2">Ordre correct</p>
+                  <ol className="space-y-1">
+                    {state.ordre_correct.map((cid, idx) => {
+                      const c = question.choix.find(x => x.id === cid);
+                      return (
+                        <li key={cid} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 flex items-center gap-3">
+                          <span className="font-mono text-emerald-300 font-bold w-5">{idx + 1}</span>
+                          <span className="text-white text-sm">{c?.libelle}</span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
               )}
             </motion.div>
           )}

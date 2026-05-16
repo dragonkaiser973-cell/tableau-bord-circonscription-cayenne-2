@@ -83,13 +83,11 @@ export default function QuizListePage() {
       });
       if (res.ok) {
         const quiz = await res.json();
-        // Pas d'éditeur en V1 → simplement recharger la liste
         setShowCreateModal(false);
         setFormTitre('');
         setFormDescription('');
-        loadAll();
-        // Indique à l'utilisateur que le quiz est créé mais sans questions
-        setError(`Quiz créé (id: ${quiz.id.slice(0, 8)}…). Ajoutez des questions via Supabase pour pouvoir le lancer (V2 amènera l'éditeur).`);
+        // Redirige vers l'éditeur pour ajouter les questions
+        router.push(`/quiz/${quiz.id}/edit`);
       } else {
         const data = await res.json();
         setError(data.error || 'Erreur lors de la création');
@@ -255,6 +253,12 @@ export default function QuizListePage() {
                   </span>
                 </div>
                 <div className="flex gap-2">
+                  <Link
+                    href={`/quiz/${q.id}/edit`}
+                    className="px-4 py-2.5 rounded-lg text-sm font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all"
+                  >
+                    ✎ Éditer
+                  </Link>
                   <button
                     onClick={() => lancerSession(q)}
                     disabled={q.nb_questions === 0}
@@ -325,9 +329,8 @@ export default function QuizListePage() {
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Modifiable à chaque session.</p>
               </div>
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2 rounded">
-                <strong>V1</strong> : l&apos;éditeur de questions arrive en V2. Pour l&apos;instant, ajoutez vos questions directement dans Supabase
-                (tables <code>quiz_questions</code> et <code>quiz_choix</code>).
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-3 py-2 rounded">
+                Vous serez redirigé vers l&apos;éditeur pour ajouter vos questions.
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { melangerAvecSeed } from '@/lib/quizScoring';
 
 // GET — Vue PARTICIPANT (sans révéler les bonnes réponses).
 //        Renvoie le statut, la question courante (si active) et le score du participant.
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (p && session.current_question_id) {
       const { data: r } = await supabase
         .from('quiz_reponses')
-        .select('id, est_correct, points_gagnes, choix_id')
+        .select('id, est_correct, points_gagnes, choix_id, ordre_choisi')
         .eq('participant_id', participantId)
         .eq('question_id', session.current_question_id)
         .maybeSingle();
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   // Question courante : on strip est_correct des choix sauf si on est en phase de résultats
   let questionCourante = null;
   let bonneReponseId: string | null = null;
+  let ordreCorrect: string[] | null = null;
   if (session.current_question_id) {
     const { data: q } = await supabase
       .from('quiz_questions')
@@ -54,15 +56,29 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         .eq('question_id', q.id)
         .order('ordre', { ascending: true });
 
-      const choixPublic = (choix || []).map(c => ({
+      let choixPublic = (choix || []).map(c => ({
         id: c.id,
         ordre: c.ordre,
         libelle: c.libelle,
       }));
 
+      // Pour le classement, on mélange les items avec un seed déterministe
+      // (basé sur la session + la question) pour que tous les participants
+      // voient le même ordre mélangé. L'ordre correct reste dans `quiz_choix.ordre`.
+      if (q.type === 'classement') {
+        choixPublic = melangerAvecSeed(choixPublic, `${session.id}-${q.id}`);
+      }
+
       // Lors de la phase résultats on peut révéler la bonne réponse
       if (session.statut === 'resultats_question') {
-        bonneReponseId = (choix || []).find(c => c.est_correct)?.id || null;
+        if (q.type === 'classement') {
+          ordreCorrect = (choix || [])
+            .slice()
+            .sort((a, b) => a.ordre - b.ordre)
+            .map(c => c.id);
+        } else {
+          bonneReponseId = (choix || []).find(c => c.est_correct)?.id || null;
+        }
       }
 
       questionCourante = { ...q, choix: choixPublic };
@@ -86,6 +102,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     participant,
     a_deja_repondu: aDejaRepondu,
     bonne_reponse_id: bonneReponseId,
+    ordre_correct: ordreCorrect,
     question: questionCourante,
     total_questions: totalQuestions || 0,
   });

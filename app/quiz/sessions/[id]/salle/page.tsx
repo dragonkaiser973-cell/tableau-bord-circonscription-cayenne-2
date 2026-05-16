@@ -12,10 +12,11 @@ interface Choix {
   libelle: string;
   est_correct: boolean;
 }
+type TypeQuestion = 'qcm' | 'vrai_faux' | 'classement';
 interface Question {
   id: string;
   ordre: number;
-  type: string;
+  type: TypeQuestion;
   enonce: string;
   duree_secondes: number;
   points_base: number;
@@ -378,31 +379,58 @@ function QuestionVue({
         <p className="text-slate-400 text-sm mt-2">seconde{tempsRestantS > 1 ? 's' : ''} restantes</p>
       </div>
 
-      {/* Choix avec barres de réponses live */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-        {question.choix.map((c, idx) => {
-          const couleur = COULEURS_CHOIX[idx % 4];
-          const nb = counts[c.id] || 0;
-          const pct = nbParticipants > 0 ? Math.round((nb / nbParticipants) * 100) : 0;
-          return (
-            <div
-              key={c.id}
-              className={`relative bg-gradient-to-br ${couleur.bg} rounded-2xl px-6 py-5 shadow-xl overflow-hidden`}
-            >
-              {/* Barre de fond proportionnelle */}
+      {/* Choix avec barres de réponses live (qcm/vrai_faux) */}
+      {question.type !== 'classement' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+          {question.choix.map((c, idx) => {
+            const couleur = COULEURS_CHOIX[idx % 4];
+            const nb = counts[c.id] || 0;
+            const pct = nbParticipants > 0 ? Math.round((nb / nbParticipants) * 100) : 0;
+            return (
               <div
-                className="absolute inset-y-0 left-0 bg-black/20 transition-all duration-500"
-                style={{ width: `${pct}%` }}
-              />
-              <div className="relative flex items-center gap-4">
-                <span className="text-3xl text-white/90 flex-shrink-0">{couleur.forme}</span>
-                <p className="text-xl font-bold text-white flex-1">{c.libelle}</p>
-                <span className="text-2xl font-black text-white/90 flex-shrink-0 w-12 text-right">{nb}</span>
+                key={c.id}
+                className={`relative bg-gradient-to-br ${couleur.bg} rounded-2xl px-6 py-5 shadow-xl overflow-hidden`}
+              >
+                <div
+                  className="absolute inset-y-0 left-0 bg-black/20 transition-all duration-500"
+                  style={{ width: `${pct}%` }}
+                />
+                <div className="relative flex items-center gap-4">
+                  <span className="text-3xl text-white/90 flex-shrink-0">{couleur.forme}</span>
+                  <p className="text-xl font-bold text-white flex-1">{c.libelle}</p>
+                  <span className="text-2xl font-black text-white/90 flex-shrink-0 w-12 text-right">{nb}</span>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Mode classement : on ne révèle pas l'ordre, juste les items à réordonner */}
+      {question.type === 'classement' && (
+        <div className="mb-6">
+          <p className="text-center text-sm uppercase tracking-widest text-emerald-400 mb-3">
+            🔢 Réordonnez les éléments
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {question.choix.map((c, idx) => {
+              const couleur = COULEURS_CHOIX[idx % 4];
+              return (
+                <div
+                  key={c.id}
+                  className={`bg-gradient-to-br ${couleur.bg} rounded-xl px-4 py-4 shadow-xl text-center`}
+                >
+                  <span className="text-2xl text-white/90 block mb-1">{couleur.forme}</span>
+                  <p className="text-base font-bold text-white">{c.libelle}</p>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-center text-slate-400 text-sm mt-4">
+            {nbReponses} / {nbParticipants} ont validé
+          </p>
+        </div>
+      )}
 
       {/* Bouton stopper la question (manuel) */}
       <div className="flex justify-center">
@@ -440,34 +468,61 @@ function ResultatsQuestion({
       </div>
 
       <div className="grid lg:grid-cols-[1.5fr,1fr] gap-6">
-        {/* Histogramme des réponses */}
-        <div className="space-y-3">
-          {question.choix.map((c, idx) => {
-            const couleur = COULEURS_CHOIX[idx % 4];
-            const nb = counts[c.id] || 0;
-            const pct = Math.round((nb / totalReponses) * 100);
-            return (
-              <div key={c.id} className={`relative rounded-2xl overflow-hidden border-2 ${c.est_correct ? 'border-emerald-400 ring-4 ring-emerald-400/30' : 'border-transparent opacity-60'}`}>
-                <div className={`bg-gradient-to-br ${couleur.bg} px-6 py-5`}>
-                  <div className="flex items-center gap-4 mb-2">
-                    <span className="text-3xl text-white/90">{couleur.forme}</span>
-                    <p className="text-xl font-bold text-white flex-1">{c.libelle}</p>
-                    {c.est_correct && <span className="text-2xl">✓</span>}
-                    <span className="text-2xl font-black text-white">{nb}</span>
-                  </div>
-                  <div className="h-2 bg-black/20 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className="h-full bg-white/70"
-                    />
+        {/* Histogramme des réponses (qcm/vrai_faux) */}
+        {question.type !== 'classement' && (
+          <div className="space-y-3">
+            {question.choix.map((c, idx) => {
+              const couleur = COULEURS_CHOIX[idx % 4];
+              const nb = counts[c.id] || 0;
+              const pct = Math.round((nb / totalReponses) * 100);
+              return (
+                <div key={c.id} className={`relative rounded-2xl overflow-hidden border-2 ${c.est_correct ? 'border-emerald-400 ring-4 ring-emerald-400/30' : 'border-transparent opacity-60'}`}>
+                  <div className={`bg-gradient-to-br ${couleur.bg} px-6 py-5`}>
+                    <div className="flex items-center gap-4 mb-2">
+                      <span className="text-3xl text-white/90">{couleur.forme}</span>
+                      <p className="text-xl font-bold text-white flex-1">{c.libelle}</p>
+                      {c.est_correct && <span className="text-2xl">✓</span>}
+                      <span className="text-2xl font-black text-white">{nb}</span>
+                    </div>
+                    <div className="h-2 bg-black/20 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        className="h-full bg-white/70"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Ordre correct (classement) */}
+        {question.type === 'classement' && (
+          <div>
+            <p className="text-sm uppercase tracking-widest text-emerald-400 mb-3">L'ordre correct</p>
+            <ol className="space-y-2">
+              {[...question.choix].sort((a, b) => a.ordre - b.ordre).map((c, idx) => {
+                const couleur = COULEURS_CHOIX[idx % 4];
+                return (
+                  <motion.li
+                    key={c.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.15 }}
+                    className={`bg-gradient-to-br ${couleur.bg} rounded-2xl px-5 py-4 shadow-xl flex items-center gap-4`}
+                  >
+                    <span className="font-mono text-3xl text-white/80 w-10 text-center font-black">{idx + 1}</span>
+                    <span className="text-2xl text-white/90">{couleur.forme}</span>
+                    <p className="text-xl font-bold text-white flex-1">{c.libelle}</p>
+                  </motion.li>
+                );
+              })}
+            </ol>
+          </div>
+        )}
 
         {/* Top 5 */}
         <div className="bg-white/5 rounded-3xl border border-white/10 p-6">
