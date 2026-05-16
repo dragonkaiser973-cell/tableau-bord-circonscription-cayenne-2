@@ -32,12 +32,12 @@ const navItems: NavItem[] = [
     requiresAuth: true,
     items: [
       { href: '/formations/boussole',     label: "Boussole d'état d'esprit", icon: <CompassIcon />, category: 'auth' },
+      { href: '/quiz',                    label: 'Quiz live',                icon: <TargetIcon />,  category: 'auth' },
       { href: '/formations/plan',         label: 'Plan de formation',        icon: <ListIcon />,    category: 'auth' },
       { href: '/formations/scenarisation', label: 'Scénarisation ABC',       icon: <FilmIcon />,    category: 'auth' },
       { href: '/formations/bilan',        label: 'Bilan',                    icon: <PieChartIcon />, category: 'auth' },
     ],
   },
-  { href: '/quiz', label: 'Quiz live', icon: <TargetIcon />, category: 'auth', requiresAuth: true },
   { href: '/donnees', label: 'Données', icon: <DatabaseIcon />, category: 'auth', requiresAuth: true },
   { href: '/calendrier', label: 'Calendrier', icon: <CalendarIcon />, category: 'auth', requiresAuth: true },
   { href: '/pilotage', label: 'Pilotage', icon: <DashboardIcon />, category: 'auth', requiresAuth: true },
