@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
+import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
 
 interface Choix {
@@ -252,24 +254,38 @@ function Lobby({
   pin, participants, onStart, transitioning,
 }: { pin: string; participants: Participant[]; onStart: () => void; transitioning: boolean }) {
   const urlJouer = typeof window !== 'undefined' ? `${window.location.origin}/jouer` : '/jouer';
+  // Lien direct vers la page de saisie pseudo (skip la saisie de PIN si scan)
+  const urlScan = typeof window !== 'undefined' ? `${window.location.origin}/jouer/${pin}` : `/jouer/${pin}`;
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="h-full grid lg:grid-cols-[1fr,1.2fr] gap-6 px-8 py-8"
     >
-      {/* Bloc PIN */}
+      {/* Bloc PIN + QR */}
       <div className="flex flex-col items-center justify-center">
         <p className="text-sm uppercase tracking-[0.2em] text-emerald-400 mb-3">Rejoignez la partie</p>
         <p className="text-slate-300 text-lg mb-2">Rendez-vous sur</p>
-        <p className="font-mono text-2xl text-white mb-6 bg-white/5 px-4 py-2 rounded-lg">{urlJouer}</p>
-        <p className="text-slate-300 text-lg mb-2">avec le code</p>
-        <div className="bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-400 p-1 rounded-3xl shadow-2xl">
-          <div className="bg-slate-900 rounded-3xl px-12 py-8">
-            <p className="font-mono font-black text-[clamp(4rem,12vw,9rem)] tracking-[0.2em] text-white leading-none">
-              {pin}
-            </p>
+        <p className="font-mono text-xl text-white mb-5 bg-white/5 px-4 py-2 rounded-lg">{urlJouer}</p>
+
+        <div className="flex items-center gap-6">
+          {/* PIN */}
+          <div className="bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-400 p-1 rounded-3xl shadow-2xl">
+            <div className="bg-slate-900 rounded-3xl px-8 py-6">
+              <p className="font-mono font-black text-[clamp(3rem,9vw,7rem)] tracking-[0.2em] text-white leading-none">
+                {pin}
+              </p>
+            </div>
+          </div>
+
+          <div className="text-slate-400 text-sm uppercase tracking-widest font-semibold">ou</div>
+
+          {/* QR code (scan direct) */}
+          <div className="bg-white p-3 rounded-2xl shadow-2xl">
+            <QRCodeSVG value={urlScan} size={160} level="M" />
+            <p className="text-center text-xs text-slate-600 mt-2 font-medium">📱 Scan</p>
           </div>
         </div>
+
         <button
           onClick={onStart}
           disabled={transitioning || participants.length === 0}
@@ -571,6 +587,24 @@ function Podium({ participants, onClose, transitioning }: { participants: Partic
   const hauteurs = ['h-44', 'h-60', 'h-32'];
   const couleursMedaille = ['from-slate-300 to-slate-100', 'from-amber-400 to-yellow-200', 'from-orange-500 to-orange-300'];
   const rangs = [2, 1, 3];
+
+  // Salve de confettis à l'apparition du podium
+  useEffect(() => {
+    const lance = (origin: { x: number; y: number }) => {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        startVelocity: 45,
+        origin,
+        colors: ['#34d399', '#06b6d4', '#fbbf24', '#f97316', '#ec4899'],
+      });
+    };
+    // Premier souffle après l'animation d'entrée
+    const t1 = setTimeout(() => lance({ x: 0.25, y: 0.7 }), 600);
+    const t2 = setTimeout(() => lance({ x: 0.75, y: 0.7 }), 900);
+    const t3 = setTimeout(() => lance({ x: 0.5, y: 0.5 }), 1400);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
 
   return (
     <motion.div
