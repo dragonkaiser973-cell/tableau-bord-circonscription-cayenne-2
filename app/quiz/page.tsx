@@ -34,6 +34,8 @@ export default function QuizListePage() {
   const [formRythme, setFormRythme] = useState<'manuel' | 'auto'>('manuel');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -149,6 +151,33 @@ export default function QuizListePage() {
     }
   };
 
+  const renommer = async (quiz: Quiz, nouveauTitre: string) => {
+    if (!nouveauTitre.trim() || nouveauTitre === quiz.titre) {
+      setRenamingId(null);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/quiz/quizzes/${quiz.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({ titre: nouveauTitre.trim() }),
+      });
+      if (res.ok) {
+        setQuizzes(prev => prev.map(q => q.id === quiz.id ? { ...q, titre: nouveauTitre.trim() } : q));
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Erreur lors du renommage');
+      }
+    } catch {
+      setError('Erreur de connexion');
+    } finally {
+      setRenamingId(null);
+    }
+  };
+
   const supprimer = async (quiz: Quiz) => {
     if (!confirm(`Supprimer le quiz « ${quiz.titre} » ?`)) return;
     try {
@@ -261,7 +290,29 @@ export default function QuizListePage() {
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-lg flex items-center justify-center text-2xl flex-shrink-0">🎯</div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xl font-bold text-gray-800 mb-1 truncate">{q.titre}</h2>
+                    {renamingId === q.id ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        value={renameValue}
+                        onChange={e => setRenameValue(e.target.value)}
+                        onBlur={() => renommer(q, renameValue)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') renommer(q, renameValue);
+                          if (e.key === 'Escape') setRenamingId(null);
+                        }}
+                        className="text-xl font-bold text-gray-800 w-full border-b-2 border-primary-400 focus:outline-none bg-transparent mb-1"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-1.5 group/title mb-1">
+                        <h2 className="text-xl font-bold text-gray-800 truncate">{q.titre}</h2>
+                        <button
+                          onClick={() => { setRenamingId(q.id); setRenameValue(q.titre); }}
+                          className="opacity-0 group-hover/title:opacity-100 transition-opacity text-slate-400 hover:text-primary-600 flex-shrink-0"
+                          title="Renommer"
+                        >✎</button>
+                      </div>
+                    )}
                     {q.description && <p className="text-gray-500 text-sm line-clamp-2">{q.description}</p>}
                   </div>
                 </div>
