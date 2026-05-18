@@ -111,6 +111,9 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     );
   }
 
+  // Supprime d'abord les sessions terminées (FK restrict les empêche d'être cascadées)
+  await supabase.from('quiz_sessions').delete().eq('quiz_id', id);
+
   const { error } = await supabase.from('quiz_quizzes').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
