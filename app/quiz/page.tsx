@@ -178,6 +178,24 @@ export default function QuizListePage() {
     }
   };
 
+  const supprimerSession = async (s: SessionLite) => {
+    if (!confirm(`Supprimer la session ${s.pin} (${s.quiz_quizzes?.titre || 'Quiz'}) ? Les participants connectés seront déconnectés.`)) return;
+    try {
+      const res = await fetch(`/api/quiz/sessions/${s.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+      });
+      if (res.ok) {
+        setSessions(prev => prev.filter(x => x.id !== s.id));
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Erreur de suppression');
+      }
+    } catch {
+      setError('Erreur de connexion');
+    }
+  };
+
   const supprimer = async (quiz: Quiz) => {
     if (!confirm(`Supprimer le quiz « ${quiz.titre} » ?`)) return;
     try {
@@ -242,17 +260,23 @@ export default function QuizListePage() {
             <h2 className="text-sm uppercase tracking-widest text-emerald-700 font-bold mb-3">Sessions en cours</h2>
             <div className="flex flex-wrap gap-3">
               {sessionsActives.map(s => (
-                <Link
-                  key={s.id}
-                  href={`/quiz/sessions/${s.id}/salle`}
-                  className="inline-flex items-center gap-3 bg-white border border-emerald-300 px-4 py-2.5 rounded-xl hover:shadow-md transition-all"
-                >
-                  <span className="font-mono text-lg font-black text-emerald-600">{s.pin}</span>
-                  <span className="text-sm text-slate-700">{s.quiz_quizzes?.titre || 'Quiz'}</span>
-                  <span className="text-xs text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                    {s.statut === 'lobby' ? 'Lobby' : s.statut === 'podium' ? 'Podium' : 'En cours'}
-                  </span>
-                </Link>
+                <div key={s.id} className="inline-flex items-center gap-1 bg-white border border-emerald-300 rounded-xl hover:shadow-md transition-all">
+                  <Link
+                    href={`/quiz/sessions/${s.id}/salle`}
+                    className="inline-flex items-center gap-3 px-4 py-2.5"
+                  >
+                    <span className="font-mono text-lg font-black text-emerald-600">{s.pin}</span>
+                    <span className="text-sm text-slate-700">{s.quiz_quizzes?.titre || 'Quiz'}</span>
+                    <span className="text-xs text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      {s.statut === 'lobby' ? 'Lobby' : s.statut === 'podium' ? 'Podium' : 'En cours'}
+                    </span>
+                  </Link>
+                  <button
+                    onClick={() => supprimerSession(s)}
+                    className="pr-3 text-slate-300 hover:text-red-500 transition-colors text-lg leading-none"
+                    title="Supprimer cette session"
+                  >🗑</button>
+                </div>
               ))}
             </div>
           </div>
