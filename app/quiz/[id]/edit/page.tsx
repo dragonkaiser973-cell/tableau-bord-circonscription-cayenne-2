@@ -218,6 +218,39 @@ export default function EditQuizPage() {
     } : prev);
   };
 
+  const addChoix = (qid: string) => {
+    setQuiz(prev => prev ? {
+      ...prev,
+      questions: prev.questions.map(q => q.id !== qid ? q : {
+        ...q,
+        choix: [...q.choix, {
+          id: `tmp-${Date.now()}`,
+          ordre: q.choix.length,
+          libelle: q.type === 'classement' ? `Élément ${q.choix.length + 1}` : `Choix ${q.choix.length + 1}`,
+          est_correct: false,
+        }],
+      }),
+    } : prev);
+  };
+
+  const removeChoix = (qid: string, cidx: number) => {
+    setQuiz(prev => prev ? {
+      ...prev,
+      questions: prev.questions.map(q => {
+        if (q.id !== qid) return q;
+        const next = q.choix
+          .filter((_, i) => i !== cidx)
+          .map((c, i) => ({ ...c, ordre: i }));
+        // Si la bonne réponse était supprimée, marquer le premier choix
+        const hasBonne = next.some(c => c.est_correct);
+        if (!hasBonne && next.length > 0 && q.type !== 'classement') {
+          next[0] = { ...next[0], est_correct: true };
+        }
+        return { ...q, choix: next };
+      }),
+    } : prev);
+  };
+
   const moveChoix = (qid: string, cidx: number, dir: -1 | 1) => {
     setQuiz(prev => {
       if (!prev) return prev;
@@ -367,6 +400,8 @@ export default function EditQuizPage() {
                 onChangeChoix={(idx, patch) => updateChoix(selectedQuestion.id, idx, patch)}
                 onSetBonneReponse={(idx) => setBonneReponse(selectedQuestion.id, idx)}
                 onMoveChoix={(idx, dir) => moveChoix(selectedQuestion.id, idx, dir)}
+                onAddChoix={() => addChoix(selectedQuestion.id)}
+                onRemoveChoix={(idx) => removeChoix(selectedQuestion.id, idx)}
                 onSave={() => sauverQuestion(selectedQuestion)}
                 saveStatus={saveStatus}
               />
@@ -389,7 +424,7 @@ export default function EditQuizPage() {
 
 function EditeurQuestion({
   question, onChangeEnonce, onChangeType, onChangeDuree, onChangePoints,
-  onChangeChoix, onSetBonneReponse, onMoveChoix, onSave, saveStatus,
+  onChangeChoix, onSetBonneReponse, onMoveChoix, onAddChoix, onRemoveChoix, onSave, saveStatus,
 }: {
   question: Question;
   onChangeEnonce: (v: string) => void;
@@ -399,6 +434,8 @@ function EditeurQuestion({
   onChangeChoix: (idx: number, patch: Partial<Choix>) => void;
   onSetBonneReponse: (idx: number) => void;
   onMoveChoix: (idx: number, dir: -1 | 1) => void;
+  onAddChoix: () => void;
+  onRemoveChoix: (idx: number) => void;
   onSave: () => void;
   saveStatus: 'idle' | 'pending' | 'saved';
 }) {
@@ -537,10 +574,28 @@ function EditeurQuestion({
                     >▼</button>
                   </div>
                 )}
+                {question.type !== 'vrai_faux' && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveChoix(idx)}
+                    disabled={question.choix.length <= 2}
+                    className="text-slate-300 hover:text-red-500 disabled:opacity-20 disabled:cursor-not-allowed text-lg leading-none px-1 transition-colors"
+                    title="Supprimer cette réponse"
+                  >×</button>
+                )}
               </div>
             );
           })}
         </div>
+        {question.type !== 'vrai_faux' && question.choix.length < 6 && (
+          <button
+            type="button"
+            onClick={onAddChoix}
+            className="mt-2 w-full py-2 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 hover:border-primary-400 hover:text-primary-600 text-sm font-medium transition-colors"
+          >
+            + Ajouter une réponse
+          </button>
+        )}
       </div>
 
       {/* Sauvegarder */}

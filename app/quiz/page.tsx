@@ -257,16 +257,8 @@ export default function QuizListePage() {
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
             {quizzes.map(q => (
-              <div key={q.id} className="card hover:shadow-2xl transition-all border-2 border-transparent hover:border-primary-200 relative">
-                <button
-                  onClick={() => supprimer(q)}
-                  className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors text-xl"
-                  aria-label="Supprimer"
-                  title="Supprimer"
-                >
-                  ×
-                </button>
-                <div className="flex items-start gap-4 mb-4 pr-8">
+              <div key={q.id} className="card hover:shadow-2xl transition-all border-2 border-transparent hover:border-primary-200">
+                <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-lg flex items-center justify-center text-2xl flex-shrink-0">🎯</div>
                   <div className="flex-1 min-w-0">
                     <h2 className="text-xl font-bold text-gray-800 mb-1 truncate">{q.titre}</h2>
@@ -295,6 +287,13 @@ export default function QuizListePage() {
                     title="Dupliquer"
                   >
                     ⎘
+                  </button>
+                  <button
+                    onClick={() => supprimer(q)}
+                    className="px-3 py-2.5 rounded-lg text-sm font-semibold border border-slate-300 text-slate-400 hover:text-red-600 hover:border-red-300 hover:bg-red-50 transition-all"
+                    title="Supprimer ce quiz"
+                  >
+                    🗑
                   </button>
                   <button
                     onClick={() => lancerSession(q)}
