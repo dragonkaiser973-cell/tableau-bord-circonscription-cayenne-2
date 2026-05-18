@@ -41,6 +41,8 @@ const COULEURS_CHOIX = [
   { bg: 'bg-sky-500', border: 'border-sky-300', forme: '◆' },
   { bg: 'bg-amber-500', border: 'border-amber-300', forme: '●' },
   { bg: 'bg-emerald-500', border: 'border-emerald-300', forme: '■' },
+  { bg: 'bg-violet-500', border: 'border-violet-300', forme: '★' },
+  { bg: 'bg-orange-500', border: 'border-orange-300', forme: '⬡' },
 ];
 
 export default function EditQuizPage() {
@@ -519,7 +521,7 @@ function EditeurQuestion({
         </div>
         <div className="space-y-2">
           {question.choix.map((c, idx) => {
-            const couleur = COULEURS_CHOIX[idx % 4];
+            const couleur = COULEURS_CHOIX[idx % COULEURS_CHOIX.length];
             return (
               <div
                 key={idx}
