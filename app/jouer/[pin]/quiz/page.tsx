@@ -73,6 +73,9 @@ export default function QuizJoueurPage() {
   const [tickMs, setTickMs] = useState(0);
   // Pour le mode classement : ordre courant (initialisé sur les choix de la question)
   const [ordreCourant, setOrdreCourant] = useState<string[]>([]);
+  // État de la connexion temps réel — sert à afficher un indicateur et à
+  // déclencher un polling plus agressif si Realtime est tombé.
+  const [rtStatus, setRtStatus] = useState<'connecting' | 'live' | 'fallback'>('connecting');
 
   // Récupération de session_id et participant_id depuis localStorage
   useEffect(() => {
@@ -129,11 +132,37 @@ export default function QuizJoueurPage() {
         setFeedback(null); // nouvelle phase → nouveau feedback
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'quiz_participants', filter: `id=eq.${participantId}` }, () => loadState())
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') setRtStatus('live');
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') setRtStatus('fallback');
+      });
     return () => {
       supabase.removeChannel(channel);
     };
   }, [sessionId, participantId, loadState]);
+
+  // Polling de secours — indispensable car Realtime peut dropper silencieusement
+  // un UPDATE (rate-limit, reconnexion WebSocket, mise en veille mobile…).
+  // Sans ce filet, un participant peut rester figé sur la question précédente
+  // et voir ses boutons disabled (tempsRestantMs <= 0).
+  // Cadence : 3 s en live (Realtime fiable), 1.5 s en fallback (Realtime KO).
+  useEffect(() => {
+    if (!sessionId || !participantId) return;
+    if (state?.session.statut === 'terminee') return;
+    const intervalMs = rtStatus === 'fallback' ? 1500 : 3000;
+    const it = setInterval(loadState, intervalMs);
+    return () => clearInterval(it);
+  }, [sessionId, participantId, loadState, rtStatus, state?.session.statut]);
+
+  // Quand l'onglet redevient visible (mobile qui sort de veille), on resync
+  // immédiatement : Realtime a très souvent perdu l'événement pendant la veille.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') loadState();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [loadState]);
 
   // Timer côté client
   useEffect(() => {
@@ -203,9 +232,28 @@ export default function QuizJoueurPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 text-white flex flex-col">
       {/* Bandeau supérieur */}
-      <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between text-sm">
-        <span className="font-semibold truncate max-w-[50%]">{participant?.pseudo || '—'}</span>
-        <span className="font-mono text-emerald-300 font-bold text-lg">{participant?.score ?? 0}</span>
+      <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between text-sm gap-3">
+        <span className="font-semibold truncate flex-1 min-w-0">{participant?.pseudo || '—'}</span>
+        <span
+          className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wider flex-shrink-0 ${
+            rtStatus === 'live' ? 'text-emerald-400'
+              : rtStatus === 'fallback' ? 'text-amber-400'
+              : 'text-slate-500'
+          }`}
+          title={
+            rtStatus === 'live' ? 'Temps réel actif'
+              : rtStatus === 'fallback' ? 'Connexion temps réel dégradée — synchro automatique toutes les 1,5 s'
+              : 'Connexion en cours…'
+          }
+        >
+          <span className={`w-2 h-2 rounded-full ${
+            rtStatus === 'live' ? 'bg-emerald-400 animate-pulse'
+              : rtStatus === 'fallback' ? 'bg-amber-400 animate-pulse'
+              : 'bg-slate-500'
+          }`} />
+          {rtStatus === 'live' ? 'Live' : rtStatus === 'fallback' ? 'Synchro' : '…'}
+        </span>
+        <span className="font-mono text-emerald-300 font-bold text-lg flex-shrink-0">{participant?.score ?? 0}</span>
       </div>
 
       <div className="flex-1 flex flex-col">
