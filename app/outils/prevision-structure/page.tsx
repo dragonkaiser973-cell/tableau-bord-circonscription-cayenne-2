@@ -268,7 +268,7 @@ export default function PrevisionStructurePage() {
     try {
       const imported = await importFromTemplate(f);
       setPrevisions((prev) => [...prev.filter((p) => p.ecole.trim() || hasAnyData(p)), ...imported]);
-      setActiveId(imported[0].id);
+      setSelection({ kind: 'draft', id: imported[0].id });
       setToast(`${imported.length} école${imported.length > 1 ? 's' : ''} importée${imported.length > 1 ? 's' : ''}.`);
     } catch (err) {
       setToast(err instanceof Error ? err.message : 'Import impossible.');
@@ -794,7 +794,7 @@ function IdentityBlock({
         )}
         <FieldEcoleLocked
           value={p.ecole}
-          selected={directeurSelected || readOnly}
+          selected={directeurSelected || Boolean(readOnly)}
           className="md:col-span-3"
         />
         <FieldText
