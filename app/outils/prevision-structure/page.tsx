@@ -8,15 +8,33 @@ import {
   NIVEAUX,
   NiveauKey,
   Prevision,
+  PrevisionPubliee,
   REP_PLUS_MAX,
   REP_PLUS_NIVEAUX,
   computeStats,
   makeEmptyPrevision,
+  previsionToApiPayload,
+  publicationToPrevision,
 } from './types';
+
+// Discrimine ce qui est affiché : un brouillon local éditable, ou une fiche
+// publiée affichée en lecture seule.
+type Selection =
+  | { kind: 'draft'; id: string }
+  | { kind: 'published'; ecoleId: string };
 import { exportToXlsx, importFromTemplate } from './xlsx-io';
 
 const STORAGE_KEY = 'prevision-structure:v1';
+const LAST_DIRECTEUR_KEY = 'prevision-structure:last-directeur';
 const spring = { type: 'spring' as const, stiffness: 320, damping: 28 };
+
+// Annuaire — directeur aplati avec son école associée.
+type Directeur = {
+  id: string;
+  name: string;
+  ecoleId: string;
+  ecoleName: string;
+};
 
 function loadFromStorage(): Prevision[] | null {
   if (typeof window === 'undefined') return null;
@@ -27,6 +45,8 @@ function loadFromStorage(): Prevision[] | null {
     if (!Array.isArray(parsed) || parsed.length === 0) return null;
     return parsed.map((p) => {
       const safe = makeEmptyPrevision(p.id || crypto.randomUUID());
+      safe.ecoleId = p.ecoleId ?? '';
+      safe.directeurId = p.directeurId ?? '';
       safe.ecole = p.ecole ?? '';
       safe.auteur = p.auteur ?? '';
       safe.anneeN = p.anneeN ?? safe.anneeN;
@@ -50,18 +70,66 @@ function loadFromStorage(): Prevision[] | null {
 
 export default function PrevisionStructurePage() {
   const [previsions, setPrevisions] = useState<Prevision[]>(() => [makeEmptyPrevision('p1')]);
-  const [activeId, setActiveId] = useState<string>('p1');
+  const [selection, setSelection] = useState<Selection>({ kind: 'draft', id: 'p1' });
   const [hydrated, setHydrated] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [directeurs, setDirecteurs] = useState<Directeur[]>([]);
+  const [publications, setPublications] = useState<PrevisionPubliee[]>([]);
+  const [publishing, setPublishing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const stored = loadFromStorage();
     if (stored && stored.length > 0) {
       setPrevisions(stored);
-      setActiveId(stored[0].id);
+      setSelection({ kind: 'draft', id: stored[0].id });
     }
     setHydrated(true);
+  }, []);
+
+  // Chargement des prévisions déjà publiées (visibles par tous, sans auth).
+  const refreshPublications = useCallback(async () => {
+    try {
+      const res = await fetch('/api/previsions-structure', { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = (await res.json()) as PrevisionPubliee[];
+      if (Array.isArray(data)) setPublications(data);
+    } catch {
+      /* publications indispo — la page reste utilisable en brouillon local */
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshPublications();
+  }, [refreshPublications]);
+
+  // Chargement de l'annuaire — aplati en une liste de directeurs avec leur école.
+  // En cas d'échec on garde une liste vide ; le dropdown affichera l'aide
+  // "Contactez le CPC numérique".
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/annuaire');
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          ecoles?: { id: string; name: string; directors?: { id: string; name: string; ordre?: number }[] }[];
+        };
+        const flat: Directeur[] = [];
+        for (const ec of data.ecoles ?? []) {
+          for (const d of ec.directors ?? []) {
+            flat.push({ id: d.id, name: d.name, ecoleId: ec.id, ecoleName: ec.name });
+          }
+        }
+        flat.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+        if (!cancelled) setDirecteurs(flat);
+      } catch {
+        /* annuaire indispo — la page reste utilisable en brouillon local */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -79,16 +147,24 @@ export default function PrevisionStructurePage() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const active = useMemo(
-    () => previsions.find((p) => p.id === activeId) ?? previsions[0],
-    [previsions, activeId],
-  );
+  const active = useMemo<Prevision | null>(() => {
+    if (selection.kind === 'draft') {
+      return previsions.find((p) => p.id === selection.id) ?? previsions[0] ?? null;
+    }
+    const pub = publications.find((p) => p.ecole_id === selection.ecoleId);
+    if (!pub) return previsions[0] ?? null;
+    return publicationToPrevision(pub, `pub:${pub.ecole_id}`);
+  }, [selection, previsions, publications]);
+
+  const readOnly = selection.kind === 'published';
 
   const updateActive = useCallback(
     (mut: (p: Prevision) => void) => {
+      if (selection.kind !== 'draft') return;
+      const draftId = selection.id;
       setPrevisions((prev) =>
         prev.map((p) => {
-          if (p.id !== active.id) return p;
+          if (p.id !== draftId) return p;
           const clone: Prevision = JSON.parse(JSON.stringify(p));
           mut(clone);
           clone.updatedAt = Date.now();
@@ -96,16 +172,48 @@ export default function PrevisionStructurePage() {
         }),
       );
     },
-    [active?.id],
+    [selection],
   );
+
+  // Premier visiteur (mairie, recteur…) : si tous les brouillons sont vides et
+  // qu'au moins une fiche est publiée, on bascule sur la plus récente pour qu'il
+  // voie immédiatement du contenu plutôt qu'une fiche vierge.
+  useEffect(() => {
+    if (!hydrated || publications.length === 0) return;
+    if (selection.kind !== 'draft') return;
+    const allDraftsEmpty = previsions.every((p) => !p.directeurId && !hasAnyData(p));
+    if (!allDraftsEmpty) return;
+    const latest = publications[0];
+    setSelection({ kind: 'published', ecoleId: latest.ecole_id });
+    // On ne dépend volontairement pas de `previsions` ici : on ne veut basculer
+    // qu'une seule fois, à l'arrivée. Sinon toute modification de brouillon
+    // rebasculerait.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, publications]);
 
   const stats = useMemo(() => (active ? computeStats(active) : null), [active]);
 
   const addEcole = () => {
     const id = crypto.randomUUID();
     const fresh = makeEmptyPrevision(id);
+    // Si un directeur a déjà été choisi dans une autre fiche, on le pré-remplit
+    // pour éviter de le re-sélectionner à chaque nouveau brouillon.
+    try {
+      const lastId = localStorage.getItem(LAST_DIRECTEUR_KEY);
+      if (lastId) {
+        const d = directeurs.find((x) => x.id === lastId);
+        if (d) {
+          fresh.directeurId = d.id;
+          fresh.ecoleId = d.ecoleId;
+          fresh.auteur = d.name;
+          fresh.ecole = d.ecoleName;
+        }
+      }
+    } catch {
+      /* localStorage indispo */
+    }
     setPrevisions((p) => [...p, fresh]);
-    setActiveId(id);
+    setSelection({ kind: 'draft', id });
   };
 
   const removeEcole = (id: string) => {
@@ -113,20 +221,43 @@ export default function PrevisionStructurePage() {
       const next = prev.filter((p) => p.id !== id);
       if (next.length === 0) {
         const empty = makeEmptyPrevision(crypto.randomUUID());
-        setActiveId(empty.id);
+        setSelection({ kind: 'draft', id: empty.id });
         return [empty];
       }
-      if (id === activeId) setActiveId(next[0].id);
+      if (selection.kind === 'draft' && id === selection.id) {
+        setSelection({ kind: 'draft', id: next[0].id });
+      }
       return next;
     });
   };
 
   const resetActive = () => {
+    if (selection.kind !== 'draft' || !active) return;
     if (!confirm("Effacer toutes les données de cette école ? Cette action n'est pas annulable.")) return;
+    const draftId = selection.id;
     setPrevisions((prev) =>
-      prev.map((p) => (p.id === active.id ? { ...makeEmptyPrevision(p.id) } : p)),
+      prev.map((p) => (p.id === draftId ? { ...makeEmptyPrevision(p.id) } : p)),
     );
     setToast('Fiche réinitialisée.');
+  };
+
+  // Ouvre une publication en édition : on duplique la fiche en brouillon local,
+  // ou on bascule sur le brouillon existant pour cette école si on l'a déjà
+  // chargée pour modification dans la session.
+  const onEditPublication = () => {
+    if (selection.kind !== 'published') return;
+    const pub = publications.find((p) => p.ecole_id === selection.ecoleId);
+    if (!pub) return;
+    const existing = previsions.find((p) => p.ecoleId === pub.ecole_id);
+    if (existing) {
+      setSelection({ kind: 'draft', id: existing.id });
+      setToast('Brouillon existant chargé — vos modifications en cours sont préservées.');
+      return;
+    }
+    const draft = publicationToPrevision(pub, crypto.randomUUID());
+    setPrevisions((prev) => [...prev, draft]);
+    setSelection({ kind: 'draft', id: draft.id });
+    setToast('Fiche chargée — republiez pour mettre à jour la version visible.');
   };
 
   const onPickFile = () => fileRef.current?.click();
@@ -144,7 +275,14 @@ export default function PrevisionStructurePage() {
     }
   };
 
+  const canPublish = !readOnly && Boolean(active?.directeurId && active?.ecoleId);
+  const canExport = Boolean(active?.directeurId && active?.ecoleId);
+
   const onExport = async () => {
+    if (!canExport) {
+      setToast('Sélectionnez votre nom dans la liste avant d’exporter.');
+      return;
+    }
     try {
       const target = active ? [active] : previsions;
       await exportToXlsx(target);
@@ -155,6 +293,37 @@ export default function PrevisionStructurePage() {
   };
 
   const onPrint = () => window.print();
+
+  const onPublish = async () => {
+    if (!active || !canPublish || publishing || readOnly) return;
+    if (selection.kind !== 'draft') return;
+    const draftId = selection.id;
+    const ecoleId = active.ecoleId;
+    const ecoleLabel = active.ecole;
+    setPublishing(true);
+    try {
+      const res = await fetch('/api/previsions-structure', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(previsionToApiPayload(active)),
+      });
+      if (!res.ok) {
+        const txt = await res.json().catch(() => ({}));
+        setToast(txt?.message || 'Publication impossible.');
+        return;
+      }
+      // Publication réussie : on rafraîchit la liste live, puis on retire le
+      // brouillon et on bascule sur la pill publiée. Une école = une pill.
+      await refreshPublications();
+      setPrevisions((prev) => prev.filter((d) => d.id !== draftId));
+      setSelection({ kind: 'published', ecoleId });
+      setToast(`« ${ecoleLabel} » est publiée — visible par tous.`);
+    } catch {
+      setToast('Publication impossible — vérifiez la connexion.');
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   if (!active || !stats) return null;
 
@@ -170,19 +339,45 @@ export default function PrevisionStructurePage() {
           padding="py-10 md:py-12"
           action={
             <div className="flex flex-wrap items-center gap-2">
-              <TopBtn onClick={onPickFile} icon={<UploadIcon />} label="Importer .xlsx" />
-              <TopBtn onClick={onExport} icon={<DownloadIcon />} label="Exporter .xlsx" />
-              <TopBtn onClick={onPrint} icon={<PrinterIcon />} label="Imprimer A3" primary />
+              {!readOnly && (
+                <TopBtn onClick={onPickFile} icon={<UploadIcon />} label="Importer .xlsx" />
+              )}
+              <TopBtn
+                onClick={onExport}
+                icon={<DownloadIcon />}
+                label="Exporter .xlsx"
+                disabled={!canExport}
+                disabledTitle="Sélectionnez votre nom dans la liste pour exporter."
+              />
+              <TopBtn onClick={onPrint} icon={<PrinterIcon />} label="Imprimer A3" />
+              {readOnly ? (
+                <TopBtn
+                  onClick={onEditPublication}
+                  icon={<EditIcon />}
+                  label="Modifier cette fiche"
+                  primary
+                />
+              ) : (
+                <TopBtn
+                  onClick={onPublish}
+                  icon={publishing ? <SpinnerIcon /> : <SendIcon />}
+                  label={publishing ? 'Publication…' : 'Publier'}
+                  primary
+                  disabled={!canPublish || publishing}
+                  disabledTitle="Sélectionnez votre nom dans la liste pour publier."
+                />
+              )}
               <input ref={fileRef} type="file" accept=".xlsx,.xls" hidden onChange={onFile} />
             </div>
           }
         >
           <SchoolTabs
-            list={previsions}
-            activeId={activeId}
-            onPick={setActiveId}
+            drafts={previsions}
+            publications={publications}
+            selection={selection}
+            onSelect={setSelection}
             onAdd={addEcole}
-            onRemove={removeEcole}
+            onRemoveDraft={removeEcole}
           />
         </AuroraHeader>
       </div>
@@ -191,6 +386,8 @@ export default function PrevisionStructurePage() {
         <div className="print:p-6">
           <IdentityBlock
             p={active}
+            directeurs={directeurs}
+            readOnly={readOnly}
             onChange={(patch) =>
               updateActive((p) => {
                 Object.assign(p, patch);
@@ -206,6 +403,7 @@ export default function PrevisionStructurePage() {
 
           <Grid
             p={active}
+            readOnly={readOnly}
             onEffectifChange={(key, val) => updateActive((p) => void (p.effectifs[key] = val))}
             onCellChange={(key, c, val) =>
               updateActive((p) => {
@@ -222,27 +420,33 @@ export default function PrevisionStructurePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6 print:grid-cols-2 print:gap-3 print:mt-4">
             <CommentCard
               tone="positive"
-              title="Points positifs"
+              title="Points positifs sur la structure"
+              placeholder="Ex. : projet bilingue maintenu, CP dédoublés OK, salle informatique disponible…"
               value={active.commPositifs}
+              readOnly={readOnly}
               onChange={(v) => updateActive((p) => void (p.commPositifs = v))}
             />
             <CommentCard
               tone="negative"
-              title="Points de vigilance"
+              title="Points d’attention sur la structure (effectifs, locaux, …)"
+              placeholder="Ex. : petite salle pour C3, classe ULIS à reconfigurer, effectif CE2 à confirmer…"
               value={active.commNegatifs}
+              readOnly={readOnly}
               onChange={(v) => updateActive((p) => void (p.commNegatifs = v))}
             />
           </div>
 
-          <div className="mt-6 flex justify-end gap-2 print:hidden">
-            <button
-              onClick={resetActive}
-              className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 text-sm font-medium px-3 py-2 rounded-xl hover:bg-rose-50 transition-colors"
-            >
-              <TrashIcon />
-              Réinitialiser cette fiche
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="mt-6 flex justify-end gap-2 print:hidden">
+              <button
+                onClick={resetActive}
+                className="inline-flex items-center gap-2 text-rose-600 hover:text-rose-700 text-sm font-medium px-3 py-2 rounded-xl hover:bg-rose-50 transition-colors"
+              >
+                <TrashIcon />
+                Réinitialiser cette fiche
+              </button>
+            </div>
+          )}
         </div>
       </main>
 
@@ -303,17 +507,25 @@ function TopBtn({
   icon,
   label,
   primary,
+  disabled,
+  disabledTitle,
 }: {
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
   primary?: boolean;
+  disabled?: boolean;
+  disabledTitle?: string;
 }) {
   return (
     <button
       onClick={onClick}
+      title={disabled ? disabledTitle : undefined}
+      aria-disabled={disabled}
       className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all active:translate-y-px ${
-        primary
+        disabled
+          ? 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed'
+          : primary
           ? 'bg-white text-primary-700 hover:bg-white/90 shadow-[0_6px_18px_-6px_rgba(0,0,0,0.25)]'
           : 'bg-white/10 backdrop-blur-md border border-white/25 text-white hover:bg-white/20'
       }`}
@@ -334,84 +546,234 @@ const SCHOOL_GRADIENTS = [
 ];
 
 function SchoolTabs({
-  list,
-  activeId,
-  onPick,
+  drafts,
+  publications,
+  selection,
+  onSelect,
   onAdd,
+  onRemoveDraft,
+}: {
+  drafts: Prevision[];
+  publications: PrevisionPubliee[];
+  selection: Selection;
+  onSelect: (s: Selection) => void;
+  onAdd: () => void;
+  onRemoveDraft: (id: string) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const totalCount = drafts.length + publications.length;
+  const showSearch = totalCount > 8;
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const q = norm(query.trim());
+
+  const sortedPubs = useMemo(
+    () =>
+      [...publications].sort(
+        (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime(),
+      ),
+    [publications],
+  );
+  const visiblePubs = q
+    ? sortedPubs.filter(
+        (p) => norm(p.ecole_name).includes(q) || norm(p.directeur_name).includes(q),
+      )
+    : sortedPubs;
+  const visibleDrafts = q
+    ? drafts.filter((p) => norm(p.ecole).includes(q) || norm(p.auteur).includes(q))
+    : drafts;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {showSearch && (
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/50">
+              <SearchIcon />
+            </span>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher une école ou un directeur…"
+              className="bg-white/10 border border-white/15 rounded-full pl-8 pr-3 py-1.5 text-[12px] text-white placeholder:text-white/40 w-72 outline-none focus:border-white/40 focus:bg-white/15"
+            />
+          </div>
+          <span className="text-[10px] text-white/40">
+            {visiblePubs.length + visibleDrafts.length} / {totalCount}
+          </span>
+        </div>
+      )}
+
+      {visiblePubs.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-white/50 mr-1">
+            Publiées ({publications.length})
+          </span>
+          {visiblePubs.map((pub, i) => {
+            const isActive =
+              selection.kind === 'published' && selection.ecoleId === pub.ecole_id;
+            const gradient = SCHOOL_GRADIENTS[i % SCHOOL_GRADIENTS.length];
+            return (
+              <PublishedPill
+                key={pub.ecole_id}
+                pub={pub}
+                gradient={gradient}
+                active={isActive}
+                onClick={() => onSelect({ kind: 'published', ecoleId: pub.ecole_id })}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        {drafts.length > 0 && (
+          <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-white/50 mr-1">
+            Mes brouillons ({drafts.length})
+          </span>
+        )}
+        {visibleDrafts.map((p, i) => {
+          const isActive = selection.kind === 'draft' && p.id === selection.id;
+          const gradient = SCHOOL_GRADIENTS[i % SCHOOL_GRADIENTS.length];
+          return (
+            <DraftPill
+              key={p.id}
+              p={p}
+              gradient={gradient}
+              active={isActive}
+              canRemove={drafts.length > 1}
+              onClick={() => onSelect({ kind: 'draft', id: p.id })}
+              onRemove={() => onRemoveDraft(p.id)}
+            />
+          );
+        })}
+        <button
+          onClick={onAdd}
+          className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-dashed border-white/25 text-[11px] font-semibold tracking-wide text-white/70 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all duration-200 cursor-pointer active:scale-95"
+        >
+          <PlusIcon /> Ajouter une école
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PublishedPill({
+  pub,
+  gradient,
+  active,
+  onClick,
+}: {
+  pub: PrevisionPubliee;
+  gradient: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const sublabel = `${pub.nb_classes} classe${pub.nb_classes > 1 ? 's' : ''}`;
+  return (
+    <motion.div
+      layout
+      onClick={onClick}
+      className={`group relative inline-flex items-center gap-2 px-3 py-2 md:py-1.5 rounded-full border text-[11px] font-semibold tracking-wide transition-all duration-200 cursor-pointer active:scale-95 ${
+        active
+          ? `bg-gradient-to-r ${gradient} text-white border-transparent shadow-lg shadow-black/20`
+          : 'bg-white/10 border-white/15 text-white/85 hover:bg-white/15 hover:text-white hover:border-white/30'
+      }`}
+      title={`Publiée le ${new Date(pub.published_at).toLocaleDateString('fr-FR')} par ${pub.directeur_name}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-white' : `bg-gradient-to-r ${gradient}`}`} />
+      <span className="truncate max-w-[220px]">{pub.ecole_name}</span>
+      <span className={`font-normal ${active ? 'text-white/90' : 'text-white/55'}`}>
+        · {sublabel}
+      </span>
+    </motion.div>
+  );
+}
+
+function DraftPill({
+  p,
+  gradient,
+  active,
+  canRemove,
+  onClick,
   onRemove,
 }: {
-  list: Prevision[];
-  activeId: string;
-  onPick: (id: string) => void;
-  onAdd: () => void;
-  onRemove: (id: string) => void;
+  p: Prevision;
+  gradient: string;
+  active: boolean;
+  canRemove: boolean;
+  onClick: () => void;
+  onRemove: () => void;
 }) {
+  const label = p.ecole.trim() || 'Nouvelle école';
+  const sublabel = `${p.nbClasses} classe${p.nbClasses > 1 ? 's' : ''}`;
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-white/50 mr-1">
-        École
+    <motion.div
+      key={p.id}
+      layout
+      onClick={onClick}
+      className={`group relative inline-flex items-center gap-2 px-3 py-2 md:py-1.5 rounded-full border-2 border-dashed text-[11px] font-semibold tracking-wide transition-all duration-200 cursor-pointer active:scale-95 ${
+        active
+          ? `bg-gradient-to-r ${gradient} text-white border-white/50 shadow-lg shadow-black/20`
+          : 'bg-white/5 border-white/20 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/40'
+      }`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-white' : `bg-gradient-to-r ${gradient}`}`} />
+      <span className="truncate max-w-[220px]">{label}</span>
+      <span className={`font-normal ${active ? 'text-white/90' : 'text-white/50'}`}>
+        · {sublabel}
       </span>
-      {list.map((p, i) => {
-        const isActive = p.id === activeId;
-        const gradient = SCHOOL_GRADIENTS[i % SCHOOL_GRADIENTS.length];
-        const label = p.ecole.trim() || 'Nouvelle école';
-        const sublabel = `${p.nbClasses} classe${p.nbClasses > 1 ? 's' : ''}`;
-        return (
-          <motion.div
-            key={p.id}
-            layout
-            className={`group relative inline-flex items-center gap-2 px-3 py-2 md:py-1.5 rounded-full border text-[11px] font-semibold tracking-wide transition-all duration-200 cursor-pointer active:scale-95 ${
-              isActive
-                ? `bg-gradient-to-r ${gradient} text-white border-transparent shadow-lg shadow-black/20`
-                : 'bg-white/5 border-white/15 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/30'
-            }`}
-            onClick={() => onPick(p.id)}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                isActive ? 'bg-white' : `bg-gradient-to-r ${gradient}`
-              }`}
-            />
-            <span className="truncate max-w-[240px]">{label}</span>
-            <span className={`font-normal ${isActive ? 'text-white/90' : 'text-white/50'}`}>
-              · {sublabel}
-            </span>
-            {list.length > 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove(p.id);
-                }}
-                aria-label="Supprimer cette école"
-                className={`-mr-1 ml-0.5 w-5 h-5 inline-flex items-center justify-center rounded-full transition-colors ${
-                  isActive
-                    ? 'text-white/80 hover:text-white hover:bg-white/20'
-                    : 'text-white/50 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                <XIcon />
-              </button>
-            )}
-          </motion.div>
-        );
-      })}
-      <button
-        onClick={onAdd}
-        className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-dashed border-white/25 text-[11px] font-semibold tracking-wide text-white/70 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all duration-200 cursor-pointer active:scale-95"
-      >
-        <PlusIcon /> Ajouter une école
-      </button>
-    </div>
+      {canRemove && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          aria-label="Supprimer ce brouillon"
+          className={`-mr-1 ml-0.5 w-5 h-5 inline-flex items-center justify-center rounded-full transition-colors ${
+            active
+              ? 'text-white/80 hover:text-white hover:bg-white/20'
+              : 'text-white/50 hover:text-white hover:bg-white/15'
+          }`}
+        >
+          <XIcon />
+        </button>
+      )}
+    </motion.div>
   );
 }
 
 function IdentityBlock({
   p,
+  directeurs,
+  readOnly,
   onChange,
 }: {
   p: Prevision;
+  directeurs: Directeur[];
+  readOnly?: boolean;
   onChange: (patch: Partial<Prevision>) => void;
 }) {
+  const directeurSelected = Boolean(p.directeurId);
+  const onPickDirecteur = (id: string) => {
+    if (!id) {
+      onChange({ directeurId: '', ecoleId: '', auteur: '', ecole: '' });
+      return;
+    }
+    const d = directeurs.find((x) => x.id === id);
+    if (!d) return;
+    onChange({
+      directeurId: d.id,
+      ecoleId: d.ecoleId,
+      auteur: d.name,
+      ecole: d.ecoleName,
+    });
+    try {
+      localStorage.setItem(LAST_DIRECTEUR_KEY, d.id);
+    } catch {
+      /* localStorage indispo */
+    }
+  };
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 8 }}
@@ -420,18 +782,19 @@ function IdentityBlock({
       className="bg-white rounded-3xl border border-slate-200 shadow-[0_1px_0_rgba(15,23,42,0.02),0_24px_48px_-24px_rgba(30,90,120,0.22)] hover:shadow-[0_1px_0_rgba(15,23,42,0.04),0_32px_60px_-24px_rgba(30,90,120,0.30)] hover:border-slate-300 transition-[box-shadow,border-color] duration-300 p-6 mt-6 print:shadow-none print:border-slate-300 print:rounded-none print:p-4 print:mt-0"
     >
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <FieldText
-          label="École"
+        {readOnly ? (
+          <FieldReadOnly label="Directeur / directrice" value={p.auteur} icon={<LockIcon />} className="md:col-span-5" />
+        ) : (
+          <FieldDirecteur
+            value={p.directeurId}
+            directeurs={directeurs}
+            onChange={onPickDirecteur}
+            className="md:col-span-5"
+          />
+        )}
+        <FieldEcoleLocked
           value={p.ecole}
-          onChange={(v) => onChange({ ecole: v })}
-          placeholder="Nom de l'école"
-          className="md:col-span-5"
-        />
-        <FieldText
-          label="Directeur / directrice"
-          value={p.auteur}
-          onChange={(v) => onChange({ auteur: v })}
-          placeholder="Nom de l'auteur"
+          selected={directeurSelected || readOnly}
           className="md:col-span-3"
         />
         <FieldText
@@ -440,6 +803,7 @@ function IdentityBlock({
           onChange={(v) => onChange({ anneeN: v })}
           placeholder="2025-2026"
           className="md:col-span-2"
+          readOnly={readOnly}
         />
         <FieldText
           label="Année n+1"
@@ -447,8 +811,18 @@ function IdentityBlock({
           onChange={(v) => onChange({ anneeN1: v })}
           placeholder="2026-2027"
           className="md:col-span-2"
+          readOnly={readOnly}
         />
       </div>
+      {!readOnly && !directeurSelected && (
+        <p className="mt-2 text-[12px] text-slate-500 flex items-center gap-1.5 print:hidden">
+          <span className="inline-flex w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+          Sélectionnez votre nom pour débloquer l’export et la publication.
+          <span className="text-slate-400">
+            · Mon nom n’est pas dans la liste ? Contactez le CPC numérique.
+          </span>
+        </p>
+      )}
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <div className="inline-flex items-center gap-3 bg-slate-50 rounded-2xl border border-slate-200 px-4 py-2.5">
           <span className="text-xs font-bold tracking-[0.15em] uppercase text-slate-500">
@@ -459,15 +833,21 @@ function IdentityBlock({
             min={1}
             max={MAX_CLASSES}
             value={p.nbClasses}
+            readOnly={readOnly}
             onChange={(e) => onChange({ nbClasses: Number(e.target.value) || 1 })}
-            className="w-16 bg-white rounded-lg border border-slate-300 px-2 py-1 text-center font-bold tabular-nums text-slate-900 outline-none focus:ring-2 focus:ring-primary-400"
+            className={`w-16 rounded-lg border px-2 py-1 text-center font-bold tabular-nums text-slate-900 outline-none ${
+              readOnly
+                ? 'bg-slate-100 border-slate-200 cursor-not-allowed'
+                : 'bg-white border-slate-300 focus:ring-2 focus:ring-primary-400'
+            }`}
           />
           <span className="text-xs text-slate-400">max {MAX_CLASSES}</span>
         </div>
 
         <button
           type="button"
-          onClick={() => onChange({ repPlus: !p.repPlus })}
+          onClick={() => !readOnly && onChange({ repPlus: !p.repPlus })}
+          disabled={readOnly}
           aria-pressed={p.repPlus}
           className={`inline-flex items-center gap-2.5 rounded-2xl border px-4 py-2.5 text-sm font-semibold transition-all active:translate-y-px ${
             p.repPlus
@@ -502,12 +882,14 @@ function FieldText({
   onChange,
   placeholder,
   className,
+  readOnly,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   className?: string;
+  readOnly?: boolean;
 }) {
   return (
     <label className={`flex flex-col gap-1.5 ${className ?? ''}`}>
@@ -516,10 +898,117 @@ function FieldText({
       </span>
       <input
         value={value}
+        readOnly={readOnly}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="bg-slate-50 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 outline-none transition-all focus:ring-2 focus:ring-primary-400 focus:bg-white"
+        className={`rounded-xl border px-3 py-2 text-sm text-slate-900 outline-none transition-all ${
+          readOnly
+            ? 'bg-slate-100 border-slate-200 cursor-not-allowed'
+            : 'bg-slate-50 border-slate-200 focus:ring-2 focus:ring-primary-400 focus:bg-white'
+        }`}
       />
+    </label>
+  );
+}
+
+function FieldReadOnly({
+  label,
+  value,
+  icon,
+  className,
+}: {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <label className={`flex flex-col gap-1.5 ${className ?? ''}`}>
+      <span className="text-[11px] font-bold tracking-[0.15em] uppercase text-slate-500">
+        {label}
+      </span>
+      <div className="flex items-center gap-2 rounded-xl border bg-slate-100 border-slate-200 px-3 py-2 text-sm text-slate-900">
+        {icon}
+        <span className="truncate">{value || '—'}</span>
+      </div>
+    </label>
+  );
+}
+
+function FieldDirecteur({
+  value,
+  directeurs,
+  onChange,
+  className,
+}: {
+  value: string;
+  directeurs: Directeur[];
+  onChange: (id: string) => void;
+  className?: string;
+}) {
+  const selected = directeurs.find((d) => d.id === value);
+  return (
+    <label className={`flex flex-col gap-1.5 ${className ?? ''}`}>
+      <span className="text-[11px] font-bold tracking-[0.15em] uppercase text-slate-500">
+        Directeur / directrice
+      </span>
+      <div
+        className={`relative rounded-xl border transition-all ${
+          selected
+            ? 'bg-emerald-50/40 border-emerald-200'
+            : 'bg-amber-50/40 border-amber-200 ring-1 ring-amber-100'
+        }`}
+      >
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none bg-transparent px-3 py-2 pr-9 text-sm font-medium text-slate-900 outline-none cursor-pointer"
+        >
+          <option value="">— Choisissez votre nom —</option>
+          {directeurs.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name} · {d.ecoleName}
+            </option>
+          ))}
+        </select>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+          <ChevronDownIcon />
+        </span>
+      </div>
+    </label>
+  );
+}
+
+function FieldEcoleLocked({
+  value,
+  selected,
+  className,
+}: {
+  value: string;
+  selected: boolean;
+  className?: string;
+}) {
+  return (
+    <label className={`flex flex-col gap-1.5 ${className ?? ''}`}>
+      <span className="text-[11px] font-bold tracking-[0.15em] uppercase text-slate-500">
+        École
+      </span>
+      <div
+        className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm ${
+          selected
+            ? 'bg-slate-50 border-slate-200 text-slate-900'
+            : 'bg-slate-50/60 border-dashed border-slate-200 text-slate-400 italic'
+        }`}
+      >
+        {selected ? (
+          <>
+            <LockIcon />
+            <span className="truncate">{value}</span>
+          </>
+        ) : (
+          <span>Sera renseignée automatiquement</span>
+        )}
+      </div>
     </label>
   );
 }
@@ -585,11 +1074,13 @@ function RepPlusBanner({
 
 function Grid({
   p,
+  readOnly,
   onEffectifChange,
   onCellChange,
   stats,
 }: {
   p: Prevision;
+  readOnly?: boolean;
   onEffectifChange: (key: NiveauKey, val: number) => void;
   onCellChange: (key: NiveauKey, c: number, val: number) => void;
   stats: ReturnType<typeof computeStats>;
@@ -673,6 +1164,7 @@ function Grid({
                       value={p.effectifs[n.key]}
                       onChange={(v) => onEffectifChange(n.key, v)}
                       strong
+                      readOnly={readOnly}
                     />
                   </td>
                   <td className="px-1 py-1 text-center text-sm font-bold tabular-nums ps-print-cell">
@@ -697,6 +1189,7 @@ function Grid({
                               ? `REP+ : un groupe ${n.label} dépasse ${REP_PLUS_MAX} élèves`
                               : undefined
                           }
+                          readOnly={readOnly}
                         />
                       </td>
                     );
@@ -775,6 +1268,7 @@ function NumberCell({
   onKeyDown,
   danger,
   dangerTitle,
+  readOnly,
 }: {
   value: number;
   onChange: (v: number) => void;
@@ -783,6 +1277,7 @@ function NumberCell({
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   danger?: boolean;
   dangerTitle?: string;
+  readOnly?: boolean;
 }) {
   const display = value === 0 ? '' : String(value);
   return (
@@ -790,22 +1285,27 @@ function NumberCell({
       inputMode="numeric"
       pattern="[0-9]*"
       value={display}
+      readOnly={readOnly}
+      tabIndex={readOnly ? -1 : undefined}
       data-cell={dataCell}
       title={dangerTitle}
-      onKeyDown={onKeyDown}
+      onKeyDown={readOnly ? undefined : onKeyDown}
       onChange={(e) => {
+        if (readOnly) return;
         const v = e.target.value.replace(/[^0-9]/g, '');
         onChange(v === '' ? 0 : Number(v));
       }}
-      onFocus={(e) => e.target.select()}
-      className={`w-full text-center tabular-nums border rounded-md py-1.5 md:py-1 outline-none transition-colors focus:ring-2 ${
-        danger
-          ? 'bg-rose-50 border-rose-300 text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 focus:bg-white focus:ring-rose-400'
-          : 'bg-transparent border-transparent text-slate-900 hover:bg-slate-100/70 focus:bg-white focus:ring-primary-400'
+      onFocus={(e) => !readOnly && e.target.select()}
+      className={`w-full text-center tabular-nums border rounded-md py-1.5 md:py-1 outline-none transition-colors ${
+        readOnly
+          ? 'bg-transparent border-transparent text-slate-700 cursor-default'
+          : danger
+          ? 'bg-rose-50 border-rose-300 text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 focus:bg-white focus:ring-2 focus:ring-rose-400'
+          : 'bg-transparent border-transparent text-slate-900 hover:bg-slate-100/70 focus:bg-white focus:ring-2 focus:ring-primary-400'
       } ${
         strong ? 'font-bold text-[15px]' : 'font-semibold text-[13px]'
       } print:hover:bg-transparent print:focus:bg-transparent`}
-      placeholder="·"
+      placeholder={readOnly ? '' : '·'}
     />
   );
 }
@@ -1152,12 +1652,16 @@ function NiveauChip({
 function CommentCard({
   tone,
   title,
+  placeholder,
   value,
+  readOnly,
   onChange,
 }: {
   tone: 'positive' | 'negative';
   title: string;
+  placeholder?: string;
   value: string;
+  readOnly?: boolean;
   onChange: (v: string) => void;
 }) {
   const accent =
@@ -1175,10 +1679,13 @@ function CommentCard({
         <h3 className={`text-xs font-bold uppercase tracking-[0.12em] ${accent.head}`}>{title}</h3>
         <textarea
           value={value}
+          readOnly={readOnly}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Notes libres…"
+          placeholder={readOnly ? '' : (placeholder ?? 'Notes libres…')}
           rows={5}
-          className="mt-2 w-full resize-y bg-transparent border-0 text-sm text-slate-800 leading-relaxed outline-none placeholder:text-slate-300 print:resize-none"
+          className={`mt-2 w-full resize-y bg-transparent border-0 text-sm leading-relaxed outline-none placeholder:text-slate-400 placeholder:italic print:resize-none ${
+            readOnly ? 'text-slate-600 cursor-default' : 'text-slate-800'
+          }`}
         />
       </div>
     </motion.div>
@@ -1219,4 +1726,22 @@ function TrashIcon() {
 }
 function AlertIcon() {
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+}
+function ChevronDownIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
+}
+function LockIcon() {
+  return <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+}
+function SendIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
+}
+function SpinnerIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>;
+}
+function EditIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>;
+}
+function SearchIcon() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
 }

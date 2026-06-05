@@ -35,6 +35,10 @@ export const MAX_CLASSES = 35;
 
 export type Prevision = {
   id: string;
+  // Identifiants annuaire — vides tant que le directeur ne s'est pas sélectionné
+  // dans le dropdown. Bloquent l'export et la publication.
+  ecoleId: string;
+  directeurId: string;
   ecole: string;
   auteur: string;
   anneeN: string;
@@ -51,6 +55,73 @@ export type Prevision = {
 export const REP_PLUS_MAX = 12;
 export const REP_PLUS_NIVEAUX: NiveauKey[] = ['CP', 'CE1'];
 
+// Format renvoyé par /api/previsions-structure (snake_case côté Supabase).
+export type PrevisionPubliee = {
+  ecole_id: string;
+  directeur_id: string;
+  directeur_name: string;
+  ecole_name: string;
+  annee_n: string;
+  annee_n1: string;
+  nb_classes: number;
+  rep_plus: boolean;
+  effectifs: Record<NiveauKey, number>;
+  repartition: Record<NiveauKey, number[]>;
+  comm_positifs: string;
+  comm_negatifs: string;
+  published_at: string;
+  client_id?: string | null;
+};
+
+// Convertit une publication serveur en Prevision locale (pour l'affichage
+// en lecture seule via les composants existants).
+export function publicationToPrevision(pub: PrevisionPubliee, id: string): Prevision {
+  const base = makeEmptyPrevision(id);
+  base.ecoleId = pub.ecole_id;
+  base.directeurId = pub.directeur_id;
+  base.ecole = pub.ecole_name;
+  base.auteur = pub.directeur_name;
+  base.anneeN = pub.annee_n;
+  base.anneeN1 = pub.annee_n1;
+  base.nbClasses = Math.max(1, Math.min(35, pub.nb_classes));
+  base.repPlus = Boolean(pub.rep_plus);
+  for (const n of NIVEAUX) {
+    base.effectifs[n.key] = Number(pub.effectifs?.[n.key]) || 0;
+    const arr = Array.isArray(pub.repartition?.[n.key]) ? pub.repartition[n.key] : [];
+    for (let c = 0; c < arr.length && c < base.repartition[n.key].length; c++) {
+      base.repartition[n.key][c] = Number(arr[c]) || 0;
+    }
+  }
+  base.commPositifs = pub.comm_positifs ?? '';
+  base.commNegatifs = pub.comm_negatifs ?? '';
+  base.updatedAt = new Date(pub.published_at).getTime();
+  return base;
+}
+
+// Convertit le format local (Prevision) en payload API (snake_case),
+// en tronquant repartition aux nb_classes effectives.
+export function previsionToApiPayload(p: Prevision) {
+  const repartition = {} as Record<NiveauKey, number[]>;
+  for (const n of NIVEAUX) {
+    repartition[n.key] = (p.repartition[n.key] || []).slice(0, p.nbClasses);
+  }
+  return {
+    directeur_id: p.directeurId,
+    ecole_id: p.ecoleId,
+    directeur_name: p.auteur,
+    ecole_name: p.ecole,
+    annee_n: p.anneeN,
+    annee_n1: p.anneeN1,
+    nb_classes: p.nbClasses,
+    rep_plus: p.repPlus,
+    effectifs: p.effectifs,
+    repartition,
+    comm_positifs: p.commPositifs,
+    comm_negatifs: p.commNegatifs,
+    client_id: p.id,
+  };
+}
+
 export function makeEmptyPrevision(id: string): Prevision {
   const effectifs = {} as Record<NiveauKey, number>;
   const repartition = {} as Record<NiveauKey, number[]>;
@@ -60,6 +131,8 @@ export function makeEmptyPrevision(id: string): Prevision {
   }
   return {
     id,
+    ecoleId: '',
+    directeurId: '',
     ecole: '',
     auteur: '',
     anneeN: '2025-2026',
