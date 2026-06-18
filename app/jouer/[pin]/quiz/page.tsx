@@ -108,6 +108,7 @@ export default function QuizJoueurPage() {
       if (res.ok) {
         const data: StatePayload = await res.json();
         setState(data);
+        setError(null); // une synchro réussie efface un éventuel message d'erreur transitoire
         // Réinitialiser le feedback à chaque changement de question
         setFeedback(prevFb => {
           if (!prevFb) return prevFb;
@@ -164,6 +165,15 @@ export default function QuizJoueurPage() {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [loadState]);
 
+  // Auto-disparition du toast d'erreur : sans ça, un raté réseau transitoire
+  // (ex. « Erreur de chargement » pendant le polling) reste affiché en rouge
+  // indéfiniment. On l'efface après 4 s.
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(null), 4000);
+    return () => clearTimeout(t);
+  }, [error]);
+
   // Timer côté client
   useEffect(() => {
     if (!state || state.session.statut !== 'question_active' || !state.session.question_started_at) {
@@ -177,10 +187,20 @@ export default function QuizJoueurPage() {
     return () => clearInterval(it);
   }, [state]);
 
-  // Initialise l'ordre courant à chaque nouvelle question de classement
+  // Initialise l'ordre courant à chaque nouvelle question de classement.
+  // ATTENTION : le polling de secours recrée un nouveau tableau `choix` à chaque
+  // rechargement (toutes les 3 s). On ne doit donc PAS réinitialiser bêtement à
+  // chaque re-render, sinon l'ordre que le participant vient de glisser-déposer
+  // est écrasé et la proposition « retourne à sa place ». On ne réinitialise que
+  // si l'ensemble des items a réellement changé (= nouvelle question).
   useEffect(() => {
     if (state?.question?.type === 'classement' && !state.a_deja_repondu) {
-      setOrdreCourant(state.question.choix.map(c => c.id));
+      const ids = state.question.choix.map(c => c.id);
+      setOrdreCourant(prev => {
+        const memesItems =
+          prev.length === ids.length && prev.every(id => ids.includes(id));
+        return memesItems ? prev : ids;
+      });
     }
   }, [state?.question?.id, state?.question?.type, state?.a_deja_repondu, state?.question?.choix]);
 
@@ -320,7 +340,7 @@ export default function QuizJoueurPage() {
                       <button
                         key={c.id}
                         onClick={() => repondre({ choix_id: c.id })}
-                        disabled={submitting || tempsRestantMs <= 0}
+                        disabled={submitting}
                         className={`bg-gradient-to-br ${couleur.bg} text-white rounded-2xl px-5 py-7 font-bold text-lg text-left shadow-xl active:scale-95 transition-all disabled:opacity-40 flex items-center gap-4`}
                       >
                         <span className="text-3xl text-white/90 flex-shrink-0">{couleur.forme}</span>
@@ -349,7 +369,7 @@ export default function QuizJoueurPage() {
                   <div className="fixed bottom-0 left-0 right-0 px-5 pt-8 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent z-20">
                     <button
                       onClick={() => repondre({ ordre_choisi: ordreCourant })}
-                      disabled={submitting || tempsRestantMs <= 0}
+                      disabled={submitting}
                       className="w-full bg-gradient-to-br from-emerald-400 to-cyan-500 text-white py-4 rounded-2xl text-lg font-bold shadow-2xl active:scale-95 disabled:opacity-40 transition-all"
                     >
                       {submitting ? 'Envoi…' : '✓ Valider mon ordre'}
