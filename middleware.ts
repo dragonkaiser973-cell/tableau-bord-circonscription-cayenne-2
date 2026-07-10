@@ -25,8 +25,13 @@ const PUBLIC_API_ROUTES = [
 // (POST/PUT/PATCH/DELETE nécessitent un token admin).
 const PUBLIC_READ_ADMIN_WRITE = [
   '/api/config',
-  '/api/evenements',
   '/api/archives',
+];
+
+// Routes à LECTURE publique (GET) mais ÉCRITURE réservée aux utilisateurs
+// authentifiés, quel que soit leur rôle (token valide requis, pas forcément admin).
+const PUBLIC_READ_AUTH_WRITE = [
+  '/api/evenements',
 ];
 
 const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
@@ -95,16 +100,20 @@ export async function middleware(request: NextRequest) {
     // Pour /api/questionnaires ou /api/enseignants en écriture → continuer vers vérification token
   }
 
-  // Routes lecture publique / écriture admin
+  // Routes lecture publique / écriture réservée (admin ou simple authentifié)
   const isPublicReadAdminWrite = PUBLIC_READ_ADMIN_WRITE.some(
     r => pathname === r || pathname.startsWith(r + '/')
   );
+  const isPublicReadAuthWrite = PUBLIC_READ_AUTH_WRITE.some(
+    r => pathname === r || pathname.startsWith(r + '/')
+  );
   const isMutation = MUTATION_METHODS.includes(request.method);
-  if (isPublicReadAdminWrite && !isMutation) {
+  if ((isPublicReadAdminWrite || isPublicReadAuthWrite) && !isMutation) {
     // GET/HEAD → lecture publique autorisée
     return NextResponse.next();
   }
-  // Écriture sur ces routes → continuer vers vérification token + rôle admin
+  // Écriture sur ces routes → continuer vers vérification token
+  // (rôle admin exigé uniquement pour PUBLIC_READ_ADMIN_WRITE, voir plus bas)
 
   // Toutes les autres routes API → token requis
   const authHeader = request.headers.get('authorization');
