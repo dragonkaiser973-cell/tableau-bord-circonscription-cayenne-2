@@ -46,7 +46,10 @@ export default function ArchivesPage() {
     try {
       const res = await fetch('/api/archives', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
         body: JSON.stringify({ anneeScolaire: newAnneeScolaire })
       });
 
@@ -74,7 +77,10 @@ export default function ArchivesPage() {
     }
 
     try {
-      const res = await fetch(`/api/archives?annee=${annee}`, { method: 'DELETE' });
+      const res = await fetch(`/api/archives?annee=${annee}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+      });
       
       if (res.ok) {
         setMessage({ type: 'success', text: `Archive ${annee} supprimée` });

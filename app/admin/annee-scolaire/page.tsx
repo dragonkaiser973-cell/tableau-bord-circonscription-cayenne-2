@@ -94,7 +94,10 @@ export default function ChangerAnneeScolairePage() {
       
       const res = await fetch('/api/changer-annee', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
         body: JSON.stringify({
           nouvelleAnnee: anneeDetectee,
           effectifActuel,
