@@ -108,7 +108,10 @@ export default function CalendrierPage() {
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
         body: JSON.stringify(body)
       });
 
@@ -125,7 +128,10 @@ export default function CalendrierPage() {
     if (!confirm('Supprimer cet événement ?')) return;
     
     try {
-      const res = await fetch(`/api/evenements?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/evenements?id=${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+      });
       if (res.ok) {
         loadEvenements();
       }

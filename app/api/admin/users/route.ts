@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 import { supabase } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
 
@@ -11,30 +12,31 @@ interface User {
   last_login?: string;
 }
 
-// Vérifier si l'utilisateur est admin via le token JWT
+// Vérifier si l'utilisateur est admin via le token JWT.
+// IMPORTANT : la signature du token est vérifiée cryptographiquement
+// (jwtVerify avec JWT_SECRET). Un décodage base64 brut ne prouve rien —
+// n'importe qui pourrait forger un payload { role: 'admin' }.
 async function verifyAdmin(request: NextRequest): Promise<boolean> {
+  if (!process.env.JWT_SECRET) return false;
+
   const authHeader = request.headers.get('authorization');
   if (!authHeader) return false;
 
   const token = authHeader.replace('Bearer ', '');
   try {
-    // Décoder le JWT en gérant le padding base64 correctement
-    const parts = token.split('.');
-    if (parts.length !== 3) return false;
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret);
 
-    // Ajouter le padding manquant
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
-    const payload = JSON.parse(Buffer.from(padded, 'base64').toString('utf-8'));
-
-    // Vérification 1 : rôle dans le token
+    // Rôle porté par le token signé
     if (payload.role === 'admin') return true;
 
-    // Vérification 2 : fallback → vérifier directement dans Supabase
-    if (payload.userId || payload.username) {
-      const query = payload.userId
-        ? supabase.from('users').select('role').eq('id', payload.userId).single()
-        : supabase.from('users').select('role').eq('username', payload.username).single();
+    // Repli : re-vérifier le rôle en base à partir des identifiants du token signé
+    const userId = payload.userId as number | undefined;
+    const username = payload.username as string | undefined;
+    if (userId || username) {
+      const query = userId
+        ? supabase.from('users').select('role').eq('id', userId).single()
+        : supabase.from('users').select('role').eq('username', username).single();
       const { data } = await query;
       return data?.role === 'admin';
     }

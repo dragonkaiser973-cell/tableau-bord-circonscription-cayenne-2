@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { creerArchiveComplete } from '@/lib/archives';
 
 // POST - Changer l'année scolaire et remettre toutes les données à zéro
 export async function POST(request: NextRequest) {
@@ -33,13 +34,14 @@ export async function POST(request: NextRequest) {
     let archive_creee = false;
     if (creerArchive) {
       try {
-        const archiveRes = await fetch(`${request.nextUrl.origin}/api/archives`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ anneeScolaire: ancienneAnnee, auto_created: true })
-        });
-        archive_creee = archiveRes.ok;
-        if (!archive_creee) console.warn('⚠️ Impossible de créer l\'archive automatiquement');
+        // Appel DIRECT de la logique d'archivage (pas de fetch HTTP interne) :
+        // /api/changer-annee est déjà réservé aux admins par le middleware, et
+        // /api/archives est désormais protégé — un fetch sans jeton échouerait.
+        const resultat = await creerArchiveComplete(ancienneAnnee, request.nextUrl.origin);
+        archive_creee = resultat.success;
+        if (!archive_creee) {
+          console.warn('⚠️ Impossible de créer l\'archive automatiquement:', (resultat as any).error);
+        }
       } catch (error) {
         console.warn('⚠️ Erreur création archive:', error);
         // On continue même si l'archive échoue

@@ -9,12 +9,9 @@ const PUBLIC_API_ROUTES = [
   '/api/ecoles-structure',
   '/api/enseignants',
   '/api/evaluations',
-  '/api/evenements',
-  '/api/config',
   '/api/statistiques-ecoles',
   '/api/stagiaires-m2',
-  '/api/archives',
-  '/api/archives/data',
+  '/api/archives/data',   // consultation seule (GET) des données d'une archive
   '/api/questionnaires',  // lecture publique (actifs seulement)
   '/api/questionnaires/soumissions',     // soumission publique
   '/api/annuaire',         // lecture publique de l'annuaire circo
@@ -23,6 +20,16 @@ const PUBLIC_API_ROUTES = [
 
   '/api/quiz/public',      // accès participants quiz live (via PIN, sans auth)
 ];
+
+// Routes à LECTURE publique (GET) mais ÉCRITURE réservée aux admins
+// (POST/PUT/PATCH/DELETE nécessitent un token admin).
+const PUBLIC_READ_ADMIN_WRITE = [
+  '/api/config',
+  '/api/evenements',
+  '/api/archives',
+];
+
+const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
 // Routes réservées aux admins
 const ADMIN_API_ROUTES = [
@@ -88,6 +95,17 @@ export async function middleware(request: NextRequest) {
     // Pour /api/questionnaires ou /api/enseignants en écriture → continuer vers vérification token
   }
 
+  // Routes lecture publique / écriture admin
+  const isPublicReadAdminWrite = PUBLIC_READ_ADMIN_WRITE.some(
+    r => pathname === r || pathname.startsWith(r + '/')
+  );
+  const isMutation = MUTATION_METHODS.includes(request.method);
+  if (isPublicReadAdminWrite && !isMutation) {
+    // GET/HEAD → lecture publique autorisée
+    return NextResponse.next();
+  }
+  // Écriture sur ces routes → continuer vers vérification token + rôle admin
+
   // Toutes les autres routes API → token requis
   const authHeader = request.headers.get('authorization');
   const token = authHeader?.replace('Bearer ', '');
@@ -107,7 +125,9 @@ export async function middleware(request: NextRequest) {
   const isQuestionnairesWrite = pathname.startsWith('/api/questionnaires') && ['POST', 'PUT', 'DELETE'].includes(request.method);
   const isEnseignantsWriteAdmin = pathname === '/api/enseignants' && ['PUT', 'DELETE'].includes(request.method);
 
-  if ((isAdminRoute || isQuestionnairesWrite || isEnseignantsWriteAdmin) && payload.role !== 'admin') {
+  const isPublicReadAdminWriteMutation = isPublicReadAdminWrite && isMutation;
+
+  if ((isAdminRoute || isQuestionnairesWrite || isEnseignantsWriteAdmin || isPublicReadAdminWriteMutation) && payload.role !== 'admin') {
     return NextResponse.json({ error: 'Accès réservé aux administrateurs' }, { status: 403 });
   }
 
