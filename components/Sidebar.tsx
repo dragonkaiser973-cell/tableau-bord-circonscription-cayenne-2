@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, LayoutGroup } from 'framer-motion';
 
 const sbSpring = { type: 'spring' as const, stiffness: 320, damping: 28 };
@@ -72,6 +72,7 @@ const categoryLabels: Record<string, string> = {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState('');
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -122,6 +123,16 @@ export default function Sidebar() {
     );
     if (parent) setOpenSubmenu(parent.label);
   }, [pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
+    setIsAuthenticated(false);
+    setUserRole('');
+    setIsMobileOpen(false);
+    router.push('/');
+  };
 
   const filteredItems = navItems.filter(item => {
     if (item.requiresAdmin && (!isAuthenticated || userRole !== 'admin')) return false;
@@ -398,11 +409,30 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* Collapse toggle */}
-        <div className="hidden lg:block p-3 border-t border-zen-border">
+        {/* Footer : déconnexion + repli */}
+        <div className="p-3 border-t border-zen-border space-y-1">
+          {isAuthenticated && (
+            <button
+              onClick={handleLogout}
+              className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-zen-text-secondary hover:bg-red-50 hover:text-red-600 transition-all duration-200 ${isCollapsed ? 'justify-center' : ''}`}
+              title={isCollapsed ? 'Se déconnecter' : undefined}
+            >
+              <span className="flex-shrink-0 w-5 h-5 text-zen-text-muted group-hover:text-red-600 transition-colors duration-200">
+                <LogoutIcon />
+              </span>
+              {!isCollapsed && <span className="truncate">Se déconnecter</span>}
+              {isCollapsed && (
+                <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-zen-accent text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 shadow-lg">
+                  Se déconnecter
+                </div>
+              )}
+            </button>
+          )}
+
+          {/* Repli (bureau uniquement) */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-zen-text-muted hover:bg-zen-bg hover:text-zen-text-secondary transition-all duration-200 text-sm"
+            className="hidden lg:flex w-full items-center justify-center gap-2 py-2 rounded-xl text-zen-text-muted hover:bg-zen-bg hover:text-zen-text-secondary transition-all duration-200 text-sm"
             title={isCollapsed ? 'Déplier' : 'Replier'}
           >
             <span className={`w-4 h-4 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}>
@@ -477,6 +507,9 @@ function CloseIcon() {
 }
 function ChevronLeftIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>;
+}
+function LogoutIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" /></svg>;
 }
 function ChevronDownIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>;
