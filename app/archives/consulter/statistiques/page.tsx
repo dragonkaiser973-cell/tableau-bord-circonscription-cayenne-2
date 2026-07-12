@@ -7,6 +7,7 @@ import { Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale, T
 import { Bar, Pie } from 'react-chartjs-2';
 import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 
 import PageLoader from '@/components/PageLoader';
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
@@ -29,6 +30,7 @@ function StatistiquesPageContent() {
   const [loading, setLoading] = useState(true);
   const [statsEcoles, setStatsEcoles] = useState<StatsEcole[]>([]);
   const [ecoles, setEcoles] = useState<any[]>([]);
+  const [ecolesIdentite, setEcolesIdentite] = useState<any[]>([]);
   const [structures, setStructures] = useState<any[]>([]);
   const [enseignants, setEnseignants] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
@@ -46,9 +48,10 @@ function StatistiquesPageContent() {
 
   const loadAllData = async () => {
     try {
-      const [statsRes, ecolesRes, structuresRes, ensRes, evalRes] = await Promise.all([
+      const [statsRes, ecolesRes, identiteRes, structuresRes, ensRes, evalRes] = await Promise.all([
         fetch(`/api/archives/data?annee=${annee}&type=statistiques_ecoles`).catch(() => ({ ok: false })),
         fetch(`/api/archives/data?annee=${annee}&type=ecoles_structure`).catch(() => ({ ok: false })),
+        fetch(`/api/archives/data?annee=${annee}&type=ecoles_identite`).catch(() => ({ ok: false })),
         fetch(`/api/archives/data?annee=${annee}&type=ecoles_structure`).catch(() => ({ ok: false })),
         fetch(`/api/archives/data?annee=${annee}&type=enseignants`).catch(() => ({ ok: false })),
         fetch(`/api/archives/data?annee=${annee}&type=evaluations`).catch(() => ({ ok: false }))
@@ -62,6 +65,11 @@ function StatistiquesPageContent() {
       if (ecolesRes.ok && 'json' in ecolesRes) {
         const ecolesData = await ecolesRes.json();
         setEcoles(ecolesData);
+      }
+
+      if (identiteRes.ok && 'json' in identiteRes) {
+        const identiteData = await identiteRes.json();
+        setEcolesIdentite(Array.isArray(identiteData) ? identiteData : []);
       }
 
       if (structuresRes.ok && 'json' in structuresRes) {
@@ -222,6 +230,89 @@ function StatistiquesPageContent() {
 
   const moyennesEval = getMoyennesEvaluations();
 
+  // La table statistiques_ecoles archive un nom tronqué (ex: "MONT" pour Mont-Lucas)
+  // et sans sigle. On récupère le nom complet + le sigle depuis ecoles_identite (archivé) via l'UAI.
+  const normNom = (s: string) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  const infoEcole = (uai: string, fallbackNom = '') => {
+    const e = ecolesIdentite.find((x) => x.uai === uai);
+    const nom = e?.nom || fallbackNom || '';
+    let sigle = e?.sigle || '';
+    if (!sigle) {
+      const n = normNom(nom);
+      if (n.includes('MATERNELLE') || n.includes('EMPU')) sigle = 'E.M.PU';
+      else if (n.includes('ELEMENTAIRE') || n.includes('EEPU')) sigle = 'E.E.PU';
+      else if (n.includes('PRIMAIRE') || n.includes('EPPU')) sigle = 'E.P.PU';
+    }
+    return { nom, sigle, label: sigle ? `${sigle} ${nom}` : nom };
+  };
+
+  const handleExportExcel = async () => {
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+    const niveaux = Object.keys(totauxNiveau).filter(n => totauxNiveau[n] > 0);
+
+    const sheetSynthese: ExcelSheetDef = {
+      name: 'Synthèse',
+      title: `Statistiques archivées · ${annee}`,
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr}`,
+      columns: [
+        { header: 'Indicateur', key: 'indicateur', width: 34 },
+        { header: 'Valeur', key: 'valeur', width: 16, align: 'center' },
+      ],
+      rows: [
+        { indicateur: "Nombre d'écoles", valeur: totalEcoles },
+        { indicateur: "Nombre d'élèves", valeur: totalEleves },
+        { indicateur: 'Nombre de classes', valeur: totalClasses },
+        { indicateur: "Nombre d'enseignants", valeur: totalEnseignants },
+        { indicateur: 'Effectif Maternelle', valeur: cycleData['Maternelle'] || 0 },
+        { indicateur: 'Effectif Cycle 2', valeur: cycleData['Cycle 2'] || 0 },
+        { indicateur: 'Effectif Cycle 3', valeur: cycleData['Cycle 3'] || 0 },
+        ...(moyennesEval ? [
+          { indicateur: `Réussite français (${moyennesEval.annee})`, valeur: `${moyennesEval.francais} %` },
+          { indicateur: `Réussite maths (${moyennesEval.annee})`, valeur: `${moyennesEval.maths} %` },
+        ] : []),
+      ],
+    };
+
+    const sheetNiveaux: ExcelSheetDef = {
+      name: 'Par niveau',
+      title: 'Effectifs par niveau',
+      subtitle: `Circonscription Cayenne 2 · Année ${annee} · Exporté le ${dateStr}`,
+      columns: [
+        { header: 'Niveau', key: 'niveau', width: 16 },
+        { header: 'Effectif', key: 'effectif', width: 14, align: 'center', numFmt: '0' },
+      ],
+      rows: niveaux.map(n => ({ niveau: n, effectif: totauxNiveau[n] })),
+      totalsRow: { niveau: 'TOTAL', effectif: niveaux.reduce((s, n) => s + totauxNiveau[n], 0) },
+    };
+
+    const sheetEcoles: ExcelSheetDef = {
+      name: 'Par école',
+      title: 'Effectifs par école et par niveau',
+      subtitle: `Circonscription Cayenne 2 · Année ${annee} · ${statsEcoles.length} écoles`,
+      columns: [
+        { header: 'Sigle', key: 'sigle', width: 10, align: 'center' as const },
+        { header: 'École', key: 'nom', width: 30 },
+        { header: 'UAI', key: 'uai', width: 12 },
+        ...niveaux.map(n => ({ header: n, key: `niv_${n}`, width: 10, align: 'center' as const, numFmt: '0' })),
+        { header: 'Total', key: 'total', width: 10, align: 'center' as const, numFmt: '0' },
+      ],
+      rows: statsEcoles.map(e => {
+        const info = infoEcole(e.uai, e.nom);
+        const row: Record<string, unknown> = { sigle: info.sigle, nom: info.nom, uai: e.uai || '' };
+        let total = 0;
+        niveaux.forEach(n => {
+          const v = e.repartitions?.[n] || 0;
+          row[`niv_${n}`] = v || '';
+          total += v;
+        });
+        row.total = total;
+        return row;
+      }),
+    };
+
+    await exportStyledExcel(`statistiques-archive-${annee}`, [sheetSynthese, sheetNiveaux, sheetEcoles]);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-700 via-primary-500 to-emerald-400">
@@ -242,6 +333,20 @@ function StatistiquesPageContent() {
         subtitle={`Vue consolidée des indicateurs pour l'année scolaire ${annee}.`}
         backHref={`/archives/consulter?annee=${annee}`}
         backLabel={`Retour à l'archive ${annee}`}
+        action={
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 bg-emerald-600/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-emerald-600 hover:-translate-y-0.5 transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+              <rect x="8" y="2" width="8" height="4" rx="1" />
+            </svg>
+            Exporter en Excel
+          </button>
+        }
       />
 
       {/* Contenu */}
@@ -357,7 +462,7 @@ function StatistiquesPageContent() {
                   const effB = b.effectifs['Admis définitifs'] || b.effectifs['Admis'] || 0;
                   return effB - effA;
                 })
-                .map(e => e.nom),
+                .map(e => infoEcole(e.uai, e.nom).label),
               datasets: [{
                 label: 'Effectifs',
                 data: [...statsEcoles]
@@ -374,10 +479,11 @@ function StatistiquesPageContent() {
                     return effB - effA;
                   })
                   .map(e => {
-                    // Couleur selon le type d'école
-                    if (e.nom.startsWith('E.M.PU')) return '#8b5cf6'; // Violet - Maternelle
-                    if (e.nom.startsWith('E.E.PU')) return '#3b82f6'; // Bleu - Élémentaire
-                    if (e.nom.startsWith('E.P.PU')) return '#10b981'; // Vert - Primaire
+                    // Couleur selon le type d'école (d'après le sigle récupéré via l'UAI)
+                    const sigle = infoEcole(e.uai, e.nom).sigle;
+                    if (sigle === 'E.M.PU') return '#8b5cf6'; // Violet - Maternelle
+                    if (sigle === 'E.E.PU') return '#3b82f6'; // Bleu - Élémentaire
+                    if (sigle === 'E.P.PU') return '#10b981'; // Vert - Primaire
                     return '#6b7280'; // Gris par défaut
                   }),
               }]
@@ -507,7 +613,7 @@ function StatistiquesPageContent() {
                   {/* En-tête école */}
                   <div className="flex justify-between items-center mb-4 pb-3 border-b-2 border-gray-300">
                     <div>
-                      <h4 className="text-lg font-bold text-gray-800">{ecole.nom}</h4>
+                      <h4 className="text-lg font-bold text-gray-800">{infoEcole(ecole.uai, ecole.nom).label}</h4>
                       <p className="text-sm text-gray-600">UAI: {ecole.uai} • {nbClasses} classes</p>
                     </div>
                     <div className="text-right">
