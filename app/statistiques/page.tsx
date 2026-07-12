@@ -82,8 +82,24 @@ export default function StatistiquesPage() {
     }
   };
 
+  // La table statistiques_ecoles stocke un nom tronqué (ex: "MONT" pour Mont-Lucas)
+  // et sans sigle. On récupère le nom complet + le sigle depuis ecoles_identite via l'UAI.
+  const normNom = (s: string) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  const infoEcole = (uai: string, fallbackNom = '') => {
+    const e = ecoles.find((x) => x.uai === uai);
+    const nom = e?.nom || fallbackNom || '';
+    let sigle = e?.sigle || '';
+    if (!sigle) {
+      const n = normNom(nom);
+      if (n.includes('MATERNELLE') || n.includes('EMPU')) sigle = 'E.M.PU';
+      else if (n.includes('ELEMENTAIRE') || n.includes('EEPU')) sigle = 'E.E.PU';
+      else if (n.includes('PRIMAIRE') || n.includes('EPPU')) sigle = 'E.P.PU';
+    }
+    return { nom, sigle, label: sigle ? `${sigle} ${nom}` : nom };
+  };
+
   // Calculs globaux
-  const totalEleves = statsEcoles.reduce((sum, ecole) => 
+  const totalEleves = statsEcoles.reduce((sum, ecole) =>
     sum + (ecole.effectifs['Admis définitifs'] || ecole.effectifs['Admis'] || 0), 0
   );
 
@@ -263,13 +279,15 @@ export default function StatistiquesPage() {
       title: 'Effectifs par école et par niveau',
       subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr} · ${statsEcoles.length} écoles`,
       columns: [
-        { header: 'École', key: 'nom', width: 28 },
+        { header: 'Sigle', key: 'sigle', width: 10, align: 'center' as const },
+        { header: 'École', key: 'nom', width: 30 },
         { header: 'UAI', key: 'uai', width: 12 },
         ...niveaux.map(n => ({ header: n, key: `niv_${n}`, width: 10, align: 'center' as const, numFmt: '0' })),
         { header: 'Total', key: 'total', width: 10, align: 'center' as const, numFmt: '0' },
       ],
       rows: statsEcoles.map(e => {
-        const row: Record<string, unknown> = { nom: e.nom || '', uai: e.uai || '' };
+        const info = infoEcole(e.uai, e.nom);
+        const row: Record<string, unknown> = { sigle: info.sigle, nom: info.nom, uai: e.uai || '' };
         let total = 0;
         niveaux.forEach(n => {
           const v = e.repartitions?.[n] || 0;
@@ -440,7 +458,7 @@ export default function StatistiquesPage() {
                   const effB = b.effectifs['Admis définitifs'] || b.effectifs['Admis'] || 0;
                   return effB - effA;
                 })
-                .map(e => e.nom),
+                .map(e => infoEcole(e.uai, e.nom).label),
               datasets: [{
                 label: 'Effectifs',
                 data: [...statsEcoles]
@@ -457,10 +475,11 @@ export default function StatistiquesPage() {
                     return effB - effA;
                   })
                   .map(e => {
-                    // Couleur selon le type d'école
-                    if (e.nom.startsWith('E.M.PU')) return '#8b5cf6'; // Violet - Maternelle
-                    if (e.nom.startsWith('E.E.PU')) return '#3b82f6'; // Bleu - Élémentaire
-                    if (e.nom.startsWith('E.P.PU')) return '#10b981'; // Vert - Primaire
+                    // Couleur selon le type d'école (d'après le sigle récupéré via l'UAI)
+                    const sigle = infoEcole(e.uai, e.nom).sigle;
+                    if (sigle === 'E.M.PU') return '#8b5cf6'; // Violet - Maternelle
+                    if (sigle === 'E.E.PU') return '#3b82f6'; // Bleu - Élémentaire
+                    if (sigle === 'E.P.PU') return '#10b981'; // Vert - Primaire
                     return '#6b7280'; // Gris par défaut
                   }),
               }]
@@ -590,7 +609,7 @@ export default function StatistiquesPage() {
                   {/* En-tête école */}
                   <div className="flex justify-between items-center mb-4 pb-3 border-b-2 border-gray-300">
                     <div>
-                      <h4 className="text-lg font-bold text-gray-800">{ecole.nom}</h4>
+                      <h4 className="text-lg font-bold text-gray-800">{infoEcole(ecole.uai, ecole.nom).label}</h4>
                       <p className="text-sm text-gray-600">UAI: {ecole.uai} • {nbClasses} classes</p>
                     </div>
                     <div className="text-right">
