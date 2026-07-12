@@ -7,6 +7,7 @@ import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFElement, PDFExportOptions } from '@/lib/pdfExport';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 
 import PageLoader from '@/components/PageLoader';
 export default function PilotagePage() {
@@ -240,6 +241,90 @@ export default function PilotagePage() {
     return alertes;
   };
 
+  const handleExportExcel = async () => {
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+    const ind = getIndicateurs();
+    const evo = getEvolutionEffectifs();
+
+    // Liste complète des écoles (effectif, classes, moyenne)
+    const rowsEcoles = structures.map(ecole => {
+      let effectif = 0;
+      let nbClasses = 0;
+      if (Array.isArray(ecole.classes)) {
+        ecole.classes.forEach((c: any) => { effectif += c.nbEleves || 0; nbClasses++; });
+      }
+      const ecoleIdentite = ecoles.find(ei => ei.uai === ecole.uai);
+      const nomEcole = ecoleIdentite?.nom || ecole.nom || `École ${ecole.uai}`;
+      return {
+        nom: nomEcole,
+        uai: ecole.uai || '',
+        effectif,
+        nbClasses,
+        moyenne: nbClasses > 0 ? Number((effectif / nbClasses).toFixed(1)) : '',
+      };
+    }).filter(e => e.effectif > 0).sort((a, b) => b.effectif - a.effectif);
+
+    const sheetSynthese: ExcelSheetDef = {
+      name: 'Synthèse',
+      title: `Pilotage — indicateurs clés (${ind.anneeScolaire})`,
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr}`,
+      columns: [
+        { header: 'Indicateur', key: 'indicateur', width: 42 },
+        { header: 'Valeur', key: 'valeur', width: 18, align: 'center' },
+      ],
+      rows: [
+        { indicateur: 'Effectif total', valeur: ind.effectifTotal },
+        { indicateur: 'Nombre de classes', valeur: ind.nbClasses },
+        { indicateur: '— dont dédoublées', valeur: ind.nbClassesDedoublees },
+        { indicateur: '— dont standard', valeur: ind.nbClassesStandard },
+        { indicateur: 'Moyenne élèves / classe', valeur: ind.moyenneEleves },
+        { indicateur: 'Moyenne élèves / classe dédoublée', valeur: ind.moyenneDedoublees },
+        { indicateur: 'Moyenne élèves / classe standard', valeur: ind.moyenneStandard },
+        { indicateur: 'Taux de réussite moyen (seuil 2)', valeur: `${ind.tauxMoyen} %` },
+        { indicateur: 'Enseignants titulaires', valeur: ind.titulaires },
+        { indicateur: 'Enseignants stagiaires', valeur: ind.stagiaires },
+        { indicateur: 'Enseignants contractuels', valeur: ind.contractuels },
+        { indicateur: '% de titulaires', valeur: `${ind.pctTitulaires} %` },
+      ],
+    };
+
+    const sheetEcoles: ExcelSheetDef = {
+      name: 'Écoles',
+      title: 'Effectifs et classes par école',
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr} · ${rowsEcoles.length} écoles`,
+      columns: [
+        { header: 'École', key: 'nom', width: 30 },
+        { header: 'UAI', key: 'uai', width: 12 },
+        { header: 'Effectif', key: 'effectif', width: 12, align: 'center', numFmt: '0' },
+        { header: 'Nb classes', key: 'nbClasses', width: 12, align: 'center', numFmt: '0' },
+        { header: 'Moyenne / classe', key: 'moyenne', width: 16, align: 'center', numFmt: '0.0' },
+      ],
+      rows: rowsEcoles,
+      totalsRow: {
+        nom: 'TOTAL',
+        effectif: rowsEcoles.reduce((s, r) => s + (r.effectif || 0), 0),
+        nbClasses: rowsEcoles.reduce((s, r) => s + (r.nbClasses || 0), 0),
+      },
+    };
+
+    const sheets: ExcelSheetDef[] = [sheetSynthese, sheetEcoles];
+
+    if (evo.length > 0) {
+      sheets.push({
+        name: 'Évolution effectifs',
+        title: 'Évolution des effectifs',
+        subtitle: 'Circonscription Cayenne 2',
+        columns: [
+          { header: 'Année scolaire', key: 'annee', width: 18, align: 'center' },
+          { header: 'Effectif', key: 'effectif', width: 14, align: 'center', numFmt: '0' },
+        ],
+        rows: evo.map((e: any) => ({ annee: e.annee || '', effectif: e.effectif ?? '' })),
+      });
+    }
+
+    await exportStyledExcel(`pilotage-${new Date().toISOString().slice(0, 10)}`, sheets);
+  };
+
   if (!isAuthenticated || loading) {
     return (
       <PageLoader />
@@ -260,6 +345,7 @@ export default function PilotagePage() {
         subtitle="Indicateurs clés, alertes et analyses pour piloter la circonscription."
         backLabel="Retour à l'accueil"
         action={
+          <>
           <button
             onClick={() => setShowExportModal(true)}
             className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md text-primary-700 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-white hover:-translate-y-0.5 transition-all"
@@ -271,6 +357,19 @@ export default function PilotagePage() {
             </svg>
             Exporter en PDF
           </button>
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 bg-emerald-600/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-emerald-600 hover:-translate-y-0.5 transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+              <rect x="8" y="2" width="8" height="4" rx="1" />
+            </svg>
+            Exporter en Excel
+          </button>
+          </>
         }
       />
 

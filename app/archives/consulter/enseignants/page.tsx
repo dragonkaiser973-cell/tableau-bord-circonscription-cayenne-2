@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { calculerEchelonComplet } from '@/lib/echelons';
 import { exportTableToPDF } from '@/lib/pdfExport';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 import StatPill from '@/components/StatPill';
 
 import PageLoader from '@/components/PageLoader';
@@ -177,6 +178,86 @@ function EnseignantsArchivesContent() {
     );
   };
 
+  const handleExportExcel = async () => {
+    const filtered = getFilteredEnseignants();
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+
+    const sheetEns: ExcelSheetDef = {
+      name: 'Enseignants',
+      title: `Enseignants — archive ${annee}`,
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr} · ${filtered.length} enseignant${filtered.length > 1 ? 's' : ''}`,
+      columns: [
+        { header: 'Nom', key: 'nom', width: 18 },
+        { header: 'Prénom', key: 'prenom', width: 16 },
+        { header: 'École', key: 'ecole', width: 26 },
+        { header: 'UAI', key: 'uai', width: 12 },
+        { header: 'Statut', key: 'statut', width: 14 },
+        { header: 'Ancienneté (ans)', key: 'anciennete', width: 15, align: 'center', numFmt: '0' },
+        { header: 'Classe', key: 'classe', width: 20 },
+        { header: 'Échelon', key: 'echelon', width: 10, align: 'center' },
+        { header: 'Niveau', key: 'niveau', width: 12 },
+        { header: 'Effectif', key: 'effectif', width: 10, align: 'center', numFmt: '0' },
+        { header: 'Quotité (%)', key: 'quotite', width: 12, align: 'center', numFmt: '0' },
+      ],
+      rows: filtered.map(e => {
+        const echelonInfo = calculerEchelonComplet(e.anciennete, e.code_grade);
+        return {
+          nom: e.nom || '',
+          prenom: e.prenom || '',
+          ecole: e.ecole_nom || '',
+          uai: e.ecole_uai || '',
+          statut: e.statut || '',
+          anciennete: e.anciennete ?? 0,
+          classe: echelonInfo.affichage !== '-' ? echelonInfo.classe : '',
+          echelon: echelonInfo.affichage !== '-' ? echelonInfo.echelon : '',
+          niveau: e.niveau_classe || '',
+          effectif: e.effectif_classe || '',
+          quotite: typeof e.quotite === 'number' ? e.quotite : '',
+        };
+      }),
+    };
+
+    const sheets: ExcelSheetDef[] = [sheetEns];
+
+    if (stagiaireM2.length > 0) {
+      sheets.push({
+        name: 'Stagiaires M2',
+        title: `Stagiaires M2 SOPA — archive ${annee}`,
+        subtitle: `Circonscription Cayenne 2 · ${stagiaireM2.length} stagiaire${stagiaireM2.length > 1 ? 's' : ''}`,
+        columns: [
+          { header: 'N°', key: 'num', width: 6, align: 'center', numFmt: '0' },
+          { header: 'Nom', key: 'nom', width: 18 },
+          { header: 'Prénom', key: 'prenom', width: 16 },
+          { header: 'Filé — École', key: 'fileEcole', width: 22 },
+          { header: 'Filé — Tuteur', key: 'fileTuteur', width: 20 },
+          { header: 'Filé — Niveau', key: 'fileNiveau', width: 12 },
+          { header: 'Massé 1 — École', key: 'm1Ecole', width: 22 },
+          { header: 'Massé 1 — Tuteur', key: 'm1Tuteur', width: 20 },
+          { header: 'Massé 1 — Niveau', key: 'm1Niveau', width: 14 },
+          { header: 'Massé 2 — École', key: 'm2Ecole', width: 22 },
+          { header: 'Massé 2 — Tuteur', key: 'm2Tuteur', width: 20 },
+          { header: 'Massé 2 — Niveau', key: 'm2Niveau', width: 14 },
+        ],
+        rows: stagiaireM2.map((s, i) => ({
+          num: i + 1,
+          nom: s.nom || '',
+          prenom: s.prenom || '',
+          fileEcole: s.stage_file?.ecole || '',
+          fileTuteur: s.stage_file?.tuteur || '',
+          fileNiveau: s.stage_file?.niveau || '',
+          m1Ecole: s.stage_masse_1?.ecole || '',
+          m1Tuteur: s.stage_masse_1?.tuteur || '',
+          m1Niveau: s.stage_masse_1?.niveau || '',
+          m2Ecole: s.stage_masse_2?.ecole || '',
+          m2Tuteur: s.stage_masse_2?.tuteur || '',
+          m2Niveau: s.stage_masse_2?.niveau || '',
+        })),
+      });
+    }
+
+    await exportStyledExcel(`Enseignants_Archive_${annee}_${new Date().toISOString().slice(0, 10)}`, sheets);
+  };
+
   if (loading) {
     return (
       <PageLoader />
@@ -218,12 +299,20 @@ function EnseignantsArchivesContent() {
                 <p className="text-xl opacity-90 mt-2">Archive de la circonscription</p>
               </div>
             </div>
-            <button
-              onClick={handleExportPDF}
-              className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
-            >
-              📄 Exporter en PDF
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleExportPDF}
+                className="bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
+              >
+                📄 Exporter en PDF
+              </button>
+              <button
+                onClick={handleExportExcel}
+                className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+              >
+                📊 Exporter en Excel
+              </button>
+            </div>
           </div>
         </div>
       </div>

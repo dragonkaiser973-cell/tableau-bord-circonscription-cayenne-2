@@ -8,6 +8,7 @@ import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 
 import PageLoader from '@/components/PageLoader';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
@@ -248,6 +249,81 @@ export default function CirconscriptionPage() {
     return { moyenneFrancais, moyenneMaths };
   };
 
+  const sigleEcole = (ecole: any): string => {
+    let sigle = ecole.sigle || '';
+    if (!sigle) {
+      const nomUpper = (ecole.nom || '').toUpperCase();
+      if (nomUpper.includes('E.M.PU') || nomUpper.includes('EMPU') || nomUpper.includes('MATERNELLE')) sigle = 'E.M.PU';
+      else if (nomUpper.includes('E.E.PU') || nomUpper.includes('EEPU') || nomUpper.includes('ELEMENTAIRE')) sigle = 'E.E.PU';
+      else if (nomUpper.includes('E.P.PU') || nomUpper.includes('EPPU') || nomUpper.includes('PRIMAIRE')) sigle = 'E.P.PU';
+      else sigle = 'E.PU';
+    }
+    return sigle;
+  };
+
+  const handleExportExcel = async () => {
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+    const ecolesHorsCirco = ecoles.filter(e => e.uai !== '9730456H');
+
+    const rowsEcoles = ecolesHorsCirco.map(ecole => {
+      const nbEns = enseignants.filter(e =>
+        e.ecole_nom === ecole.nom || e.ecole_uai === ecole.uai || nomCorrespond(e.ecole_nom, ecole.nom)
+      ).length;
+      const ips = getIpsEcole(ecole.uai);
+      return {
+        nom: ecole.nom || '',
+        sigle: sigleEcole(ecole),
+        uai: ecole.uai || '',
+        commune: ecole.commune || '',
+        enseignants: nbEns,
+        ips: typeof ips === 'number' ? Number(ips.toFixed(1)) : '',
+      };
+    });
+
+    const totalEns = rowsEcoles.reduce((s, r) => s + (r.enseignants || 0), 0);
+
+    const eco = getStatsEcoles();
+    const ens = getStatsEnseignants();
+    const evalStats = getStatsEvaluations();
+
+    const sheetEcoles: ExcelSheetDef = {
+      name: 'Écoles',
+      title: 'Écoles de la circonscription',
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr} · ${rowsEcoles.length} écoles`,
+      columns: [
+        { header: 'École', key: 'nom', width: 28 },
+        { header: 'Sigle', key: 'sigle', width: 10, align: 'center' },
+        { header: 'UAI', key: 'uai', width: 12 },
+        { header: 'Commune', key: 'commune', width: 18 },
+        { header: 'Enseignants', key: 'enseignants', width: 13, align: 'center', numFmt: '0' },
+        { header: 'IPS', key: 'ips', width: 10, align: 'center', numFmt: '0.0' },
+      ],
+      rows: rowsEcoles,
+      totalsRow: { nom: 'TOTAL', enseignants: totalEns },
+    };
+
+    const sheetSynthese: ExcelSheetDef = {
+      name: 'Synthèse',
+      title: 'Synthèse de la circonscription',
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr}`,
+      columns: [
+        { header: 'Indicateur', key: 'indicateur', width: 40 },
+        { header: 'Valeur', key: 'valeur', width: 18, align: 'center' },
+      ],
+      rows: [
+        { indicateur: "Nombre d'écoles", valeur: eco.total },
+        { indicateur: '— dont élémentaires', valeur: eco.elementaires },
+        { indicateur: '— dont maternelles', valeur: eco.maternelles },
+        { indicateur: '— dont primaires', valeur: eco.primaires },
+        { indicateur: "Nombre d'enseignants", valeur: ens.total },
+        { indicateur: 'Réussite français (au-dessus seuil 2)', valeur: `${evalStats.moyenneFrancais.toFixed(1)} %` },
+        { indicateur: 'Réussite maths (au-dessus seuil 2)', valeur: `${evalStats.moyenneMaths.toFixed(1)} %` },
+      ],
+    };
+
+    await exportStyledExcel(`circonscription-${new Date().toISOString().slice(0, 10)}`, [sheetSynthese, sheetEcoles]);
+  };
+
   if (loading) {
     return (
       <PageLoader />
@@ -268,6 +344,7 @@ export default function CirconscriptionPage() {
         subtitle="Statistiques globales, personnel, écoles et résultats aux évaluations nationales."
         backLabel="Retour à l'accueil"
         action={
+          <>
           <button
             onClick={handleExportPDF}
             className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md text-primary-700 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-white hover:-translate-y-0.5 transition-all"
@@ -279,6 +356,19 @@ export default function CirconscriptionPage() {
             </svg>
             Exporter en PDF
           </button>
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 bg-emerald-600/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-emerald-600 hover:-translate-y-0.5 transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+              <rect x="8" y="2" width="8" height="4" rx="1" />
+            </svg>
+            Exporter en Excel
+          </button>
+          </>
         }
       />
 

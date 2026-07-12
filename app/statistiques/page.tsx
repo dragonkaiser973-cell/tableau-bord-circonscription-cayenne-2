@@ -8,6 +8,7 @@ import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 
 import PageLoader from '@/components/PageLoader';
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
@@ -217,6 +218,72 @@ export default function StatistiquesPage() {
 
   const moyennesEval = getMoyennesEvaluations();
 
+  const handleExportExcel = async () => {
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+    const niveaux = Object.keys(totauxNiveau).filter(n => totauxNiveau[n] > 0);
+
+    const sheetSynthese: ExcelSheetDef = {
+      name: 'Synthèse',
+      title: 'Statistiques globales de la circonscription',
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr}`,
+      columns: [
+        { header: 'Indicateur', key: 'indicateur', width: 34 },
+        { header: 'Valeur', key: 'valeur', width: 16, align: 'center' },
+      ],
+      rows: [
+        { indicateur: "Nombre d'écoles", valeur: totalEcoles },
+        { indicateur: "Nombre d'élèves", valeur: totalEleves },
+        { indicateur: 'Nombre de classes', valeur: totalClasses },
+        { indicateur: "Nombre d'enseignants", valeur: totalEnseignants },
+        { indicateur: 'Effectif Maternelle', valeur: cycleData['Maternelle'] || 0 },
+        { indicateur: 'Effectif Cycle 2', valeur: cycleData['Cycle 2'] || 0 },
+        { indicateur: 'Effectif Cycle 3', valeur: cycleData['Cycle 3'] || 0 },
+        ...(moyennesEval ? [
+          { indicateur: `Réussite français (${moyennesEval.annee})`, valeur: `${moyennesEval.francais} %` },
+          { indicateur: `Réussite maths (${moyennesEval.annee})`, valeur: `${moyennesEval.maths} %` },
+        ] : []),
+      ],
+    };
+
+    const sheetNiveaux: ExcelSheetDef = {
+      name: 'Par niveau',
+      title: 'Effectifs par niveau',
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr}`,
+      columns: [
+        { header: 'Niveau', key: 'niveau', width: 16 },
+        { header: 'Effectif', key: 'effectif', width: 14, align: 'center', numFmt: '0' },
+      ],
+      rows: niveaux.map(n => ({ niveau: n, effectif: totauxNiveau[n] })),
+      totalsRow: { niveau: 'TOTAL', effectif: niveaux.reduce((s, n) => s + totauxNiveau[n], 0) },
+    };
+
+    // Matrice par école × niveau
+    const sheetEcoles: ExcelSheetDef = {
+      name: 'Par école',
+      title: 'Effectifs par école et par niveau',
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr} · ${statsEcoles.length} écoles`,
+      columns: [
+        { header: 'École', key: 'nom', width: 28 },
+        { header: 'UAI', key: 'uai', width: 12 },
+        ...niveaux.map(n => ({ header: n, key: `niv_${n}`, width: 10, align: 'center' as const, numFmt: '0' })),
+        { header: 'Total', key: 'total', width: 10, align: 'center' as const, numFmt: '0' },
+      ],
+      rows: statsEcoles.map(e => {
+        const row: Record<string, unknown> = { nom: e.nom || '', uai: e.uai || '' };
+        let total = 0;
+        niveaux.forEach(n => {
+          const v = e.repartitions?.[n] || 0;
+          row[`niv_${n}`] = v || '';
+          total += v;
+        });
+        row.total = total;
+        return row;
+      }),
+    };
+
+    await exportStyledExcel(`statistiques-${new Date().toISOString().slice(0, 10)}`, [sheetSynthese, sheetNiveaux, sheetEcoles]);
+  };
+
   if (loading) {
     return (
       <PageLoader />
@@ -232,6 +299,7 @@ export default function StatistiquesPage() {
         subtitle="Vision agrégée : élèves, classes, enseignants, moyennes aux évaluations nationales."
         backLabel="Retour à l'accueil"
         action={
+          <>
           <button
             onClick={() => setShowExportModal(true)}
             className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md text-primary-700 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-white hover:-translate-y-0.5 transition-all"
@@ -243,6 +311,19 @@ export default function StatistiquesPage() {
             </svg>
             Exporter en PDF
           </button>
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 bg-emerald-600/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-emerald-600 hover:-translate-y-0.5 transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+              <rect x="8" y="2" width="8" height="4" rx="1" />
+            </svg>
+            Exporter en Excel
+          </button>
+          </>
         }
       />
 
