@@ -160,10 +160,15 @@ export async function POST(request: NextRequest) {
 
     // Calculer le sigle depuis le type (champ utilisé dans les tableaux et l'archive)
     if (!ecoleData.sigle && ecoleData.type) {
-      const typeUpper = ecoleData.type.toUpperCase();
+      // Dé-accentuer avant de comparer : le type officiel est « Élémentaire publique »,
+      // et sans ça .includes('ELEMENTAIRE') échoue → sigle fallback E.PU (bug de classement).
+      const typeUpper = ecoleData.type
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toUpperCase();
       if (typeUpper.includes('MATERNELLE')) {
         ecoleData.sigle = 'E.M.PU';
-      } else if (typeUpper.includes('LEMENTAIRE')) {
+      } else if (typeUpper.includes('ELEMENTAIRE')) {
         ecoleData.sigle = 'E.E.PU';
       } else if (typeUpper.includes('PRIMAIRE')) {
         ecoleData.sigle = 'E.P.PU';

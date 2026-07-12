@@ -7,6 +7,7 @@ import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 
 import PageLoader from '@/components/PageLoader';
 interface Enseignant {
@@ -395,6 +396,82 @@ if (structuresRes.ok) {
     setShowExportModal(true);
   };
 
+  const handleExportExcel = async () => {
+    const filtered = getFilteredEnseignants();
+
+    const columns: ExcelSheetDef['columns'] = [
+      { header: 'Nom', key: 'nom', width: 18 },
+      { header: 'Prénom', key: 'prenom', width: 16 },
+      { header: 'École', key: 'ecole', width: 26 },
+      { header: 'UAI', key: 'uai', width: 12 },
+      { header: 'Année scolaire', key: 'annee', width: 14, align: 'center' },
+      { header: 'Statut', key: 'statut', width: 14 },
+      { header: 'Ancienneté (ans)', key: 'anciennete', width: 15, align: 'center', numFmt: '0' },
+      { header: 'Classe', key: 'classe', width: 20 },
+      { header: 'Échelon', key: 'echelon', width: 10, align: 'center' },
+      { header: 'Spécialité', key: 'specialite', width: 18 },
+      { header: "Mode d'affectation", key: 'mode', width: 20 },
+      { header: 'Niveau', key: 'niveau', width: 12 },
+      { header: 'Effectif', key: 'effectif', width: 10, align: 'center', numFmt: '0' },
+      { header: 'Quotité', key: 'quotite', width: 10, align: 'center', numFmt: '0%' },
+      { header: 'Décharge / Binôme', key: 'decharge', width: 20 },
+      { header: 'Nom décharge / binôme', key: 'nomDecharge', width: 22 },
+    ];
+
+    const rows = filtered.map(e => {
+      const echelonInfo = calculerEchelonComplet(e.anciennete, e.code_grade);
+      const specialite = e.discipline &&
+        !e.discipline.toUpperCase().includes('SANS SPECIALITE') &&
+        !e.discipline.toUpperCase().includes('SANS SPÉCIALITÉ')
+        ? e.discipline : '';
+      return {
+        nom: e.nom || '',
+        prenom: e.prenom || '',
+        ecole: e.ecole_nom || '',
+        uai: e.ecole_uai || '',
+        annee: e.annee_scolaire || '',
+        statut: e.statut || '',
+        anciennete: e.anciennete ?? 0,
+        classe: echelonInfo.affichage !== '-' ? echelonInfo.classe : '',
+        echelon: echelonInfo.affichage !== '-' ? echelonInfo.echelon : '',
+        specialite,
+        mode: e.mode_affectation || '',
+        niveau: e.niveau_classe || '',
+        effectif: e.effectif_classe || '',
+        quotite: typeof e.quotite === 'number' ? e.quotite : '',
+        decharge: e.decharge_binome || '',
+        nomDecharge: e.nom_decharge_binome || '',
+      };
+    });
+
+    // Description des filtres actifs pour le sous-titre
+    const filtresActifs: string[] = [];
+    if (searchNom) filtresActifs.push(`recherche « ${searchNom} »`);
+    if (selectedEcole) {
+      const ec = uniqueEcoles.find(x => x.uai === selectedEcole);
+      if (ec) filtresActifs.push(`école ${ec.nom}`);
+    }
+    if (selectedAnnee) filtresActifs.push(`année ${selectedAnnee}`);
+    if (selectedStatut) filtresActifs.push(`statut ${selectedStatut}`);
+    if (selectedNiveau) filtresActifs.push(`niveau ${selectedNiveau}`);
+    if (selectedSpecialite) filtresActifs.push(`spécialité ${selectedSpecialite}`);
+    if (hasDecharge) filtresActifs.push(hasDecharge === 'oui' ? 'avec décharge' : 'sans décharge');
+
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+    const subtitle = `Circonscription Cayenne 2 · Exporté le ${dateStr} · ${rows.length} enseignant${rows.length > 1 ? 's' : ''}` +
+      (filtresActifs.length ? ` · Filtres : ${filtresActifs.join(', ')}` : '');
+
+    const sheet: ExcelSheetDef = {
+      name: 'Enseignants',
+      title: 'Liste des enseignants',
+      subtitle,
+      columns,
+      rows,
+    };
+
+    await exportStyledExcel(`enseignants-${new Date().toISOString().slice(0, 10)}`, [sheet]);
+  };
+
   // ── Édition inline ──
   const startEditing = (ens: Enseignant) => {
     setEditingId(ens.id);
@@ -498,6 +575,18 @@ if (structuresRes.ok) {
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
               Exporter en PDF
+            </button>
+            <button
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-2 bg-emerald-600/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-emerald-600 hover:-translate-y-0.5 transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+                <rect x="8" y="2" width="8" height="4" rx="1" />
+              </svg>
+              Exporter en Excel
             </button>
           </>
         }
