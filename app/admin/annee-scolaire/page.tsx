@@ -53,16 +53,19 @@ export default function ChangerAnneeScolairePage() {
       structures.forEach((ecole: any) => {
         if (ecole.classes && Array.isArray(ecole.classes)) {
           ecole.classes.forEach((classe: any) => {
-            total += classe.effectif || 0;
+            // Le champ effectif des classes est `nbEleves` partout dans l'app
+            total += classe.nbEleves || 0;
           });
         }
       });
       setEffectifActuel(total);
       
       // Vérifier si une archive existe déjà
+      // /api/archives renvoie { archives: ["2025-2026", ...] } (tableau de chaînes)
       const archivesRes = await fetch('/api/archives');
-      const archives = await archivesRes.json();
-      const archiveExiste = archives.some((a: any) => a.annee_scolaire === configData.annee_scolaire_actuelle);
+      const archivesData = await archivesRes.json();
+      const listeArchives: string[] = archivesData.archives || [];
+      const archiveExiste = listeArchives.includes(configData.annee_scolaire_actuelle);
       
       // Vérifier que les données sont complètes
       const enseignantsRes = await fetch('/api/enseignants');

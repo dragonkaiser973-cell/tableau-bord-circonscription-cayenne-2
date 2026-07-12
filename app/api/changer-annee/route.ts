@@ -33,6 +33,9 @@ export async function POST(request: NextRequest) {
     // ─────────────────────────────────────────────
     let archive_creee = false;
     if (creerArchive) {
+      // ⚠️ SÉCURITÉ : l'archive doit réussir AVANT toute purge. Sans elle, vider
+      // les tables (étape 3) entraînerait une perte de données IRRÉVERSIBLE.
+      // On abandonne donc le changement d'année si l'archivage échoue.
       try {
         // Appel DIRECT de la logique d'archivage (pas de fetch HTTP interne) :
         // /api/changer-annee est déjà réservé aux admins par le middleware, et
@@ -40,11 +43,19 @@ export async function POST(request: NextRequest) {
         const resultat = await creerArchiveComplete(ancienneAnnee, request.nextUrl.origin);
         archive_creee = resultat.success;
         if (!archive_creee) {
-          console.warn('⚠️ Impossible de créer l\'archive automatiquement:', (resultat as any).error);
+          const detail = (resultat as any).error || 'erreur inconnue';
+          console.error('❌ Archivage échoué → changement d\'année ABANDONNÉ:', detail);
+          return NextResponse.json({
+            success: false,
+            message: `Archivage de ${ancienneAnnee} échoué : ${detail}. Aucune donnée n'a été supprimée.`
+          }, { status: 500 });
         }
-      } catch (error) {
-        console.warn('⚠️ Erreur création archive:', error);
-        // On continue même si l'archive échoue
+      } catch (error: any) {
+        console.error('❌ Erreur création archive → changement d\'année ABANDONNÉ:', error);
+        return NextResponse.json({
+          success: false,
+          message: `Erreur lors de l'archivage de ${ancienneAnnee} : ${error?.message || error}. Aucune donnée n'a été supprimée.`
+        }, { status: 500 });
       }
     }
 
