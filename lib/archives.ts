@@ -117,7 +117,6 @@ export async function creerArchiveComplete(
 
   const [
     resEnseignants,
-    resEcoles,
     resStagiaires,
     resEvenementsData,
     resBoussoleSessions,
@@ -127,7 +126,6 @@ export async function creerArchiveComplete(
     resPlanFormationFormateurs
   ] = await Promise.all([
     supabase.from('enseignants').select('*'),
-    supabase.from('ecoles').select('*'),
     supabase.from('stagiaires_m2').select('*').eq('annee_scolaire', anneeScolaire),
     supabase.from('evenements').select('*').order('date_debut', { ascending: true }),
     supabase.from('boussole_sessions').select('*').order('date_formation', { ascending: false }),
@@ -166,7 +164,6 @@ export async function creerArchiveComplete(
   }
 
   const enseignants = resEnseignants.data || [];
-  const ecoles = resEcoles.data || [];
   const stagiaires_m2 = resStagiaires.data || [];
   const boussole_sessions = resBoussoleSessions.data || [];
   const boussole_deposits = resBoussoleDeposits.data || [];
@@ -186,7 +183,6 @@ export async function creerArchiveComplete(
   console.log(`✅ Données chargées:`);
   console.log(`   - ${enseignants.length} enseignants`);
   console.log(`   - ${evaluations.length} évaluations`);
-  console.log(`   - ${ecoles.length} écoles`);
   console.log(`   - ${stagiaires_m2.length} stagiaires M2`);
   console.log(`   - ${evenements.length} événements`);
 
