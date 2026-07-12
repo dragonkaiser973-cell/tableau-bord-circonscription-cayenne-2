@@ -16,6 +16,75 @@ export interface PDFElement {
 }
 
 /**
+ * Ajoute une capture (canvas) au PDF en la découpant automatiquement sur
+ * plusieurs pages lorsqu'elle dépasse la hauteur de page. Sans ce découpage,
+ * jsPDF colle l'image d'un seul bloc et tout ce qui dépasse le bas de la page
+ * est coupé (c'était la cause des enseignants manquants dans l'export).
+ *
+ * Renvoie la position Y (en mm) juste après la dernière tranche placée.
+ */
+function addCanvasPaginated(
+  pdf: jsPDF,
+  canvas: HTMLCanvasElement,
+  opts: { pageWidth: number; pageHeight: number; margin: number; startY: number }
+): number {
+  const { pageWidth, pageHeight, margin, startY } = opts;
+  const printableWidth = pageWidth - 2 * margin;
+  const bottomLimit = pageHeight - margin;
+
+  if (canvas.width === 0 || canvas.height === 0) return startY;
+
+  // Conversion pixels du canvas → millimètres (l'image occupe toute la largeur utile)
+  const pxToMm = printableWidth / canvas.width;
+  const fullHeightMm = canvas.height * pxToMm;
+
+  let placedMm = 0; // hauteur d'image déjà placée (mm)
+  let y = startY;
+
+  while (placedMm < fullHeightMm - 0.5) {
+    let available = bottomLimit - y; // espace restant sur la page courante
+    if (available < 15) {
+      pdf.addPage();
+      y = margin;
+      available = bottomLimit - y;
+    }
+
+    const sliceMm = Math.min(fullHeightMm - placedMm, available);
+    const sliceHeightPx = Math.max(1, Math.round(sliceMm / pxToMm));
+    const sliceTopPx = Math.round(placedMm / pxToMm);
+
+    // Découper la tranche correspondante du canvas source
+    const sliceCanvas = document.createElement('canvas');
+    sliceCanvas.width = canvas.width;
+    sliceCanvas.height = sliceHeightPx;
+    const ctx = sliceCanvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+      ctx.drawImage(
+        canvas,
+        0, sliceTopPx, canvas.width, sliceHeightPx,
+        0, 0, canvas.width, sliceHeightPx
+      );
+    }
+
+    // JPEG (qualité 0.9) : fichier bien plus léger que du PNG pour ce contenu
+    const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.9);
+    pdf.addImage(sliceData, 'JPEG', margin, y, printableWidth, sliceMm);
+
+    placedMm += sliceMm;
+    y += sliceMm;
+
+    if (placedMm < fullHeightMm - 0.5) {
+      pdf.addPage();
+      y = margin;
+    }
+  }
+
+  return y;
+}
+
+/**
  * Exporte plusieurs éléments sélectionnés en PDF avec options personnalisées
  */
 export async function exportMultipleElementsToPDF(
@@ -117,18 +186,8 @@ export async function exportMultipleElementsToPDF(
               backgroundColor: '#ffffff'
             });
             
-            const titleImgData = titleCanvas.toDataURL('image/png');
-            const titleImgWidth = pageWidth - (2 * margin);
-            const titleImgHeight = (titleCanvas.height * titleImgWidth) / titleCanvas.width;
-            
-            // Ajouter le titre
-            if (yPosition + titleImgHeight > pageHeight - margin && i > 0) {
-              pdf.addPage();
-              yPosition = margin;
-            }
-            
-            pdf.addImage(titleImgData, 'PNG', margin, yPosition, titleImgWidth, titleImgHeight);
-            yPosition += titleImgHeight + 5;
+            yPosition = addCanvasPaginated(pdf, titleCanvas, { pageWidth, pageHeight, margin, startY: yPosition });
+            yPosition += 5;
           }
           
           // Capturer chaque école individuellement
@@ -146,18 +205,8 @@ export async function exportMultipleElementsToPDF(
               backgroundColor: '#ffffff'
             });
             
-            const subImgData = subCanvas.toDataURL('image/png');
-            const subImgWidth = pageWidth - (2 * margin);
-            const subImgHeight = (subCanvas.height * subImgWidth) / subCanvas.width;
-            
-            // Vérifier si on a besoin d'une nouvelle page
-            if (yPosition + subImgHeight > pageHeight - margin) {
-              pdf.addPage();
-              yPosition = margin;
-            }
-            
-            pdf.addImage(subImgData, 'PNG', margin, yPosition, subImgWidth, subImgHeight);
-            yPosition += subImgHeight + 5;
+            yPosition = addCanvasPaginated(pdf, subCanvas, { pageWidth, pageHeight, margin, startY: yPosition });
+            yPosition += 5;
           }
         }
       } else {
@@ -169,25 +218,9 @@ export async function exportMultipleElementsToPDF(
           backgroundColor: '#ffffff'
         });
 
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = pageWidth - (2 * margin);
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        // Vérifier si on a besoin d'une nouvelle page
-        if (yPosition + imgHeight > pageHeight - margin && i > 0) {
-          pdf.addPage();
-          yPosition = margin;
-        }
-
-        // Ajouter l'image au PDF
-        pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
-        yPosition += imgHeight + 10;
-
-        // Ajouter une nouvelle page si ce n'est pas le dernier élément
-        if (i < selectedElements.length - 1 && yPosition > pageHeight - margin) {
-          pdf.addPage();
-          yPosition = margin;
-        }
+        // Placer la capture en la découpant sur plusieurs pages si nécessaire
+        yPosition = addCanvasPaginated(pdf, canvas, { pageWidth, pageHeight, margin, startY: yPosition });
+        yPosition += 10;
       }
     }
 
