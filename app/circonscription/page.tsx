@@ -172,24 +172,39 @@ export default function CirconscriptionPage() {
   const getStatsEcoles = () => {
     const ecolesHorsCirco = ecoles.filter(e => e.uai !== '9730456H');
     const total = ecolesHorsCirco.length;
-    
-    const elementaires = ecolesHorsCirco.filter(e => {
-      const nom = (e.nom || '').toUpperCase().replace(/\./g, '').replace(/\s/g, '');
-      const sigle = (e.sigle || '').toUpperCase().replace(/\./g, '').replace(/\s/g, '');
-      return nom.includes('EEPU') || sigle.includes('EEPU') || nom.includes('ELEMENTAIRE');
-    }).length;
-    
-    const maternelles = ecolesHorsCirco.filter(e => {
-      const nom = (e.nom || '').toUpperCase().replace(/\./g, '').replace(/\s/g, '');
-      const sigle = (e.sigle || '').toUpperCase().replace(/\./g, '').replace(/\s/g, '');
-      return nom.includes('EMPU') || sigle.includes('EMPU') || nom.includes('MATERNELLE');
-    }).length;
 
-    const primaires = ecolesHorsCirco.filter(e => {
-      const nom = (e.nom || '').toUpperCase().replace(/\./g, '').replace(/\s/g, '');
-      const sigle = (e.sigle || '').toUpperCase().replace(/\./g, '').replace(/\s/g, '');
-      return nom.includes('EPPU') || sigle.includes('EPPU') || nom.includes('GROUPESCOLAIRE');
-    }).length;
+    // Normalisation : majuscules SANS accents (é/É/è → E) + sans points/espaces.
+    // Indispensable car le type officiel EN est « Élémentaire publique » (accentué) :
+    // sans dé-accentuation, .includes('ELEMENTAIRE') échoue et l'école n'est pas classée.
+    const norm = (s: string) =>
+      (s || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toUpperCase()
+        .replace(/\./g, '')
+        .replace(/\s/g, '');
+
+    // On classe en priorité sur le champ `type` (source fiable Éducation nationale),
+    // avec repli sur le sigle puis le nom pour les anciennes données.
+    const classer = (e: any): 'elementaire' | 'maternelle' | 'primaire' | 'autre' => {
+      const type = norm(e.type);
+      const sigle = norm(e.sigle);
+      const nom = norm(e.nom);
+      if (type.includes('MATERNELLE') || sigle.includes('EMPU')) return 'maternelle';
+      if (type.includes('ELEMENTAIRE') || sigle.includes('EEPU') || nom.includes('ELEMENTAIRE')) return 'elementaire';
+      if (type.includes('PRIMAIRE') || sigle.includes('EPPU') || nom.includes('GROUPESCOLAIRE')) return 'primaire';
+      return 'autre';
+    };
+
+    let elementaires = 0;
+    let maternelles = 0;
+    let primaires = 0;
+    for (const e of ecolesHorsCirco) {
+      const c = classer(e);
+      if (c === 'elementaire') elementaires++;
+      else if (c === 'maternelle') maternelles++;
+      else if (c === 'primaire') primaires++;
+    }
 
     return { total, elementaires, maternelles, primaires };
   };
