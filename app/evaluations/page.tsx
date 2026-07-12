@@ -7,6 +7,7 @@ import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
 import StatPill from '@/components/StatPill';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -568,6 +569,55 @@ export default function EvaluationsPage() {
     }
   };
 
+  const handleExportExcel = async () => {
+    const data = getFilteredData();
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+
+    const ecoleObj = selectedEcole ? ecoles.find(e => e.uai === selectedEcole) : null;
+    const ecoleLabel = ecoleObj ? (ecoleObj.nomAffiche || ecoleObj.nom) : 'Toutes les écoles (moyenne circonscription)';
+
+    const filtres = [
+      `École : ${ecoleLabel}`,
+      selectedAnnee && `Année : ${selectedAnnee}`,
+      selectedNiveau && `Niveau : ${selectedNiveau}`,
+      selectedMatiere && `Matière : ${selectedMatiere}`,
+    ].filter(Boolean).join(' · ');
+
+    const sheet: ExcelSheetDef = {
+      name: 'Évaluations',
+      title: 'Évaluations nationales — résultats',
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr} · ${filtres}`,
+      columns: [
+        { header: 'Compétence', key: 'libelle', width: 42 },
+        { header: 'Matière', key: 'matiere', width: 16 },
+        { header: 'Niveau', key: 'classe', width: 14 },
+        { header: 'École', key: 'ecole', width: 26 },
+        { header: 'Année', key: 'rentree', width: 10, align: 'center' },
+        { header: 'À besoin', key: 'g1', width: 12, align: 'center', numFmt: '0.0%' },
+        { header: 'Fragiles', key: 'g2', width: 12, align: 'center', numFmt: '0.0%' },
+        { header: 'Au-dessus seuil 2', key: 'g3', width: 16, align: 'center', numFmt: '0.0%' },
+        { header: 'Réf. circo — à besoin', key: 'c1', width: 18, align: 'center', numFmt: '0.0%' },
+        { header: 'Réf. circo — fragiles', key: 'c2', width: 18, align: 'center', numFmt: '0.0%' },
+        { header: 'Réf. circo — seuil 2', key: 'c3', width: 18, align: 'center', numFmt: '0.0%' },
+      ],
+      rows: data.map((d: any) => ({
+        libelle: d.libelle || '',
+        matiere: d.matiere || '',
+        classe: d.classe || '',
+        ecole: d.denomination || d.uai || '',
+        rentree: d.rentree ?? '',
+        g1: d.tx_groupe_1 ?? '',
+        g2: d.tx_groupe_2 ?? '',
+        g3: d.tx_groupe_3 ?? '',
+        c1: d.tx_cir_groupe_1 ?? '',
+        c2: d.tx_cir_groupe_2 ?? '',
+        c3: d.tx_cir_groupe_3 ?? '',
+      })),
+    };
+
+    await exportStyledExcel(`evaluations-${new Date().toISOString().slice(0, 10)}`, [sheet]);
+  };
+
   if (loading) {
     return (
       <PageLoader />
@@ -583,6 +633,7 @@ export default function EvaluationsPage() {
         subtitle="Résultats par école, par compétence et par année. Visualisations et exports."
         backLabel="Retour à l'accueil"
         action={
+          <>
           <button
             onClick={() => setShowExportModal(true)}
             className="inline-flex items-center gap-2 bg-white/95 backdrop-blur-md text-primary-700 px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-white hover:-translate-y-0.5 transition-all"
@@ -594,6 +645,19 @@ export default function EvaluationsPage() {
             </svg>
             Exporter en PDF
           </button>
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-2 bg-emerald-600/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-emerald-600 hover:-translate-y-0.5 transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+              <rect x="8" y="2" width="8" height="4" rx="1" />
+            </svg>
+            Exporter en Excel
+          </button>
+          </>
         }
       />
 

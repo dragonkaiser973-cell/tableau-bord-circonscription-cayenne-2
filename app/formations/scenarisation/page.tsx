@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import PDFExportModal from '@/components/PDFExportModal';
 import { exportMultipleElementsToPDF, PDFElement, PDFExportOptions } from '@/lib/pdfExport';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 
 // ─── Types ABC Learning Design ───────────────────────────────────────────────
 
@@ -299,6 +300,69 @@ export default function ScenarisationPage() {
     setIsExportOpen(false);
   };
 
+  const handleExportExcel = async () => {
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+    const phaseOrder: PhaseId[] = ['avant', 'pendant', 'apres'];
+    const phaseLabel = (id: PhaseId) => PHASES.find(p => p.id === id)?.label || id;
+
+    const sortedCards = [...cards].sort(
+      (a, b) => phaseOrder.indexOf(a.phase) - phaseOrder.indexOf(b.phase)
+    );
+
+    const sheetMeta: ExcelSheetDef = {
+      name: 'Formation',
+      title: meta.titre || 'Scénario de formation',
+      subtitle: `Scénarisation ABC · Circonscription Cayenne 2 · Exporté le ${dateStr}`,
+      columns: [
+        { header: 'Rubrique', key: 'k', width: 24 },
+        { header: 'Contenu', key: 'v', width: 60 },
+      ],
+      rows: [
+        { k: 'Titre', v: meta.titre || '' },
+        { k: 'Formateur', v: meta.formateur || '' },
+        { k: 'Date', v: meta.date || '' },
+        { k: 'Lieu', v: meta.lieu || '' },
+        { k: 'Public cible', v: meta.public_cible || '' },
+        { k: 'Durée totale', v: meta.duree_totale || '' },
+        { k: 'Objectifs', v: meta.objectifs || '' },
+        { k: 'Prérequis', v: meta.prerequis || '' },
+        { k: 'Matériel', v: meta.materiel || '' },
+        { k: 'Évaluation', v: meta.evaluation || '' },
+      ],
+    };
+
+    const sheetActs: ExcelSheetDef = {
+      name: 'Activités',
+      title: 'Déroulé des activités',
+      subtitle: `Scénarisation ABC · ${sortedCards.length} activité${sortedCards.length > 1 ? 's' : ''}`,
+      columns: [
+        { header: 'Phase', key: 'phase', width: 20 },
+        { header: 'Type', key: 'type', width: 16 },
+        { header: 'Titre', key: 'titre', width: 30 },
+        { header: 'Description', key: 'description', width: 50 },
+        { header: 'Durée (min)', key: 'duree', width: 12, align: 'center', numFmt: '0' },
+        { header: 'Modalité', key: 'modalite', width: 16 },
+        { header: 'Outils / supports', key: 'outils', width: 30 },
+      ],
+      rows: sortedCards.map(c => ({
+        phase: phaseLabel(c.phase),
+        type: TYPES[c.type]?.label || c.type,
+        titre: c.titre || '',
+        description: c.description || '',
+        duree: c.duree || '',
+        modalite: c.modalite || '',
+        outils: c.outils || '',
+      })),
+      totalsRow: {
+        phase: 'TOTAL',
+        duree: sortedCards.reduce((s, c) => s + (c.duree || 0), 0),
+      },
+    };
+
+    const filename = `scenario-abc-${(meta.titre || 'formation').replace(/\s+/g, '-').toLowerCase()}`;
+    await exportStyledExcel(filename, [sheetMeta, sheetActs]);
+  };
+
   // ─── Render ───
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-sky-50">
@@ -329,6 +393,12 @@ export default function ScenarisationPage() {
                 className="px-4 py-2 rounded-xl bg-white text-primary-700 text-sm font-semibold hover:bg-white/90 transition-colors shadow-lg inline-flex items-center gap-2"
               >
                 📄 Exporter en PDF
+              </button>
+              <button
+                onClick={handleExportExcel}
+                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-lg inline-flex items-center gap-2"
+              >
+                📊 Exporter en Excel
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { Pie, Bar } from 'react-chartjs-2';
 import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -326,6 +327,66 @@ export default function QuestionnairesAdminPage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     setMessage({ type: 'success', text: 'Export JSON téléchargé' });
+  };
+
+  const exporterExcel = async () => {
+    if (!resultats) return;
+    const q = resultats.questionnaire;
+    const questions = q.questions || [];
+
+    const fmtVal = (v: any): string => {
+      if (v === null || v === undefined) return '';
+      if (Array.isArray(v)) return v.join('; ');
+      if (typeof v === 'object') return Object.entries(v).map(([k, val]) => `${k}: ${val}`).join('; ');
+      return String(v);
+    };
+
+    const fmtDate = (d: string) => {
+      if (!d) return '';
+      const dt = new Date(d);
+      return isNaN(dt.getTime()) ? d : dt.toLocaleDateString('fr-FR');
+    };
+
+    const columns: ExcelSheetDef['columns'] = [
+      { header: 'Répondant', key: 'repondant', width: 22 },
+      { header: 'Date', key: 'date', width: 14, align: 'center' },
+      ...questions.map((qu: any) => ({
+        header: qu.libelle || `Question ${qu.ordre ?? ''}`,
+        key: `q_${qu.id}`,
+        width: 28,
+      })),
+    ];
+
+    const rows = resultats.soumissions.map((s: any) => {
+      const row: Record<string, unknown> = {
+        repondant: s.repondant_nom || 'Anonyme',
+        date: fmtDate(s.created_at),
+      };
+      questions.forEach((qu: any) => {
+        const rep = resultats.reponses.find((r: any) => r.soumission_id === s.id && r.question_id === qu.id);
+        let valeur: any = null;
+        if (rep) {
+          try { valeur = JSON.parse(rep.valeur); } catch { valeur = rep.valeur; }
+        }
+        row[`q_${qu.id}`] = fmtVal(valeur);
+      });
+      return row;
+    });
+
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+    const sheet: ExcelSheetDef = {
+      name: 'Réponses',
+      title: q.titre || 'Réponses au questionnaire',
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr} · ${rows.length} réponse${rows.length > 1 ? 's' : ''}`,
+      columns,
+      rows,
+    };
+
+    await exportStyledExcel(
+      `questionnaire-${q.titre?.replace(/\s+/g, '-').toLowerCase() || 'export'}-${new Date().toISOString().slice(0, 10)}`,
+      [sheet],
+    );
+    setMessage({ type: 'success', text: 'Export Excel téléchargé' });
   };
 
   const ajouterQuestion = () => setQuestions([...questions, questionVide()]);
@@ -870,6 +931,13 @@ export default function QuestionnairesAdminPage() {
                           className="bg-primary-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors flex items-center gap-2"
                         >
                           📥 Exporter PDF
+                        </button>
+                        <button
+                          onClick={exporterExcel}
+                          className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                          title="Export Excel des réponses"
+                        >
+                          📊 Exporter Excel
                         </button>
                         <button
                           onClick={exporterJSON}

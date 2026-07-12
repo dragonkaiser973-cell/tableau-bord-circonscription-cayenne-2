@@ -6,6 +6,7 @@ import Link from 'next/link';
 import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
+import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
 
 interface Evenement {
   id: string;
@@ -300,6 +301,51 @@ export default function CalendrierPage() {
     });
   };
 
+  const handleExportExcel = async () => {
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+    const fmt = (d: string) => {
+      if (!d) return '';
+      const dt = new Date(d);
+      return isNaN(dt.getTime()) ? d : dt.toLocaleDateString('fr-FR');
+    };
+
+    const evts = [...evenements].sort((a, b) => (a.dateDebut || '').localeCompare(b.dateDebut || ''));
+    const sheetEvts: ExcelSheetDef = {
+      name: 'Événements',
+      title: `Calendrier des événements — ${getAnneeScolaire()}`,
+      subtitle: `Circonscription Cayenne 2 · Exporté le ${dateStr} · ${evts.length} événement${evts.length > 1 ? 's' : ''}`,
+      columns: [
+        { header: 'Titre', key: 'titre', width: 34 },
+        { header: 'Type', key: 'type', width: 16 },
+        { header: 'Date début', key: 'debut', width: 14, align: 'center' },
+        { header: 'Date fin', key: 'fin', width: 14, align: 'center' },
+        { header: 'Lieu', key: 'lieu', width: 24 },
+      ],
+      rows: evts.map(e => ({
+        titre: e.titre || '',
+        type: TYPES_EVENEMENTS[e.type]?.label || e.type || '',
+        debut: fmt(e.dateDebut),
+        fin: fmt(e.dateFin),
+        lieu: e.lieu || '',
+      })),
+    };
+
+    const vac = getVacancesScolaires(anneeActuelle);
+    const sheetVac: ExcelSheetDef = {
+      name: 'Vacances scolaires',
+      title: `Vacances scolaires ${getAnneeScolaire()} — Zone Guyane`,
+      subtitle: 'Circonscription Cayenne 2',
+      columns: [
+        { header: 'Période', key: 'nom', width: 20 },
+        { header: 'Début', key: 'debut', width: 14, align: 'center' },
+        { header: 'Fin', key: 'fin', width: 14, align: 'center' },
+      ],
+      rows: vac.map(v => ({ nom: v.nom, debut: fmt(v.debut), fin: fmt(v.fin) })),
+    };
+
+    await exportStyledExcel(`calendrier-${new Date().toISOString().slice(0, 10)}`, [sheetEvts, sheetVac]);
+  };
+
   if (!isAuthenticated) {
     return <div>Chargement...</div>;
   }
@@ -339,6 +385,18 @@ export default function CalendrierPage() {
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
               PDF
+            </button>
+            <button
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-2 bg-emerald-600/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:bg-emerald-600 hover:-translate-y-0.5 transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+                <rect x="8" y="2" width="8" height="4" rx="1" />
+              </svg>
+              Excel
             </button>
             <button
               onClick={() => openModal()}
