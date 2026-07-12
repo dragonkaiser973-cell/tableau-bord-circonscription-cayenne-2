@@ -2,247 +2,101 @@
 
 ## 📚 Vue d'ensemble
 
-Le système d'archivage permet de sauvegarder et consulter les données de chaque année scolaire passée, rendant l'application pérenne sur plusieurs années.
+Le système d'archivage sauvegarde l'intégralité des données d'une année scolaire dans **Supabase**, afin de pouvoir les consulter les années suivantes. Il rend l'application pérenne : en année N+1, toutes les données des années passées restent accessibles en lecture seule.
 
-## 🎯 Fonctionnalités
+> ⚠️ **Cette documentation décrit l'implémentation réelle (format v3.0, stockage Supabase).**
+> Les anciennes versions reposaient sur des fichiers JSON dans `/data/archives/` — ce n'est **plus** le cas.
 
-### 1. Création d'Archives
-- Sauvegarde complète de toutes les données actuelles
-- Format : Année scolaire (ex: 2024-2025)
-- Recommandé : Chaque 1er septembre avant d'importer les nouvelles données
+## 🗄️ Où sont stockées les archives ?
 
-### 2. Consultation d'Archives
-- **Interface complète** : Les données archivées sont consultables dans l'interface normale
-- **Toutes les pages disponibles** : Circonscription, Écoles, Enseignants, Évaluations, Statistiques
-- **Mode lecture seule** : Les archives ne peuvent pas être modifiées
+Table Supabase **`archives`** — une ligne par année scolaire :
 
-### 3. Gestion des Archives
-- Liste de toutes les archives disponibles
-- Suppression d'archives (avec confirmation)
-- Métadonnées : Date d'archivage, année scolaire
+| Colonne | Type | Contenu |
+|---|---|---|
+| `annee_scolaire` | text | Ex : `2025-2026` (clé fonctionnelle) |
+| `version` | text | `3.0` |
+| `date_creation` | timestamp | Date d'archivage |
+| `metadata` | jsonb | Complétude + compteurs (nb écoles, enseignants, évaluations…) |
+| `donnees_brutes` | jsonb | Les 12 jeux de données bruts (voir ci-dessous) |
+| `donnees_calculees` | jsonb | Agrégats pré-calculés (pilotage, statistiques…) |
 
-## 📂 Structure des Données
+### `donnees_brutes` — 12 jeux de données
+`ecoles_identite`, `ecoles_structure`, `evaluations`, `statistiques_ecoles`, `stagiaires_m2`, `enseignants`, `evenements`, `boussole_sessions`, `boussole_deposits`, `plan_formation`, `plan_formation_sessions`, `plan_formation_formateurs`.
 
-### Emplacement
+### `donnees_calculees` — agrégats
+`pilotage` (indicateurs, RH, top5/bottom5 écoles), `circonscription` (stats générales), `statistiques` (totaux par niveau, classement), `enseignants` (par statut), `calendrier` (événements par type).
+
+La logique de construction est centralisée dans **`lib/archives.ts`** → fonction `creerArchiveComplete(anneeScolaire, origin)`, réutilisée par les deux points d'entrée ci-dessous.
+
+## 🎯 Deux façons de créer une archive
+
+### 1. Manuellement (page Archives)
+`Archives` → **« Nouvelle archive »** → saisir l'année → valider.
+→ `POST /api/archives { anneeScolaire }` → snapshot des données **actuelles**. Les données en base ne sont **pas** modifiées.
+
+### 2. Automatiquement (changement d'année scolaire)
+`Administration → Changement d'année scolaire` → `POST /api/changer-annee`.
+Ce flux **archive l'année sortante PUIS vide les tables** pour repartir sur une année vierge.
+
+> 🔒 **Sécurité (depuis 2026-07)** : si la création de l'archive échoue, le changement d'année est **abandonné avant toute suppression** — aucune donnée n'est perdue. La purge ne s'exécute que si l'archive a réussi.
+
+Tables vidées au changement d'année : `enseignants`, `evaluations`, `ecoles_identite`, `ecoles_structure`, `statistiques_ecoles`, `stagiaires_m2`, `evenements`, `effectifs`, `boussole_deposits`, `boussole_sessions`, `plan_formation_sessions`, `plan_formation`. Les tables `archives` et `config` sont conservées.
+
+## 🔔 Alerte de changement d'année
+
+Le composant `components/AlerteAnneeScolaire.tsx` (monté dans `app/layout.tsx`) compare l'année **détectée** (d'après la date système, cf. `lib/annee-scolaire.ts` — une année scolaire va de septembre à août) à `config.annee_scolaire_actuelle`.
+
+En cas d'écart, une **carte discrète** apparaît en bas à droite (visible uniquement pour un utilisateur connecté), proposant d'aller sur la page de changement d'année. Elle peut être mise de côté pour la journée (« Plus tard »).
+
+## 👁️ Consulter une archive
+
+`Archives` → **« Consulter »** sur une année → `/archives/consulter?annee=YYYY-YYYY` (vue d'ensemble), puis sous-pages :
+
 ```
-data/
-├── archives/
-│   ├── 2023-2024.json
-│   ├── 2024-2025.json
-│   └── 2025-2026.json
-├── ecoles.json           (données actuelles)
-├── enseignants.json      (données actuelles)
-└── ...
-```
-
-### Contenu d'une Archive
-```json
-{
-  "anneeScolaire": "2024-2025",
-  "dateArchivage": "2025-09-01T10:30:00.000Z",
-  "data": {
-    "ecoles": [...],
-    "ecoles_identite": [...],
-    "ecoles_structure": [...],
-    "enseignants": [...],
-    "evaluations": [...],
-    "statistiques_ecoles": [...],
-    "stagiaires_sopa": [...]
-  }
-}
-```
-
-## 🔄 Workflow Annuel Recommandé
-
-### Fin d'Année Scolaire (Août)
-
-**1. Créer une Archive**
-```
-1. Aller sur "Archives"
-2. Cliquer "➕ Nouvelle archive"
-3. Saisir l'année : "2024-2025"
-4. Valider
-→ Toutes les données sont sauvegardées
+/archives/consulter/circonscription?annee=   Vue d'ensemble + liste des écoles (sigle, commune, IPS)
+/archives/consulter/ecoles?annee=            Détails par école et structures
+/archives/consulter/enseignants?annee=       Tableau complet + filtres + export Excel
+/archives/consulter/evaluations?annee=       Résultats par niveau
+/archives/consulter/statistiques?annee=      Effectifs, classements + export Excel
+/archives/consulter/calendrier?annee=        Événements et vacances scolaires
+/archives/consulter/formations/...           Boussole & plan de formation (si présents)
 ```
 
-**2. Réinitialiser les Données Actuelles**
-```
-1. Aller sur "Gestion des données"
-2. Section "Zone Dangereuse"
-3. Cliquer "Réinitialiser toutes les données"
-4. Confirmer
-→ Les données actuelles sont effacées
-```
+Toutes les pages sont en **lecture seule** et chargent les données via `GET /api/archives/data`.
 
-**3. Importer les Nouvelles Données**
-```
-1. Importer nouveau TRM
-2. Importer nouvelles évaluations
-3. Importer fichiers écoles
-4. Etc.
-→ Prêt pour la nouvelle année scolaire
-```
+## 🔧 APIs
 
-### Début d'Année Scolaire (Septembre)
+| Appel | Effet |
+|---|---|
+| `GET /api/archives` | Liste des années : `{ archives: ["2025-2026", ...] }` |
+| `GET /api/archives?annee=YYYY-YYYY` | Une archive complète (metadata + brutes + calculées) |
+| `GET /api/archives/data?annee=YYYY-YYYY&type=<jeu>` | Un jeu de données brut (ex : `enseignants`, `ecoles_identite`, `statistiques_ecoles`…) |
+| `POST /api/archives` | Crée une archive (`{ anneeScolaire }`) |
+| `DELETE /api/archives?annee=YYYY-YYYY` | Supprime une archive (**irréversible**) |
 
-L'application contient les nouvelles données, l'archive contient les anciennes.
+**Sécurité** : ces routes sont réservées aux administrateurs par le middleware JWT. Côté serveur, Supabase utilise la clé `service_role` (contourne le RLS) ; la clé `anon` publique ne peut pas lire la table `archives`.
 
-## 🖥️ Utilisation de l'Interface
+## 🔄 Workflow annuel recommandé
 
-### Accéder aux Archives
+1. **Fin d'année (juin–août)** : vérifier que les données de l'année sont complètes.
+2. **Bascule** : `Administration → Changement d'année scolaire`. Laisser l'option « Créer une archive » cochée → l'année sortante est archivée, puis les tables sont vidées.
+3. **Rentrée (septembre)** : importer les nouvelles données (TRM, évaluations, structures…).
 
-**Depuis la Page d'Accueil**
-```
-1. Se connecter
-2. Cliquer sur la carte "📚 Archives"
-→ Liste de toutes les archives
-```
+> Alternative sans purge : créer une archive manuellement depuis la page `Archives` à tout moment, sans toucher aux données courantes.
 
-### Consulter une Archive
+## ⚠️ Points importants
 
-**Navigation**
-```
-1. Sur la page Archives
-2. Cliquer "👁️ Consulter" sur une année
-3. Choisir la section à consulter :
-   - Circonscription
-   - Écoles
-   - Enseignants
-   - Évaluations
-   - Statistiques
-```
+- **Suppression irréversible** : supprimer une archive efface définitivement la ligne Supabase. Aucune corbeille.
+- **Archives immuables** : une archive fige les données telles quelles au moment de sa création. Corriger un bug de code ou une donnée source **ne réécrit pas** les archives déjà créées. Les pages de consultation compensent en **enrichissant à l'affichage** quand c'est possible (ex. la page Statistiques rejoint `ecoles_identite` par UAI pour retrouver le nom complet et le sigle des écoles).
+- **Complétude** : une archive ne contient que les données présentes au moment du snapshot. Si une table était vide, elle sera vide dans l'archive (`metadata.completude` le signale).
 
-**Exemple : Consulter les Enseignants 2023-2024**
-```
-Archives > 2023-2024 > Consulter > Enseignants
-→ Affichage du tableau des enseignants avec les données de 2023-2024
-```
+## 🔮 Évolutions possibles
 
-## 📊 Pages de Consultation d'Archives
-
-### Structure des URLs
-```
-/archives                                    → Liste des archives
-/archives/consulter?annee=2024-2025         → Vue d'ensemble d'une archive
-/archives/consulter/circonscription?annee=  → Page Circonscription archivée ✅
-/archives/consulter/ecoles?annee=           → Page Écoles archivée ✅
-/archives/consulter/enseignants?annee=      → Page Enseignants archivée ✅
-/archives/consulter/evaluations?annee=      → Page Évaluations archivée ✅
-/archives/consulter/statistiques?annee=     → Page Statistiques archivée ✅
-```
-
-### Pages Créées ✅
-
-Toutes les pages de consultation sont maintenant disponibles :
-- ✅ `/archives/consulter/circonscription/page.tsx` - Vue d'ensemble avec statistiques
-- ✅ `/archives/consulter/ecoles/page.tsx` - Liste complète des écoles
-- ✅ `/archives/consulter/enseignants/page.tsx` - Tableau complet avec filtres
-- ✅ `/archives/consulter/evaluations/page.tsx` - Résultats par niveau
-- ✅ `/archives/consulter/statistiques/page.tsx` - Effectifs et données ONDE
-
-**Fonctionnalités communes à toutes les pages :**
-- Banner "Mode Consultation Archive" pour rappeler qu'on consulte des données passées
-- Fil d'Ariane pour navigation facile
-- Chargement des données depuis l'API `/api/archives/data`
-- Interface identique aux pages normales (même UX)
-
-## 🔧 APIs Disponibles
-
-### Liste des Archives
-```
-GET /api/archives
-→ { archives: ["2024-2025", "2023-2024", ...] }
-```
-
-### Créer une Archive
-```
-POST /api/archives
-Body: { anneeScolaire: "2024-2025" }
-→ Sauvegarde toutes les données actuelles
-```
-
-### Récupérer une Archive Complète
-```
-GET /api/archives/data?annee=2024-2025
-→ { anneeScolaire, dateArchivage, data: {...} }
-```
-
-### Récupérer des Données Spécifiques
-```
-GET /api/archives/data?annee=2024-2025&type=enseignants
-→ [...] (liste des enseignants de 2024-2025)
-```
-
-### Supprimer une Archive
-```
-DELETE /api/archives?annee=2024-2025
-→ Supprime l'archive (irréversible)
-```
-
-## 💡 Conseils d'Utilisation
-
-### Nommage des Archives
-- **Format recommandé** : `YYYY-YYYY` (ex: 2024-2025)
-- **Cohérent** : Utilisez toujours le même format
-- **Explicite** : L'année de début correspond à septembre
-
-### Fréquence de Sauvegarde
-- **Minimum** : 1 fois par an (1er septembre)
-- **Recommandé** : Avant chaque import massif de données
-- **Backup** : Considérer aussi des sauvegardes du dossier `/data`
-
-### Espace Disque
-- Une archive complète : ~1-5 MB
-- 10 années archivées : ~10-50 MB
-- Négligeable pour un serveur moderne
-
-### Sécurité
-- Les archives sont **en lecture seule** dans l'interface
-- Seuls les utilisateurs authentifiés peuvent créer/supprimer
-- Aucune modification possible des archives via l'interface
-
-## 🔮 Évolutions Futures Possibles
-
-- [ ] Export d'archives au format ZIP
 - [ ] Comparaison entre deux années
-- [ ] Graphiques d'évolution sur plusieurs années
-- [ ] Import d'archives depuis un fichier
-- [ ] Recherche dans toutes les archives
-
-## ⚠️ Points Importants
-
-### Avant de Réinitialiser
-```
-✅ TOUJOURS créer une archive avant de réinitialiser les données
-❌ NE JAMAIS réinitialiser sans avoir archivé
-```
-
-### Suppression d'Archives
-```
-⚠️ La suppression est IRREVERSIBLE
-💾 Envisager un export avant suppression
-```
-
-### Consultation vs Données Actuelles
-```
-📚 Archives = Données PASSÉES (lecture seule)
-📊 Pages normales = Données ACTUELLES (modifiables)
-```
-
-## 🆘 Dépannage
-
-### "Archive non trouvée"
-- Vérifier que le fichier existe dans `/data/archives/`
-- Vérifier le nom de l'année (format exact)
-
-### "Données manquantes dans l'archive"
-- L'archive ne contient que les données présentes au moment de sa création
-- Si un fichier était vide, il sera vide dans l'archive
-
-### "Erreur lors de la création"
-- Vérifier les permissions du dossier `/data/archives/`
-- Vérifier l'espace disque disponible
+- [ ] Graphiques d'évolution pluriannuelle
+- [ ] Export d'une archive complète (ZIP / classeur Excel multi-feuilles)
+- [ ] Recherche transverse dans toutes les archives
 
 ---
 
-**Le système d'archivage rend l'application pérenne et permet de garder un historique complet de plusieurs années scolaires !** 📚🎓
+**Le système d'archivage rend l'application pérenne et conserve un historique complet, année après année.** 📚🎓
