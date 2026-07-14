@@ -186,15 +186,19 @@ export async function creerArchiveComplete(
   console.log(`   - ${stagiaires_m2.length} stagiaires M2`);
   console.log(`   - ${evenements.length} événements`);
 
-  // Charger structures et stats depuis Supabase
-  console.log('📥 Chargement structures et stats depuis Supabase...');
-  const [resStructures, resStats] = await Promise.all([
+  // Charger structures, stats et outils directeurs (prévisions + 108h) depuis Supabase
+  console.log('📥 Chargement structures, stats et outils directeurs depuis Supabase...');
+  const [resStructures, resStats, resPrevisions, resRepartitions108h] = await Promise.all([
     supabase.from('ecoles_structure').select('*'),
-    supabase.from('statistiques_ecoles').select('*')
+    supabase.from('statistiques_ecoles').select('*'),
+    supabase.from('previsions_structure').select('*').order('published_at', { ascending: false }),
+    supabase.from('repartition_108h').select('*').order('published_at', { ascending: false })
   ]);
 
   const ecoles_structure = resStructures.data || [];
   const statistiques_ecoles = resStats.data || [];
+  const previsions_structure = resPrevisions.data || [];
+  const repartitions_108h = resRepartitions108h.data || [];
 
   // Charger ecoles_identite depuis l'API (plus complet que table ecoles)
   console.log('📥 Chargement ecoles_identite depuis API...');
@@ -223,6 +227,8 @@ export async function creerArchiveComplete(
   console.log(`   - ${ecoles_structure.length} structures chargées`);
   console.log(`   - ${statistiques_ecoles.length} statistiques chargées`);
   console.log(`   - ${ecoles_identite.length} identités chargées`);
+  console.log(`   - ${previsions_structure.length} prévisions de structure publiées`);
+  console.log(`   - ${repartitions_108h.length} répartitions 108h publiées`);
 
   // ── Calculs agrégés ─────────────────────────────────────────────
   console.log('📊 Calcul des statistiques...');
@@ -255,7 +261,9 @@ export async function creerArchiveComplete(
       stagiaires: stagiaires_m2.length > 0,
       calendrier: evenements.length > 0,
       boussole: boussole_sessions.length > 0,
-      planFormation: plan_formation.length > 0
+      planFormation: plan_formation.length > 0,
+      previsionsStructure: previsions_structure.length > 0,
+      repartitions108h: repartitions_108h.length > 0
     },
     stats: {
       nombreEcoles: ecoles_identite.length,
@@ -269,7 +277,9 @@ export async function creerArchiveComplete(
       nombreBoussoleDeposits: boussole_deposits.length,
       nombrePlanFormation: plan_formation.length,
       nombrePlanFormationSessions: plan_formation_sessions.length,
-      nombrePlanFormationSessionsFaites: plan_formation_sessions.filter((s: any) => s.fait).length
+      nombrePlanFormationSessionsFaites: plan_formation_sessions.filter((s: any) => s.fait).length,
+      nombrePrevisionsStructure: previsions_structure.length,
+      nombreRepartitions108h: repartitions_108h.length
     }
   };
 
@@ -285,7 +295,9 @@ export async function creerArchiveComplete(
     boussole_deposits,
     plan_formation,
     plan_formation_sessions,
-    plan_formation_formateurs
+    plan_formation_formateurs,
+    previsions_structure,
+    repartitions_108h
   };
 
   const donnees_calculees = {
