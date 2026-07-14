@@ -283,6 +283,30 @@ function ConsulterArchiveContent() {
                 </div>
               </Link>
             )}
+
+            {brutes.previsions_structure && brutes.previsions_structure.length > 0 && (
+              <Link href={`/archives/consulter/prevision-structure?annee=${annee}`}>
+                <div className="p-6 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg border-2 border-cyan-200 hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="text-4xl mb-3">🏗️</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Prévisions de structure</h3>
+                  <p className="text-sm text-gray-600">
+                    {brutes.previsions_structure.length} fiche{brutes.previsions_structure.length > 1 ? 's' : ''} directeur{brutes.previsions_structure.length > 1 ? 's' : ''} publiée{brutes.previsions_structure.length > 1 ? 's' : ''}
+                  </p>
+                </div>
+              </Link>
+            )}
+
+            {brutes.repartitions_108h && brutes.repartitions_108h.length > 0 && (
+              <Link href={`/archives/consulter/repartition-108h?annee=${annee}`}>
+                <div className="p-6 bg-gradient-to-br from-rose-50 to-rose-100 rounded-lg border-2 border-rose-200 hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="text-4xl mb-3">⏱️</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Répartitions des 108h</h3>
+                  <p className="text-sm text-gray-600">
+                    {brutes.repartitions_108h.length} fiche{brutes.repartitions_108h.length > 1 ? 's' : ''} directeur{brutes.repartitions_108h.length > 1 ? 's' : ''} publiée{brutes.repartitions_108h.length > 1 ? 's' : ''}
+                  </p>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>

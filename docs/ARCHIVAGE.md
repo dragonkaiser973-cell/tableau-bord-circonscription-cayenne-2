@@ -17,11 +17,13 @@ Table Supabase **`archives`** — une ligne par année scolaire :
 | `version` | text | `3.0` |
 | `date_creation` | timestamp | Date d'archivage |
 | `metadata` | jsonb | Complétude + compteurs (nb écoles, enseignants, évaluations…) |
-| `donnees_brutes` | jsonb | Les 12 jeux de données bruts (voir ci-dessous) |
+| `donnees_brutes` | jsonb | Les 14 jeux de données bruts (voir ci-dessous) |
 | `donnees_calculees` | jsonb | Agrégats pré-calculés (pilotage, statistiques…) |
 
-### `donnees_brutes` — 12 jeux de données
-`ecoles_identite`, `ecoles_structure`, `evaluations`, `statistiques_ecoles`, `stagiaires_m2`, `enseignants`, `evenements`, `boussole_sessions`, `boussole_deposits`, `plan_formation`, `plan_formation_sessions`, `plan_formation_formateurs`.
+### `donnees_brutes` — 14 jeux de données
+`ecoles_identite`, `ecoles_structure`, `evaluations`, `statistiques_ecoles`, `stagiaires_m2`, `enseignants`, `evenements`, `boussole_sessions`, `boussole_deposits`, `plan_formation`, `plan_formation_sessions`, `plan_formation_formateurs`, `previsions_structure`, `repartitions_108h`.
+
+> Les deux derniers (`previsions_structure`, `repartitions_108h`) sont les **fiches directeurs publiées** — prévision de structure et répartition des 108h. Seule la version *publiée* de chaque école est archivée (pas l'historique des tables `*_versions`).
 
 ### `donnees_calculees` — agrégats
 `pilotage` (indicateurs, RH, top5/bottom5 écoles), `circonscription` (stats générales), `statistiques` (totaux par niveau, classement), `enseignants` (par statut), `calendrier` (événements par type).
@@ -40,7 +42,9 @@ Ce flux **archive l'année sortante PUIS vide les tables** pour repartir sur une
 
 > 🔒 **Sécurité (depuis 2026-07)** : si la création de l'archive échoue, le changement d'année est **abandonné avant toute suppression** — aucune donnée n'est perdue. La purge ne s'exécute que si l'archive a réussi.
 
-Tables vidées au changement d'année : `enseignants`, `evaluations`, `ecoles_identite`, `ecoles_structure`, `statistiques_ecoles`, `stagiaires_m2`, `evenements`, `effectifs`, `boussole_deposits`, `boussole_sessions`, `plan_formation_sessions`, `plan_formation`. Les tables `archives` et `config` sont conservées.
+Tables vidées au changement d'année : `enseignants`, `evaluations`, `ecoles_identite`, `ecoles_structure`, `statistiques_ecoles`, `stagiaires_m2`, `evenements`, `effectifs`, `boussole_deposits`, `boussole_sessions`, `plan_formation_sessions`, `plan_formation`, `previsions_structure` (+ `previsions_structure_versions`), `repartition_108h` (+ `repartition_108h_versions`). Les tables `archives`, `config` et les référentiels annuaire (`annuaire_ecoles`, `annuaire_directions`) sont conservés.
+
+> Pour les outils directeurs, on vide aussi les tables d'historique `*_versions` afin de repartir réellement à zéro — la version publiée de chaque fiche ayant déjà été capturée dans l'archive.
 
 ## 🔔 Alerte de changement d'année
 
@@ -60,7 +64,11 @@ En cas d'écart, une **carte discrète** apparaît en bas à droite (visible uni
 /archives/consulter/statistiques?annee=      Effectifs, classements + export Excel
 /archives/consulter/calendrier?annee=        Événements et vacances scolaires
 /archives/consulter/formations/...           Boussole & plan de formation (si présents)
+/archives/consulter/prevision-structure?annee=   Fiches directeurs « prévision de structure » (si présentes)
+/archives/consulter/repartition-108h?annee=      Fiches directeurs « répartition 108h » (si présentes)
 ```
+
+> Les deux pages « outils directeurs » n'apparaissent (carte + écran) que si des fiches ont été publiées au moment de l'archivage. Chacune propose une synthèse par école + un détail lecture seule (effectifs/répartition pour la structure ; heures par catégorie + périodes pour les 108h) et un export Excel.
 
 Toutes les pages sont en **lecture seule** et chargent les données via `GET /api/archives/data`.
 

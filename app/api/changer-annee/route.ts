@@ -77,7 +77,14 @@ export async function POST(request: NextRequest) {
       'boussole_deposits',
       'boussole_sessions',
       'plan_formation_sessions',
-      'plan_formation'
+      'plan_formation',
+      // Outils directeurs (prévision de structure + répartition 108h) : on vide
+      // la fiche publiée ET son historique de versions pour repartir à zéro.
+      // Les fiches publiées ont déjà été archivées à l'étape 2 (donnees_brutes).
+      'previsions_structure_versions',
+      'previsions_structure',
+      'repartition_108h_versions',
+      'repartition_108h'
     ];
 
     const erreurs: string[] = [];
