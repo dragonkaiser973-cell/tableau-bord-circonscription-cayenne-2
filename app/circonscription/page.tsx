@@ -454,6 +454,7 @@ export default function CirconscriptionPage() {
             sub={`${statsEcoles.elementaires} élém. · ${statsEcoles.maternelles} mat. · ${statsEcoles.primaires} prim.`}
             gradient="from-sky-400 via-cyan-400 to-teal-400"
             variant="light"
+            href="/ecoles"
           />
           <StatPill
             value={statsEns.total}
@@ -461,6 +462,7 @@ export default function CirconscriptionPage() {
             sub={`${statsEns.avecSpecialite} avec spécialité`}
             gradient="from-emerald-400 via-teal-400 to-cyan-400"
             variant="light"
+            href="/enseignants"
           />
           <StatPill
             value={`${statsEval.moyenneFrancais.toFixed(1)}%`}
@@ -468,6 +470,7 @@ export default function CirconscriptionPage() {
             sub="Moyenne au-dessus seuil 2"
             gradient="from-violet-400 via-fuchsia-400 to-pink-400"
             variant="light"
+            href="/evaluations"
           />
           <StatPill
             value={`${statsEval.moyenneMaths.toFixed(1)}%`}
@@ -475,6 +478,7 @@ export default function CirconscriptionPage() {
             sub="Moyenne au-dessus seuil 2"
             gradient="from-amber-400 via-orange-400 to-rose-500"
             variant="light"
+            href="/evaluations"
           />
         </div>
 

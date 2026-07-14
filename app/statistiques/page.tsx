@@ -361,18 +361,21 @@ export default function StatistiquesPage() {
             label="Classes"
             gradient="from-emerald-400 via-teal-400 to-cyan-400"
             variant="light"
+            href="/ecoles"
           />
           <StatPill
             value={totalEnseignants}
             label="Enseignants"
             gradient="from-violet-400 via-fuchsia-400 to-pink-400"
             variant="light"
+            href="/enseignants"
           />
           <StatPill
             value={totalEcoles}
             label="Écoles"
             gradient="from-amber-400 via-orange-400 to-rose-500"
             variant="light"
+            href="/ecoles"
           />
         </div>
 

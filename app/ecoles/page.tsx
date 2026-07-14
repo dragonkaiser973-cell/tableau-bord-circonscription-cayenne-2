@@ -172,6 +172,7 @@ export default function EcolesPage() {
               label="Élèves"
               gradient="from-violet-400 via-fuchsia-400 to-pink-400"
               variant="light"
+              href="/statistiques"
             />
             <StatPill
               value={totalDispositifs}

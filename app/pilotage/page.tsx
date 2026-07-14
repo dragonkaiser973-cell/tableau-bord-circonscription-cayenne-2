@@ -411,18 +411,21 @@ export default function PilotagePage() {
               label="Élèves total"
               gradient="from-sky-400 via-cyan-400 to-teal-400"
               variant="light"
+              href="/statistiques"
             />
             <StatPill
               value={indicateurs.nbClasses}
               label="Classes total"
               gradient="from-emerald-400 via-teal-400 to-cyan-400"
               variant="light"
+              href="/ecoles"
             />
             <StatPill
               value={`${indicateurs.tauxMoyen}%`}
               label="Réussite moyenne"
               gradient="from-amber-400 via-orange-400 to-rose-500"
               variant="light"
+              href="/evaluations"
             />
           </div>
 
