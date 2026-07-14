@@ -64,7 +64,11 @@ En cas d'écart, une **carte discrète** apparaît en bas à droite (visible uni
 /archives/consulter/statistiques?annee=      Effectifs, classements + export Excel
 /archives/consulter/calendrier?annee=        Événements et vacances scolaires
 /archives/consulter/formations/...           Boussole & plan de formation (si présents)
+/archives/consulter/prevision-structure?annee=   Fiches directeurs « prévision de structure » (si présentes)
+/archives/consulter/repartition-108h?annee=      Fiches directeurs « répartition 108h » (si présentes)
 ```
+
+> Les deux pages « outils directeurs » n'apparaissent (carte + écran) que si des fiches ont été publiées au moment de l'archivage. Chacune propose une synthèse par école + un détail lecture seule (effectifs/répartition pour la structure ; heures par catégorie + périodes pour les 108h) et un export Excel.
 
 Toutes les pages sont en **lecture seule** et chargent les données via `GET /api/archives/data`.
 
