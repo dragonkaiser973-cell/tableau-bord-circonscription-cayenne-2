@@ -17,6 +17,7 @@ const PUBLIC_API_ROUTES = [
   '/api/annuaire',         // lecture publique de l'annuaire circo
   '/api/formations/plan',  // lecture publique du plan de formation
   '/api/previsions-structure', // lecture publique + publication directeur sans auth
+  '/api/repartitions-108h',    // lecture publique + publication directeur sans auth
 
   '/api/quiz/public',      // accès participants quiz live (via PIN, sans auth)
 ];

@@ -320,6 +320,141 @@ function injectPeriode(
   }
 }
 
+// ─── Calendrier natif dessiné sur chaque feuille PERIODE ─────────────────────
+// Le template contient une image « appareil photo » liée au calendrier de la
+// feuille CALCUL : elle reste vide (sans couleurs) une fois le fichier exporté.
+// On la remplace donc par un vrai calendrier en cellules colorées, dans les
+// colonnes libres A→E (le tableau THEMATIQUES occupe F→K), montrant les mois de
+// la période avec les jours coloriés par catégorie et le nombre d'heures.
+
+const CAL_MONTH_NAMES = [
+  'JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN',
+  'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE',
+];
+
+function fmtSlotHours(h: number): string {
+  if (h <= 0) return '';
+  if (h < 1) return `${Math.round(h * 60)}min`;
+  const whole = Math.floor(h + 1e-9);
+  const rem = h - whole;
+  if (rem >= 0.5 - 1e-9) return `${whole}h30`;
+  return `${whole}h`;
+}
+
+// Mois couverts par la période (inclusif), en {year, monthIdx0}.
+function periodeMonths(bounds: { start: string; end: string } | undefined): { year: number; monthIdx0: number }[] {
+  const ms = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bounds?.start || '');
+  const me = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bounds?.end || '');
+  if (!ms || !me) return [];
+  let y = Number(ms[1]);
+  let m = Number(ms[2]) - 1;
+  const ey = Number(me[1]);
+  const em = Number(me[2]) - 1;
+  const out: { year: number; monthIdx0: number }[] = [];
+  let guard = 0;
+  while ((y < ey || (y === ey && m <= em)) && guard++ < 24) {
+    out.push({ year: y, monthIdx0: m });
+    m++;
+    if (m > 11) { m = 0; y++; }
+  }
+  return out;
+}
+
+const CAL_THIN = { style: 'thin' as const, color: { argb: 'FFBFBFBF' } };
+const CAL_BORDER = { top: CAL_THIN, left: CAL_THIN, bottom: CAL_THIN, right: CAL_THIN };
+
+// Dessine un mois (label "Lun. 1" en labelCol, case couleur+heures en colorCol).
+// Retourne le nombre de jours écrits.
+function drawCalendarMonth(
+  ws: ExcelJS.Worksheet,
+  p: Repartition108h,
+  year: number,
+  monthIdx0: number,
+  headerRow: number,
+  labelCol: number,
+  colorCol: number,
+): number {
+  const daysInMonth = new Date(year, monthIdx0 + 1, 0).getDate();
+  const hoursPerSlot = p.type === 'maternelle' ? 0.5 : 1;
+
+  ws.mergeCells(headerRow, labelCol, headerRow, colorCol);
+  const hc = ws.getCell(headerRow, labelCol);
+  hc.value = `${CAL_MONTH_NAMES[monthIdx0]} ${year}`;
+  hc.font = { name: 'Calibri', size: 9, bold: true, color: { argb: 'FF1F3B4D' } };
+  hc.alignment = { horizontal: 'center', vertical: 'middle' };
+  hc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEAF1F5' } };
+  hc.border = CAL_BORDER;
+  ws.getCell(headerRow, colorCol).border = CAL_BORDER;
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const row = headerRow + d;
+    const wd = new Date(year, monthIdx0, d).getDay();
+    const isWE = wd === 0 || wd === 6;
+    const labelCell = ws.getCell(row, labelCol);
+    const colorCell = ws.getCell(row, colorCol);
+
+    labelCell.value = `${JOURS_COURTS[wd]} ${d}`;
+    labelCell.font = { name: 'Calibri', size: 8, color: { argb: isWE ? 'FF9AA0A6' : 'FF333333' } };
+    labelCell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+    labelCell.border = CAL_BORDER;
+    if (isWE) labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+
+    const dKey = `${year}-${String(monthIdx0 + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const sel = p.selections[dKey];
+    colorCell.border = CAL_BORDER;
+    colorCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    if (sel && sel.slots) {
+      const argb = ARGB_BY_CATEGORY[sel.category];
+      colorCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb }, bgColor: { argb } };
+      colorCell.value = fmtSlotHours(sel.slots * hoursPerSlot);
+      const dark = sel.category === 'organisation';
+      colorCell.font = { name: 'Calibri', size: 8, bold: true, color: { argb: dark ? 'FFFFFFFF' : 'FF1A1A1A' } };
+    } else {
+      colorCell.value = null;
+    }
+  }
+  return daysInMonth;
+}
+
+function injectPeriodeCalendar(
+  ws: ExcelJS.Worksheet,
+  p: Repartition108h,
+  bounds: { start: string; end: string } | undefined,
+) {
+  // Retire l'image « appareil photo » liée (vide dans l'export).
+  try {
+    (ws as unknown as { _media: unknown[] })._media = [];
+  } catch {
+    /* pas d'image ou API indisponible */
+  }
+
+  const months = periodeMonths(bounds);
+  if (months.length === 0) return;
+
+  // Largeurs des colonnes du calendrier (A..E) — le tableau démarre en F.
+  ws.getColumn(1).width = 8.5; // label mois gauche
+  ws.getColumn(2).width = 7;   // couleur/heures gauche
+  ws.getColumn(3).width = 8.5; // label mois droit
+  ws.getColumn(4).width = 7;   // couleur/heures droit
+  ws.getColumn(5).width = 2;   // séparation avant le tableau
+
+  const title = ws.getCell(1, 1);
+  title.value = 'CALENDRIER DE LA PÉRIODE';
+  title.font = { name: 'Calibri', size: 9, bold: true, color: { argb: 'FF1F3B4D' } };
+
+  // 2 mois par bande (A-B et C-D), les bandes suivantes s'empilent en dessous.
+  const BAND_GAP = 2;
+  let bandTop = 2;
+  for (let i = 0; i < months.length; i += 2) {
+    const left = months[i];
+    const right = months[i + 1];
+    const dLeft = drawCalendarMonth(ws, p, left.year, left.monthIdx0, bandTop, 1, 2);
+    let dRight = 0;
+    if (right) dRight = drawCalendarMonth(ws, p, right.year, right.monthIdx0, bandTop, 3, 4);
+    bandTop += 1 + Math.max(dLeft, dRight) + BAND_GAP;
+  }
+}
+
 export async function exportRepartition(p: Repartition108h) {
   const url = TEMPLATE_BY_TYPE[p.type];
   const res = await fetch(url);
@@ -352,6 +487,7 @@ export async function exportRepartition(p: Repartition108h) {
       p.periodeBounds[periodeKey],
       hoursPerSlot,
     );
+    injectPeriodeCalendar(ws, p, p.periodeBounds[periodeKey]);
   }
 
   const out = await wb.xlsx.writeBuffer();

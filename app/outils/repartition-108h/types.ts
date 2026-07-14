@@ -58,6 +58,10 @@ export const PERIODES: Periode[] = [1, 2, 3, 4, 5];
 
 export type Repartition108h = {
   id: string;
+  // Identifiants annuaire — vides tant que le directeur ne s'est pas sélectionné
+  // dans le dropdown. Bloquent l'export et la publication.
+  ecoleId: string;
+  directeurId: string;
   ecole: string;
   auteur: string;
   anneeN: string;
@@ -67,6 +71,27 @@ export type Repartition108h = {
   notes: Record<Periode, string>;
   periodeBounds: Record<Periode, { start: string; end: string }>;
   updatedAt: number;
+};
+
+/** Déduit le type d'école 108h (mater/élém) depuis le type annuaire (EEPU/EMPU/EEPR/GS). */
+export function ecoleTypeToKind(annuaireType?: string | null): EcoleType {
+  return annuaireType === 'EMPU' ? 'maternelle' : 'elementaire';
+}
+
+// Format renvoyé par /api/repartitions-108h (snake_case côté Supabase).
+export type Repartition108hPubliee = {
+  ecole_id: string;
+  directeur_id: string;
+  directeur_name: string;
+  ecole_name: string;
+  annee_n: string;
+  type: EcoleType;
+  selections: Record<DayKey, DaySelection>;
+  periodes: Record<string, PeriodeEvent[]>;
+  notes: Record<string, string>;
+  periode_bounds: Record<string, { start: string; end: string }>;
+  published_at: string;
+  client_id?: string | null;
 };
 
 export function dayKey(year: number, monthIdx0: number, day: number): DayKey {
@@ -106,6 +131,8 @@ export function makeEmptyRepartition(id: string, anneeN = currentSchoolYear()): 
   const startYear = Number(anneeN.split('-')[0]) || new Date().getFullYear();
   return {
     id,
+    ecoleId: '',
+    directeurId: '',
     ecole: '',
     auteur: '',
     anneeN,
@@ -115,6 +142,58 @@ export function makeEmptyRepartition(id: string, anneeN = currentSchoolYear()): 
     notes: { 1: '', 2: '', 3: '', 4: '', 5: '' },
     periodeBounds: defaultPeriodeBounds(startYear),
     updatedAt: Date.now(),
+  };
+}
+
+// Convertit une publication serveur en Repartition108h locale (pour l'affichage
+// en lecture seule via les composants existants).
+export function publicationToRepartition(pub: Repartition108hPubliee, id: string): Repartition108h {
+  const base = makeEmptyRepartition(id, pub.annee_n);
+  base.ecoleId = pub.ecole_id;
+  base.directeurId = pub.directeur_id;
+  base.ecole = pub.ecole_name;
+  base.auteur = pub.directeur_name;
+  base.type = pub.type === 'maternelle' ? 'maternelle' : 'elementaire';
+
+  const rawSel = pub.selections && typeof pub.selections === 'object' ? pub.selections : {};
+  base.selections = {};
+  for (const [dKey, sel] of Object.entries(rawSel)) {
+    if (!sel || typeof sel !== 'object') continue;
+    const slots = Math.max(1, Math.min(MAX_SLOTS_PER_DAY, Number(sel.slots) || 1));
+    base.selections[dKey] = { category: sel.category, slots };
+  }
+  for (const k of PERIODES) {
+    base.periodes[k] = Array.isArray(pub.periodes?.[k]) ? pub.periodes[k] : [];
+    base.notes[k] = typeof pub.notes?.[k] === 'string' ? pub.notes[k] : '';
+    const b = pub.periode_bounds?.[k];
+    if (b?.start && b?.end) base.periodeBounds[k] = b;
+  }
+  base.updatedAt = new Date(pub.published_at).getTime();
+  return base;
+}
+
+// Convertit le format local (Repartition108h) en payload API (snake_case).
+export function repartitionToApiPayload(p: Repartition108h) {
+  const periodes: Record<string, PeriodeEvent[]> = {};
+  const notes: Record<string, string> = {};
+  const periodeBounds: Record<string, { start: string; end: string }> = {};
+  for (const k of PERIODES) {
+    periodes[k] = p.periodes[k] || [];
+    notes[k] = p.notes[k] || '';
+    periodeBounds[k] = p.periodeBounds[k];
+  }
+  return {
+    directeur_id: p.directeurId,
+    ecole_id: p.ecoleId,
+    directeur_name: p.auteur,
+    ecole_name: p.ecole,
+    annee_n: p.anneeN,
+    type: p.type,
+    selections: p.selections,
+    periodes,
+    notes,
+    periode_bounds: periodeBounds,
+    client_id: p.id,
   };
 }
 
