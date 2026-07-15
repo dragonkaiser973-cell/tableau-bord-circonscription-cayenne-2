@@ -307,6 +307,21 @@ function ConsulterArchiveContent() {
                 </div>
               </Link>
             )}
+
+            {brutes.remplacements && brutes.remplacements.length > 0 && (
+              <Link href={`/archives/consulter/remplacements?annee=${annee}`}>
+                <div className="p-6 bg-gradient-to-br from-lime-50 to-lime-100 rounded-lg border-2 border-lime-200 hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="text-4xl mb-3">🔄</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">Remplacements</h3>
+                  <p className="text-sm text-gray-600">
+                    {brutes.remplacements.length} remplacement{brutes.remplacements.length > 1 ? 's' : ''}
+                    {brutes.remplacements_tr && brutes.remplacements_tr.length > 0
+                      ? ` · ${brutes.remplacements_tr.length} TR`
+                      : ''}
+                  </p>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>

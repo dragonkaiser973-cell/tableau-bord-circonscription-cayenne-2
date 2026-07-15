@@ -84,7 +84,11 @@ export async function POST(request: NextRequest) {
       'previsions_structure_versions',
       'previsions_structure',
       'repartition_108h_versions',
-      'repartition_108h'
+      'repartition_108h',
+      // Remplacements TR : les remplacements de l'année sont purgés (déjà
+      // archivés à l'étape 2). La liste des TR (remplacements_tr) n'est PAS
+      // purgée : l'équipe de remplaçants persiste d'une année sur l'autre.
+      'remplacements'
     ];
 
     const erreurs: string[] = [];

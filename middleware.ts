@@ -33,6 +33,8 @@ const PUBLIC_READ_ADMIN_WRITE = [
 // authentifiés, quel que soit leur rôle (token valide requis, pas forcément admin).
 const PUBLIC_READ_AUTH_WRITE = [
   '/api/evenements',
+  '/api/remplacements',     // gestion des remplacements TR (écriture secrétaire authentifiée)
+  '/api/remplacements-tr',  // liste des TR gérée dans l'outil remplacements
 ];
 
 const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
