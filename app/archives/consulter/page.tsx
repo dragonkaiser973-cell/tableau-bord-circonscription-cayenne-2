@@ -322,6 +322,22 @@ function ConsulterArchiveContent() {
                 </div>
               </Link>
             )}
+
+            {((brutes.pacte_repartitions && brutes.pacte_repartitions.length > 0) ||
+              (brutes.pacte_attributions && brutes.pacte_attributions.length > 0)) && (
+              <Link href={`/archives/consulter/pacte?annee=${annee}`}>
+                <div className="p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg border-2 border-emerald-200 hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="text-4xl mb-3">🤝</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">PACTE</h3>
+                  <p className="text-sm text-gray-600">
+                    {(brutes.pacte_repartitions || []).length} répartition{(brutes.pacte_repartitions || []).length > 1 ? 's' : ''}
+                    {brutes.pacte_suivis && brutes.pacte_suivis.length > 0
+                      ? ` · ${brutes.pacte_suivis.length} suivi${brutes.pacte_suivis.length > 1 ? 's' : ''} mensuel${brutes.pacte_suivis.length > 1 ? 's' : ''}`
+                      : ''}
+                  </p>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>

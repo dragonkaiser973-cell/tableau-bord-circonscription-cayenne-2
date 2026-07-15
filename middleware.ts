@@ -18,6 +18,8 @@ const PUBLIC_API_ROUTES = [
   '/api/formations/plan',  // lecture publique du plan de formation
   '/api/previsions-structure', // lecture publique + publication directeur sans auth
   '/api/repartitions-108h',    // lecture publique + publication directeur sans auth
+  '/api/pacte/repartitions',   // lecture publique + publication directeur sans auth
+  '/api/pacte/suivis',         // lecture publique + publication directeur sans auth
 
   '/api/quiz/public',      // accès participants quiz live (via PIN, sans auth)
 ];
@@ -35,6 +37,7 @@ const PUBLIC_READ_AUTH_WRITE = [
   '/api/evenements',
   '/api/remplacements',     // gestion des remplacements TR (écriture secrétaire authentifiée)
   '/api/remplacements-tr',  // liste des TR gérée dans l'outil remplacements
+  '/api/pacte/attributions', // parts PACTE fixées côté circo (IEN/CPC/secrétariat)
 ];
 
 const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
