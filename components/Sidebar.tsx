@@ -42,7 +42,7 @@ const navItems: NavItem[] = [
   { href: '/calendrier', label: 'Calendrier', icon: <CalendarIcon />, category: 'auth', requiresAuth: true },
   { href: '/remplacements', label: 'Remplacements', icon: <SwapIcon />, category: 'auth', requiresAuth: true },
   { href: '/pilotage', label: 'Pilotage', icon: <DashboardIcon />, category: 'auth', requiresAuth: true },
-  { href: '/pacte', label: 'Pilotage PACTE', icon: <BriefcaseIcon />, category: 'auth', requiresAuth: true },
+  { href: '/pacte', label: 'Pilotage Pacte', icon: <BriefcaseIcon />, category: 'auth', requiresAuth: true },
   { href: '/carte', label: 'Carte', icon: <MapIcon />, category: 'auth', requiresAuth: true },
   { href: '/archives', label: 'Archives', icon: <ArchiveIcon />, category: 'auth', requiresAuth: true },
   { href: '/admin', label: 'Administration', icon: <ShieldIcon />, category: 'admin', requiresAdmin: true },
@@ -53,7 +53,7 @@ const navItems: NavItem[] = [
   { href: '/aide-analyse-classe', label: 'Guide', icon: <BookIcon />, category: 'tools' },
   { href: '/outils/prevision-structure', label: 'Prévision structure', icon: <DashboardIcon />, category: 'tools' },
   { href: '/outils/repartition-108h', label: 'Répartition 108h', icon: <ClipboardIcon />, category: 'tools' },
-  { href: '/outils/pacte', label: 'PACTE', icon: <BriefcaseIcon />, category: 'tools' },
+  { href: '/outils/pacte', label: 'Pacte', icon: <BriefcaseIcon />, category: 'tools' },
   { href: '/outils/annuaire', label: 'Annuaire', icon: <AddressBookIcon />, category: 'info' },
   {
     label: 'Ressources',

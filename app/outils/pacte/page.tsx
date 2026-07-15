@@ -93,7 +93,8 @@ export default function PactePage() {
   const [suiviDrafts, setSuiviDrafts] = useState<Record<string, PacteSuivi>>({});
   const [moisIdx, setMoisIdx] = useState(0);
   const [anneeScolaire, setAnneeScolaire] = useState('2025-2026');
-  const [enseignantsList, setEnseignantsList] = useState<{ nom: string; prenom: string }[]>([]);
+  const [enseignantsList, setEnseignantsList] = useState<{ nom: string; prenom: string; ecole_uai: string }[]>([]);
+  const [ecolesIdentite, setEcolesIdentite] = useState<{ uai: string; sigle?: string; nom: string }[]>([]);
   const [publishing, setPublishing] = useState(false);
 
   // ── Hydratation locale ──
@@ -175,17 +176,23 @@ export default function PactePage() {
         const data = await res.json();
         if (Array.isArray(data)) {
           const seen = new Set<string>();
-          const list: { nom: string; prenom: string }[] = [];
+          const list: { nom: string; prenom: string; ecole_uai: string }[] = [];
           for (const e of data) {
             const nom = String(e?.nom ?? '').trim();
             const prenom = String(e?.prenom ?? '').trim();
-            const k = `${nom}|${prenom}`;
-            if (nom && !seen.has(k)) { seen.add(k); list.push({ nom, prenom }); }
+            const ecole_uai = String(e?.ecole_uai ?? '').trim();
+            const k = `${nom}|${prenom}|${ecole_uai}`;
+            if (nom && !seen.has(k)) { seen.add(k); list.push({ nom, prenom, ecole_uai }); }
           }
           list.sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
           setEnseignantsList(list);
         }
-      } catch { /* autocomplétion indispo */ }
+      } catch { /* liste enseignants indispo */ }
+      try {
+        const res = await fetch('/api/ecoles-identite');
+        const data = await res.json();
+        if (Array.isArray(data)) setEcolesIdentite(data);
+      } catch { /* correspondance écoles indispo */ }
     })();
   }, [refreshPublications, refreshSuivis]);
 
@@ -216,6 +223,40 @@ export default function PactePage() {
     () => (active ? computeRepartitionStats(active, attribution) : null),
     [active, attribution],
   );
+
+  // ── Enseignants de l'école active ──
+  // Un directeur ne peut attribuer de part qu'à un enseignant de son école.
+  // L'annuaire (écoles des directeurs) n'a pas d'UAI : on retrouve la ou les
+  // écoles correspondantes dans ecoles_identite par nom normalisé (départage
+  // maternelle/élémentaire via le sigle), puis on filtre la table enseignants
+  // par UAI. En cas d'échec de correspondance, la liste reste vide et le
+  // directeur saisit ses enseignants avec « Ligne vide ».
+  const enseignantsEcole = useMemo(() => {
+    if (!active?.ecole) return [];
+    const norm = (s: string) =>
+      s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+    const full = norm(active.ecole);
+    const kind = /\bMATERNELLE\b/.test(full) ? 'M' : /\bELEMENTAIRE\b/.test(full) ? 'E' : null;
+    const tokens = full
+      .replace(/\b(MATERNELLE|ELEMENTAIRE|PRIMAIRE|ECOLE|GROUPE|SCOLAIRE)\b/g, ' ')
+      .split(' ')
+      .filter((t) => t.length >= 3);
+    if (tokens.length === 0) return [];
+    const matches = ecolesIdentite.filter((e) => {
+      const label = norm(`${e.sigle ?? ''} ${e.nom ?? ''}`);
+      return tokens.every((t) => label.includes(t));
+    });
+    let retained = matches;
+    if (kind && matches.length > 1) {
+      const byKind = matches.filter((e) => {
+        const isMat = norm(e.sigle ?? '').split(' ').includes('M') || norm(e.nom ?? '').includes('MATERNELLE');
+        return kind === 'M' ? isMat : !isMat;
+      });
+      if (byKind.length > 0) retained = byKind;
+    }
+    const uais = new Set(retained.map((e) => e.uai));
+    return enseignantsList.filter((e) => uais.has(e.ecole_uai));
+  }, [active?.ecole, ecolesIdentite, enseignantsList]);
 
   const updateActive = useCallback(
     (mut: (p: PacteRepartition) => void) => {
@@ -602,7 +643,7 @@ export default function PactePage() {
             stats={stats}
             hasAttribution={Boolean(attribution)}
             readOnly={readOnly}
-            enseignantsList={enseignantsList}
+            enseignantsList={enseignantsEcole}
             updateActive={updateActive}
           />
         ) : (
@@ -615,7 +656,7 @@ export default function PactePage() {
             setMoisIdx={setMoisIdx}
             anneeScolaire={anneeScolaire}
             updateSuivi={updateSuivi}
-            enseignantsList={enseignantsList}
+            enseignantsList={enseignantsEcole}
           />
         )}
       </main>
@@ -747,12 +788,18 @@ function RepartitionVolet({
               <select
                 value={pick}
                 onChange={(e) => onPickEnseignant(e.target.value)}
-                disabled={p.lignes.length >= MAX_LIGNES}
-                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-primary-400 max-w-[280px]"
+                disabled={p.lignes.length >= MAX_LIGNES || enseignantsList.length === 0}
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-primary-400 max-w-[300px] disabled:opacity-60"
               >
-                <option value="">+ Ajouter depuis la liste des enseignants…</option>
-                {enseignantsList.map((e) => (
-                  <option key={`${e.nom}|${e.prenom}`} value={`${e.nom}|${e.prenom}`}>
+                <option value="">
+                  {!p.ecoleId
+                    ? 'Sélectionnez d’abord votre nom…'
+                    : enseignantsList.length === 0
+                    ? 'Aucun enseignant trouvé pour votre école'
+                    : '+ Ajouter un enseignant de mon école…'}
+                </option>
+                {enseignantsList.map((e, i) => (
+                  <option key={`${e.nom}|${e.prenom}|${i}`} value={`${e.nom}|${e.prenom}`}>
                     {e.nom} {e.prenom}
                   </option>
                 ))}
@@ -937,11 +984,16 @@ function SuiviVolet({
               <select
                 value={pick}
                 onChange={(e) => onPickEnseignant(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-primary-400 max-w-[260px]"
+                disabled={enseignantsList.length === 0}
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-primary-400 max-w-[280px] disabled:opacity-60"
               >
-                <option value="">+ Ajouter un enseignant…</option>
-                {enseignantsList.map((e) => (
-                  <option key={`${e.nom}|${e.prenom}`} value={`${e.nom}|${e.prenom}`}>
+                <option value="">
+                  {enseignantsList.length === 0
+                    ? 'Aucun enseignant trouvé pour votre école'
+                    : '+ Ajouter un enseignant de mon école…'}
+                </option>
+                {enseignantsList.map((e, i) => (
+                  <option key={`${e.nom}|${e.prenom}|${i}`} value={`${e.nom}|${e.prenom}`}>
                     {e.nom} {e.prenom}
                   </option>
                 ))}
