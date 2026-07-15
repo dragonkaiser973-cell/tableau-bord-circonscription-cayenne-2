@@ -88,7 +88,14 @@ export async function POST(request: NextRequest) {
       // Remplacements TR : les remplacements de l'année sont purgés (déjà
       // archivés à l'étape 2). La liste des TR (remplacements_tr) n'est PAS
       // purgée : l'équipe de remplaçants persiste d'une année sur l'autre.
-      'remplacements'
+      'remplacements',
+      // PACTE : attributions, répartitions et suivis mensuels repartent à zéro
+      // chaque année (déjà archivés à l'étape 2).
+      'pacte_attributions',
+      'pacte_repartitions_versions',
+      'pacte_repartitions',
+      'pacte_suivis_versions',
+      'pacte_suivis'
     ];
 
     const erreurs: string[] = [];

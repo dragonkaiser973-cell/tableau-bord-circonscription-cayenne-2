@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
   { href: '/calendrier', label: 'Calendrier', icon: <CalendarIcon />, category: 'auth', requiresAuth: true },
   { href: '/remplacements', label: 'Remplacements', icon: <SwapIcon />, category: 'auth', requiresAuth: true },
   { href: '/pilotage', label: 'Pilotage', icon: <DashboardIcon />, category: 'auth', requiresAuth: true },
+  { href: '/pacte', label: 'Pilotage Pacte', icon: <BriefcaseIcon />, category: 'auth', requiresAuth: true },
   { href: '/carte', label: 'Carte', icon: <MapIcon />, category: 'auth', requiresAuth: true },
   { href: '/archives', label: 'Archives', icon: <ArchiveIcon />, category: 'auth', requiresAuth: true },
   { href: '/admin', label: 'Administration', icon: <ShieldIcon />, category: 'admin', requiresAdmin: true },
@@ -52,6 +53,7 @@ const navItems: NavItem[] = [
   { href: '/aide-analyse-classe', label: 'Guide', icon: <BookIcon />, category: 'tools' },
   { href: '/outils/prevision-structure', label: 'Prévision structure', icon: <DashboardIcon />, category: 'tools' },
   { href: '/outils/repartition-108h', label: 'Répartition 108h', icon: <ClipboardIcon />, category: 'tools' },
+  { href: '/outils/pacte', label: 'Pacte', icon: <BriefcaseIcon />, category: 'tools' },
   { href: '/outils/annuaire', label: 'Annuaire', icon: <AddressBookIcon />, category: 'info' },
   {
     label: 'Ressources',
@@ -532,6 +534,9 @@ function FilmIcon() {
 }
 function SwapIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3l4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16" /></svg>;
+}
+function BriefcaseIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" /></svg>;
 }
 function TargetIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>;

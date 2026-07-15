@@ -188,13 +188,16 @@ export async function creerArchiveComplete(
 
   // Charger structures, stats et outils directeurs (prévisions + 108h) depuis Supabase
   console.log('📥 Chargement structures, stats et outils directeurs depuis Supabase...');
-  const [resStructures, resStats, resPrevisions, resRepartitions108h, resRemplacementsTr, resRemplacements] = await Promise.all([
+  const [resStructures, resStats, resPrevisions, resRepartitions108h, resRemplacementsTr, resRemplacements, resPacteAttr, resPacteRep, resPacteSuivis] = await Promise.all([
     supabase.from('ecoles_structure').select('*'),
     supabase.from('statistiques_ecoles').select('*'),
     supabase.from('previsions_structure').select('*').order('published_at', { ascending: false }),
     supabase.from('repartition_108h').select('*').order('published_at', { ascending: false }),
     supabase.from('remplacements_tr').select('*').order('ordre', { ascending: true }),
-    supabase.from('remplacements').select('*').order('date_debut', { ascending: true })
+    supabase.from('remplacements').select('*').order('date_debut', { ascending: true }),
+    supabase.from('pacte_attributions').select('*').order('ecole_name', { ascending: true }),
+    supabase.from('pacte_repartitions').select('*').order('published_at', { ascending: false }),
+    supabase.from('pacte_suivis').select('*').order('mois', { ascending: true })
   ]);
 
   const ecoles_structure = resStructures.data || [];
@@ -203,6 +206,9 @@ export async function creerArchiveComplete(
   const repartitions_108h = resRepartitions108h.data || [];
   const remplacements_tr = resRemplacementsTr.data || [];
   const remplacements = resRemplacements.data || [];
+  const pacte_attributions = resPacteAttr.data || [];
+  const pacte_repartitions = resPacteRep.data || [];
+  const pacte_suivis = resPacteSuivis.data || [];
 
   // Charger ecoles_identite depuis l'API (plus complet que table ecoles)
   console.log('📥 Chargement ecoles_identite depuis API...');
@@ -234,6 +240,7 @@ export async function creerArchiveComplete(
   console.log(`   - ${previsions_structure.length} prévisions de structure publiées`);
   console.log(`   - ${repartitions_108h.length} répartitions 108h publiées`);
   console.log(`   - ${remplacements.length} remplacements (${remplacements_tr.length} TR)`);
+  console.log(`   - PACTE : ${pacte_attributions.length} attributions, ${pacte_repartitions.length} répartitions, ${pacte_suivis.length} suivis`);
 
   // ── Calculs agrégés ─────────────────────────────────────────────
   console.log('📊 Calcul des statistiques...');
@@ -269,7 +276,8 @@ export async function creerArchiveComplete(
       planFormation: plan_formation.length > 0,
       previsionsStructure: previsions_structure.length > 0,
       repartitions108h: repartitions_108h.length > 0,
-      remplacements: remplacements.length > 0
+      remplacements: remplacements.length > 0,
+      pacte: pacte_repartitions.length > 0 || pacte_attributions.length > 0
     },
     stats: {
       nombreEcoles: ecoles_identite.length,
@@ -287,7 +295,10 @@ export async function creerArchiveComplete(
       nombrePrevisionsStructure: previsions_structure.length,
       nombreRepartitions108h: repartitions_108h.length,
       nombreRemplacements: remplacements.length,
-      nombreTR: remplacements_tr.length
+      nombreTR: remplacements_tr.length,
+      nombrePacteAttributions: pacte_attributions.length,
+      nombrePacteRepartitions: pacte_repartitions.length,
+      nombrePacteSuivis: pacte_suivis.length
     }
   };
 
@@ -307,7 +318,10 @@ export async function creerArchiveComplete(
     previsions_structure,
     repartitions_108h,
     remplacements,
-    remplacements_tr
+    remplacements_tr,
+    pacte_attributions,
+    pacte_repartitions,
+    pacte_suivis
   };
 
   const donnees_calculees = {
