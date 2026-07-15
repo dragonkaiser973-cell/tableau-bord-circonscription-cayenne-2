@@ -7,6 +7,7 @@ import PDFExportModal from '@/components/PDFExportModal';
 import AuroraHeader from '@/components/AuroraHeader';
 import { exportMultipleElementsToPDF, PDFExportOptions } from '@/lib/pdfExport';
 import { exportStyledExcel, ExcelSheetDef } from '@/lib/excelExport';
+import { getVacancesScolaires, formatDateFr } from '@/lib/vacances-guyane';
 
 interface Evenement {
   id: string;
@@ -15,12 +16,6 @@ interface Evenement {
   dateDebut: string;
   dateFin: string;
   lieu: string;
-}
-
-interface PeriodeVacances {
-  nom: string;
-  debut: string;
-  fin: string;
 }
 
 const TYPES_EVENEMENTS = {
@@ -33,17 +28,6 @@ const MOIS = [
   'Septembre', 'Octobre', 'Novembre', 'Décembre',
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août'
 ];
-
-// Vacances scolaires Guyane - mise à jour automatique
-const getVacancesScolaires = (anneeScolaire: number): PeriodeVacances[] => {
-  return [
-    { nom: 'Toussaint', debut: `${anneeScolaire}-10-19`, fin: `${anneeScolaire}-11-04` },
-    { nom: 'Noël', debut: `${anneeScolaire}-12-21`, fin: `${anneeScolaire + 1}-01-06` },
-    { nom: 'Carnaval', debut: `${anneeScolaire + 1}-02-22`, fin: `${anneeScolaire + 1}-03-10` },
-    { nom: 'Printemps', debut: `${anneeScolaire + 1}-04-12`, fin: `${anneeScolaire + 1}-04-28` },
-    { nom: 'Été', debut: `${anneeScolaire + 1}-07-05`, fin: `${anneeScolaire + 1}-09-01` }
-  ];
-};
 
 export default function CalendrierPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -303,11 +287,7 @@ export default function CalendrierPage() {
 
   const handleExportExcel = async () => {
     const dateStr = new Date().toLocaleDateString('fr-FR');
-    const fmt = (d: string) => {
-      if (!d) return '';
-      const dt = new Date(d);
-      return isNaN(dt.getTime()) ? d : dt.toLocaleDateString('fr-FR');
-    };
+    const fmt = formatDateFr;
 
     const evts = [...evenements].sort((a, b) => (a.dateDebut || '').localeCompare(b.dateDebut || ''));
     const sheetEvts: ExcelSheetDef = {
@@ -445,7 +425,7 @@ export default function CalendrierPage() {
               <div key={periode.nom} className="bg-white rounded-lg p-3 border border-orange-200">
                 <div className="font-semibold text-orange-700">{periode.nom}</div>
                 <div className="text-sm text-gray-600 mt-1">
-                  Du {new Date(periode.debut).toLocaleDateString('fr-FR')} au {new Date(periode.fin).toLocaleDateString('fr-FR')}
+                  Du {formatDateFr(periode.debut)} au {formatDateFr(periode.fin)}
                 </div>
               </div>
             ))}
