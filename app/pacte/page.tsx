@@ -309,16 +309,9 @@ export default function PacteCircoPage() {
                       </td>
                       {MISSIONS.map((m) => (
                         <td key={m.key} className="px-1 py-1">
-                          <input
-                            inputMode="numeric"
-                            value={parts[m.key] ? String(parts[m.key]) : ''}
-                            onChange={(ev) => {
-                              const v = ev.target.value.replace(/[^0-9]/g, '');
-                              setPart(e.id, m.key, v === '' ? 0 : Number(v));
-                            }}
-                            onFocus={(ev) => ev.target.select()}
-                            placeholder="·"
-                            className="w-full text-center tabular-nums border border-transparent rounded-md py-1.5 text-[13px] font-semibold text-slate-900 outline-none hover:bg-slate-100/70 focus:bg-white focus:ring-2 focus:ring-primary-400 transition-colors"
+                          <PartInput
+                            value={Number(parts[m.key]) || 0}
+                            onChange={(v) => setPart(e.id, m.key, v)}
                           />
                         </td>
                       ))}
@@ -437,5 +430,32 @@ export default function PacteCircoPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Saisie de parts avec demi-parts (pas de 0,5). État local pour laisser passer
+// les saisies intermédiaires (« 0, » puis « 0,5 ») sans être écrasé par le nombre.
+function PartInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [raw, setRaw] = useState(value === 0 ? '' : String(value));
+  useEffect(() => {
+    setRaw((prev) => {
+      const cur = prev === '' ? 0 : Number(prev);
+      return cur === value ? prev : value === 0 ? '' : String(value);
+    });
+  }, [value]);
+  return (
+    <input
+      inputMode="decimal"
+      value={raw}
+      onChange={(ev) => {
+        const r = ev.target.value.replace(',', '.').replace(/[^0-9.]/g, '');
+        setRaw(r);
+        const v = r === '' ? 0 : Number(r);
+        if (Number.isFinite(v)) onChange(v);
+      }}
+      onFocus={(ev) => ev.target.select()}
+      placeholder="·"
+      className="w-full text-center tabular-nums border border-transparent rounded-md py-1.5 text-[13px] font-semibold text-slate-900 outline-none hover:bg-slate-100/70 focus:bg-white focus:ring-2 focus:ring-primary-400 transition-colors"
+    />
   );
 }
