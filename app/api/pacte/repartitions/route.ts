@@ -29,7 +29,8 @@ function sanitizeLignes(raw: unknown): { nom: string; prenom: string; parts: Rec
       const parts: Record<string, number> = {};
       const rawParts = (l.parts && typeof l.parts === 'object' ? l.parts : {}) as Record<string, unknown>;
       for (const key of MISSION_KEYS) {
-        const v = Math.max(0, Math.min(99, Math.floor(Number(rawParts[key]) || 0)));
+        // Parts en pas de 0,5 (les demi-parts existent dans le PACTE 1er degré).
+        const v = Math.max(0, Math.min(99, Math.round((Number(rawParts[key]) || 0) * 2) / 2));
         if (v > 0) parts[key] = v;
       }
       return {

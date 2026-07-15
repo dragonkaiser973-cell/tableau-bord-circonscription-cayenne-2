@@ -24,7 +24,8 @@ function sanitizeParts(raw: unknown): Record<string, number> {
   const out: Record<string, number> = {};
   if (!raw || typeof raw !== 'object') return out;
   for (const key of MISSION_KEYS) {
-    const v = Math.max(0, Math.min(999, Math.floor(Number((raw as Record<string, unknown>)[key]) || 0)));
+    // Parts en pas de 0,5 (les demi-parts existent dans le PACTE 1er degré).
+    const v = Math.max(0, Math.min(999, Math.round((Number((raw as Record<string, unknown>)[key]) || 0) * 2) / 2));
     if (v > 0) out[key] = v;
   }
   return out;

@@ -150,7 +150,8 @@ function sanitizeLignes(raw: unknown): LigneRepartition[] {
       const parts: Partial<Record<MissionKey, number>> = {};
       const rawParts = (l.parts && typeof l.parts === 'object' ? l.parts : {}) as Record<string, unknown>;
       for (const m of MISSIONS) {
-        const v = Math.max(0, Math.min(99, Math.floor(Number(rawParts[m.key]) || 0)));
+        // Parts en pas de 0,5 (les demi-parts existent dans le PACTE 1er degré).
+        const v = Math.max(0, Math.min(99, Math.round((Number(rawParts[m.key]) || 0) * 2) / 2));
         if (v > 0) parts[m.key] = v;
       }
       return {

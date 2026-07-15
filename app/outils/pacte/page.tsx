@@ -850,6 +850,7 @@ function RepartitionVolet({
                       <NumCell
                         value={l.parts[m.key] || 0}
                         readOnly={readOnly}
+                        decimals
                         onChange={(v) =>
                           updateActive((d) => {
                             if (v > 0) d.lignes[li].parts[m.key] = v;
@@ -1181,18 +1182,27 @@ function NumCell({
   readOnly?: boolean;
   decimals?: boolean;
 }) {
-  const display = value === 0 ? '' : String(value);
+  // État local pour laisser passer les saisies intermédiaires ("0," puis "0,5") :
+  // un input contrôlé par le nombre seul avalerait le séparateur décimal.
+  const [raw, setRaw] = useState(value === 0 ? '' : String(value));
+  useEffect(() => {
+    setRaw((prev) => {
+      const cur = prev === '' ? 0 : Number(prev);
+      return cur === value ? prev : value === 0 ? '' : String(value);
+    });
+  }, [value]);
   return (
     <input
       inputMode={decimals ? 'decimal' : 'numeric'}
-      value={display}
+      value={raw}
       readOnly={readOnly}
       tabIndex={readOnly ? -1 : undefined}
       onChange={(e) => {
         if (readOnly) return;
-        const raw = e.target.value.replace(',', '.').replace(decimals ? /[^0-9.]/g : /[^0-9]/g, '');
-        const v = raw === '' ? 0 : Number(raw);
-        onChange(Number.isFinite(v) ? v : 0);
+        const r = e.target.value.replace(',', '.').replace(decimals ? /[^0-9.]/g : /[^0-9]/g, '');
+        setRaw(r);
+        const v = r === '' ? 0 : Number(r);
+        if (Number.isFinite(v)) onChange(v);
       }}
       onFocus={(e) => !readOnly && e.target.select()}
       placeholder={readOnly ? '' : '·'}
