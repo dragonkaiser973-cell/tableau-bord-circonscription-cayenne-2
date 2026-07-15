@@ -2,6 +2,8 @@
 // Partagé entre la page live (/remplacements) et la consultation d'archive
 // (/archives/consulter/remplacements).
 
+import { getVacancesScolaires } from '@/lib/vacances-guyane';
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type Plage = 'journee' | 'matin' | 'apres-midi';
@@ -69,21 +71,8 @@ export function toISO(year: number, monthIdx0: number, day: number): string {
 // Dates codées en dur (même limitation assumée que app/calendrier/page.tsx) :
 // à mettre à jour chaque année si le calendrier académique bouge.
 
-interface PeriodeVacances {
-  nom: string;
-  debut: string; // YYYY-MM-DD inclus
-  fin: string;   // YYYY-MM-DD inclus
-}
-
-export function getVacancesScolaires(anneeDebut: number): PeriodeVacances[] {
-  return [
-    { nom: 'Vacances de la Toussaint', debut: `${anneeDebut}-10-19`, fin: `${anneeDebut}-11-04` },
-    { nom: 'Vacances de Noël', debut: `${anneeDebut}-12-21`, fin: `${anneeDebut + 1}-01-06` },
-    { nom: 'Vacances de Carnaval', debut: `${anneeDebut + 1}-02-22`, fin: `${anneeDebut + 1}-03-10` },
-    { nom: 'Vacances de Printemps', debut: `${anneeDebut + 1}-04-12`, fin: `${anneeDebut + 1}-04-28` },
-    { nom: "Vacances d'été", debut: `${anneeDebut + 1}-07-05`, fin: `${anneeDebut + 1}-09-01` },
-  ];
-}
+export { getVacancesScolaires };
+export type { PeriodeVacances } from '@/lib/vacances-guyane';
 
 // ─── Jours fériés (France + Guyane) ──────────────────────────────────────────
 

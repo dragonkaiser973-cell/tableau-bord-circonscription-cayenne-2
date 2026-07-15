@@ -106,7 +106,28 @@ export function parseDayKey(key: DayKey): { year: number; month: number; day: nu
   return { year: Number(m[1]), month: Number(m[2]) - 1, day: Number(m[3]) };
 }
 
+// Bornes par défaut des 5 périodes (entre les vacances officielles de la
+// Guyane — cf. lib/vacances-guyane.ts). À compléter chaque année.
+const PERIODE_BOUNDS_OFFICIELLES: Record<number, Record<Periode, { start: string; end: string }>> = {
+  2025: {
+    1: { start: '2025-09-01', end: '2025-10-17' },
+    2: { start: '2025-11-03', end: '2025-12-19' },
+    3: { start: '2026-01-05', end: '2026-02-06' },
+    4: { start: '2026-02-23', end: '2026-04-01' },
+    5: { start: '2026-04-16', end: '2026-07-04' },
+  },
+  2026: {
+    1: { start: '2026-09-01', end: '2026-10-16' },
+    2: { start: '2026-11-03', end: '2026-12-18' },
+    3: { start: '2027-01-04', end: '2027-02-05' },
+    4: { start: '2027-02-18', end: '2027-03-25' },
+    5: { start: '2027-04-12', end: '2027-07-03' },
+  },
+};
+
 export function defaultPeriodeBounds(anneeStartYear: number): Record<Periode, { start: string; end: string }> {
+  const officiel = PERIODE_BOUNDS_OFFICIELLES[anneeStartYear];
+  if (officiel) return officiel;
   const y0 = anneeStartYear;
   const y1 = anneeStartYear + 1;
   return {
