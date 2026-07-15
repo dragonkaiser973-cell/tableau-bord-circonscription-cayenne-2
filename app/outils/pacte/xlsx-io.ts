@@ -162,9 +162,10 @@ export async function exportRepartitionXlsx(rep: PacteRepartition, attribution: 
   c1.value = CIRCO;
   c1.font = { bold: true, size: 12 };
 
-  // Le bloc commence ligne 1 dans le fichier d'origine (attribué en ligne 1) ;
-  // on garde le titre circo fusionné sur A1:B1 puis le bloc sur les mêmes lignes.
-  writeRepartitionBlock(ws, 1, rep, attribution);
+  // Le bloc écrit son libellé « Parts attribuées » fusionné sur A:B — il doit
+  // donc commencer sous le titre circo (déjà fusionné sur A1:B1), sinon ExcelJS
+  // refuse la double fusion et l'export échoue.
+  writeRepartitionBlock(ws, 2, rep, attribution);
 
   const buf = await wb.xlsx.writeBuffer();
   triggerDownload(
